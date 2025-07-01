@@ -6,9 +6,10 @@
         <Configurations>Release</Configurations>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <PlatformTarget>x64</PlatformTarget>
         <DebugType>embedded</DebugType>
         <DebugSymbols>false</DebugSymbols>
-        <AssemblyName>ASS</AssemblyName>
+        <AssemblyName>ASS.Example</AssemblyName>
     </PropertyGroup>
 
     <Import Project="../plugin.props" />
@@ -28,7 +29,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Patches\" />
+      <ProjectReference Include="..\ASS\ASS.csproj" />
     </ItemGroup>
 
 </Project>
