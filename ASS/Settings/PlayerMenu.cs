@@ -22,7 +22,11 @@ namespace ASS.Settings
 
         public ASSGroup Current { get; set; }
 
-        public void Update()
+        /// <summary>
+        /// Updates a <see cref="PlayerMenu"/> by using the menus <see cref="GroupUpdateHandler"/> to acquire new values.
+        /// </summary>
+        /// <param name="registerChange">If true, makes a red dot appear next to the owners SSS tab indicating a change.</param>
+        public void Update(bool registerChange = true)
         {
             ASSGroup newGroup = Generator(Owner);
 
@@ -31,12 +35,12 @@ namespace ASS.Settings
             Current.Viewers = newGroup.Viewers;
             Current.SubGroups = newGroup.SubGroups;
 
-            ASSNetworking.SendToPlayer(Owner);
+            ASSNetworking.SendToPlayer(Owner, true, registerChange);
         }
 
         public void Destroy()
         {
-            ASSNetworking.RegisterGroups([Current], [Owner]);
+            ASSNetworking.UnregisterGroups([Current], [Owner]);
         }
     }
 }

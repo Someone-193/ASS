@@ -20,6 +20,8 @@ namespace ASS.Settings.Inheritors
 
         public float HoldTime { get; set; }
 
+        public override ServerSpecificSettingBase.UserResponseMode ResponseMode => ServerSpecificSettingBase.UserResponseMode.ChangeOnly;
+
         internal override Type SSSType { get; } = typeof(SSButton);
 
         internal override void Serialize(NetworkWriter writer)

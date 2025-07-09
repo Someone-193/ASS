@@ -29,6 +29,8 @@ namespace ASS.Settings.Inheritors
 
         public bool DefaultRightSelected { get; set; }
 
+        public override ServerSpecificSettingBase.UserResponseMode ResponseMode => ServerSpecificSettingBase.UserResponseMode.AcquisitionAndChange;
+
         internal override Type SSSType { get; } = typeof(SSTwoButtonsSetting);
 
         internal override void Serialize(NetworkWriter writer)

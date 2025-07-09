@@ -26,6 +26,8 @@ namespace ASS.Settings.Inheritors
 
         public bool TriggerInSpectator { get; set; }
 
+        public override ServerSpecificSettingBase.UserResponseMode ResponseMode => ServerSpecificSettingBase.UserResponseMode.AcquisitionAndChange;
+
         internal override Type SSSType { get; } = typeof(SSKeybindSetting);
 
         internal override void Serialize(NetworkWriter writer)

@@ -45,6 +45,8 @@ namespace ASS.Settings.Inheritors
 
         public string DisplayFormat { get; set; }
 
+        public override ServerSpecificSettingBase.UserResponseMode ResponseMode => ServerSpecificSettingBase.UserResponseMode.AcquisitionAndChange;
+
         internal override Type SSSType { get; } = typeof(SSSliderSetting);
 
         internal override void Serialize(NetworkWriter writer)

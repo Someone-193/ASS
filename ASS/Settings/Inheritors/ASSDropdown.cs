@@ -56,6 +56,8 @@ namespace ASS.Settings.Inheritors
 
         public SSDropdownSetting.DropdownEntryType EntryType { get; set; }
 
+        public override ServerSpecificSettingBase.UserResponseMode ResponseMode => ServerSpecificSettingBase.UserResponseMode.AcquisitionAndChange;
+
         internal override Type SSSType { get; } = typeof(SSDropdownSetting);
 
         internal override void Serialize(NetworkWriter writer)

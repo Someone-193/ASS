@@ -32,6 +32,8 @@ namespace ASS.Settings.Inheritors
 
         public TMP_InputField.ContentType ContentType { get; set; }
 
+        public override ServerSpecificSettingBase.UserResponseMode ResponseMode => ServerSpecificSettingBase.UserResponseMode.AcquisitionAndChange;
+
         internal override Type SSSType { get; } = typeof(SSPlaintextSetting);
 
         internal override void Serialize(NetworkWriter writer)

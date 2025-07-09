@@ -28,6 +28,7 @@
             harmony.PatchAll();
 
             NetworkServer.ReplaceHandler<SSSClientResponse>(ASSNetworking.ProcessResponseMessage);
+            ServerSpecificSettingsSync.ServerOnStatusReceived += ASSNetworking.OnStatusReceived;
         }
 
         public override void Disable()

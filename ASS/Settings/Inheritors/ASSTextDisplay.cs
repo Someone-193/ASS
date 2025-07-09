@@ -23,6 +23,8 @@ namespace ASS.Settings.Inheritors
 
         public TextAlignmentOptions AlignmentOptions { get; set; }
 
+        public override ServerSpecificSettingBase.UserResponseMode ResponseMode => ServerSpecificSettingBase.UserResponseMode.None;
+
         internal override Type SSSType { get; } = typeof(SSTextArea);
 
         public void SendTextUpdate(string newText, bool applyOverride = true, Predicate<Player>? filter = null)

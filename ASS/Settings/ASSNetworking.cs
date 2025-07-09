@@ -11,8 +11,10 @@ namespace ASS.Settings
     using Mirror;
     using UserSettings.ServerSpecific;
 
-    public class ASSNetworking
+    public static class ASSNetworking
     {
+        private static readonly Dictionary<ReferenceHub, Action> QueuedUpdates = new();
+
         public static event Action<Player, ASSBase> SettingTriggered = (_, _) => { };
 
         public static event Action<Player, ASSKeybind> KeybindPressed = (plyr, keybind) => keybind.OnPressed(plyr, keybind);
@@ -33,7 +35,7 @@ namespace ASS.Settings
 
         public static IEnumerable<ASSBase> Settings { get; } = Groups.SelectMany(group => group.GetAllSettings());
 
-        public static int Version { get; set; }
+        public static Dictionary<Player, int> Versions { get; } = new();
 
         public static T? TryGetSetting<T>(Player player, int id)
             where T : ASSBase, new()
@@ -49,19 +51,44 @@ namespace ASS.Settings
             }
         }
 
-        public static void SendToPlayer(Player player)
+        public static void SendToPlayer(Player player, bool includeBaseGameSettings = true, bool registerChange = true)
         {
-            SendToPlayer(player, GetRegisteredSorted(player).ToArray());
+            SendToPlayer(player, GetRegisteredSorted(player).ToArray(), includeBaseGameSettings, registerChange);
         }
 
-        public static void SendToPlayer(Player player, ASSBase[] settings, bool useBaseGameSettings = true, int version = -1)
+        public static void SendToPlayer(Player player, ASSBase[] settings, bool includeBaseGameSettings = true, bool registerChange = true)
         {
-            if (version == -1)
-                version = Version;
+            if (!NetworkServer.active)
+                return;
 
             ReceivedSettings[player] = Copy(settings);
 
-            ASSUtils.SendASSMessage(player.Connection, new ASSEntriesPack(settings, useBaseGameSettings ? ServerSpecificSettingsSync.DefinedSettings : [], version));
+            foreach (ASSBase setting in ReceivedSettings[player])
+            {
+                if (setting.ResponseMode is ServerSpecificSettingBase.UserResponseMode.AcquisitionAndChange)
+                    setting.IgnoreNextResponse = true;
+            }
+
+            if (player.TabOpen())
+                ASSUtils.SendASSMessage(player.Connection, new ASSEntriesPack(settings, includeBaseGameSettings ? ServerSpecificSettingsSync.DefinedSettings : [], GetVersion(player)));
+            else
+            {
+                if (!QueuedUpdates.ContainsKey(player.ReferenceHub))
+                    ASSUtils.SendASSMessage(player.Connection, new ASSEntriesPack([new ASSHeader("Loading...")], null, GetVersion(player, registerChange)));
+                QueuedUpdates[player.ReferenceHub] = () => ASSUtils.SendASSMessage(player.Connection, new ASSEntriesPack(settings, includeBaseGameSettings ? ServerSpecificSettingsSync.DefinedSettings : [], GetVersion(player)));
+            }
+        }
+
+        public static void SendSSSIncludingASS(Player player, ServerSpecificSettingBase[] settings, int version)
+        {
+            if (player.TabOpen())
+                ASSUtils.SendASSMessage(player.Connection, new ASSEntriesPack(ReceivedSettings[player], settings, GetVersion(player)));
+            else
+            {
+                if (!QueuedUpdates.ContainsKey(player.ReferenceHub))
+                    ASSUtils.SendASSMessage(player.Connection, new ASSEntriesPack([new ASSHeader("Loading...")], null, version));
+                QueuedUpdates[player.ReferenceHub] = () => ASSUtils.SendASSMessage(player.Connection, new ASSEntriesPack(ReceivedSettings[player], settings, version));
+            }
         }
 
         public static void RegisterGroups(IEnumerable<ASSGroup> groups, IEnumerable<Player>? toUpdate = null)
@@ -74,6 +101,36 @@ namespace ASS.Settings
 
             foreach (Player player in toUpdate)
                 SendToPlayer(player);
+        }
+
+        public static void UnregisterGroups(IEnumerable<ASSGroup> groups, IEnumerable<Player>? toUpdate = null)
+        {
+            // TODO: Make this work lol
+        }
+
+        public static int GetVersion(Player player, bool newVersion = false)
+        {
+            if (Versions.TryGetValue(player, out int val))
+            {
+                if (!newVersion)
+                    return val;
+
+                val++;
+                Versions[player] = val;
+
+                return val;
+            }
+
+            Versions[player] = ServerSpecificSettingsSync.Version;
+            return ServerSpecificSettingsSync.Version;
+        }
+
+        internal static void SendByFilter(Func<ReferenceHub, bool> filter)
+        {
+            foreach (ReferenceHub hub in ReferenceHub.AllHubs.Where(filter))
+            {
+                SendToPlayer(Player.Get(hub));
+            }
         }
 
         internal static IEnumerable<ASSBase> GetRegisteredSorted(Player player)
@@ -95,13 +152,13 @@ namespace ASS.Settings
             if (setting is null)
                 return;
 
+            setting.Deserialize(NetworkReaderPool.Get(message.Payload));
+
             if (setting.IgnoreNextResponse)
             {
                 setting.IgnoreNextResponse = false;
                 return;
             }
-
-            setting.Deserialize(NetworkReaderPool.Get(message.Payload));
 
             SettingTriggered(p, setting);
 
@@ -128,6 +185,15 @@ namespace ASS.Settings
                 default:
                     Logger.Warn($"Failed to cast setting [{setting}]");
                     break;
+            }
+        }
+
+        internal static void OnStatusReceived(ReferenceHub hub, SSSUserStatusReport report)
+        {
+            if (report.TabOpen && QueuedUpdates.TryGetValue(hub, out Action update))
+            {
+                QueuedUpdates.Remove(hub);
+                update();
             }
         }
 

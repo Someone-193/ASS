@@ -11,6 +11,8 @@ namespace ASS.Settings.Inheritors
             Hint = hint;
         }
 
+        public override ServerSpecificSettingBase.UserResponseMode ResponseMode => ServerSpecificSettingBase.UserResponseMode.None;
+
         internal override Type SSSType { get; } = typeof(SSGroupHeader);
 
         internal override ASSBase Copy() => new ASSHeader(Label, Hint);

@@ -3,6 +3,7 @@ namespace ASS.Settings
     using System;
     using ASS.Settings.Inheritors;
     using Mirror;
+    using UserSettings.ServerSpecific;
 
     public abstract class ASSBase
     {
@@ -13,6 +14,11 @@ namespace ASS.Settings
         public string? Hint { get; set; }
 
         public bool IgnoreNextResponse { get; set; }
+
+        /// <summary>
+        /// Gets the <see cref="ServerSpecificSettingBase.UserResponseMode"/> of the setting. Acquisition implies a response when the setting is received and Change implies a response whenever the setting is triggered.
+        /// </summary>
+        public abstract ServerSpecificSettingBase.UserResponseMode ResponseMode { get; }
 
         internal abstract Type SSSType { get; }
 

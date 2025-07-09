@@ -35,8 +35,4 @@
         <Reference Include="Mirror.dll" HintPath="$(SL_REFERENCES)\Mirror.dll" Private="false" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Patches\" />
-    </ItemGroup>
-
 </Project>
