@@ -15,13 +15,31 @@ namespace ASS.Settings
     {
         public static event Action<Player, ASSBase> SettingTriggered = (_, _) => { };
 
+        public static event Action<Player, ASSKeybind> KeybindPressed = (plyr, keybind) => keybind.OnPressed(plyr, keybind);
+
+        public static event Action<Player, ASSDropdown> DropdownTriggered = (plyr, dropdown) => dropdown.OnTriggered(plyr, dropdown);
+
+        public static event Action<Player, ASSTwoButtons> TwoButtonsPressed = (plyr, button) => button.OnPressed(plyr, button);
+
+        public static event Action<Player, ASSSlider> SliderMoved = (plyr, slider) => slider.OnMoved(plyr, slider);
+
         public static event Action<Player, ASSButton> ButtonPressed = (plyr, button) => button.OnPressed(plyr, button);
 
-        public static Dictionary<Player, ASSBase[]> SentSettings { get; } = new();
+        public static event Action<Player, ASSTextInput> TextInputChanged = (plyr, textInput) => textInput.OnChanged(plyr, textInput);
+
+        public static Dictionary<Player, ASSBase[]> ReceivedSettings { get; } = new();
 
         public static List<ASSGroup> Groups { get; } = [];
 
+        public static IEnumerable<ASSBase> Settings { get; } = Groups.SelectMany(group => group.GetAllSettings());
+
         public static int Version { get; set; }
+
+        public static T? TryGetSetting<T>(Player player, int id)
+            where T : ASSBase, new()
+        {
+            return !ReceivedSettings.TryGetValue(player, out ASSBase[] settings) ? null : settings.FirstOrDefault(setting => setting.Id == id) as T;
+        }
 
         public static void SendToAll()
         {
@@ -31,40 +49,31 @@ namespace ASS.Settings
             }
         }
 
-        public static void SendToPlayers(Predicate<Player> receivers)
-        {
-        }
-
         public static void SendToPlayer(Player player)
         {
             SendToPlayer(player, GetRegisteredSorted(player).ToArray());
         }
 
-        public static void SendToPlayer(Player player, ASSBase[] settings)
+        public static void SendToPlayer(Player player, ASSBase[] settings, bool useBaseGameSettings = true, int version = -1)
         {
-            SentSettings[player] = settings;
+            if (version == -1)
+                version = Version;
 
-            ASSUtils.SendASSMessage(player.Connection, new ASSEntriesPack(settings, Version));
+            ReceivedSettings[player] = Copy(settings);
+
+            ASSUtils.SendASSMessage(player.Connection, new ASSEntriesPack(settings, useBaseGameSettings ? ServerSpecificSettingsSync.DefinedSettings : [], version));
         }
 
-        public static void RegisterGroups(IEnumerable<ASSGroup> groups, IEnumerable<Player> toUpdate)
+        public static void RegisterGroups(IEnumerable<ASSGroup> groups, IEnumerable<Player>? toUpdate = null)
         {
             groups = groups.Where(group => group != null);
             Groups.AddRange(groups);
+
+            if (toUpdate is null)
+                return;
+
             foreach (Player player in toUpdate)
                 SendToPlayer(player);
-        }
-
-        public static void RegisterGroups(IEnumerable<ASSGroup> groups, Predicate<Player> toUpdate)
-        {
-            groups = groups.Where(group => group != null);
-            Groups.AddRange(groups);
-            SendToPlayers(toUpdate);
-        }
-
-        public static bool ValidateMessage(Player sender, ASSBase setting)
-        {
-            return false;
         }
 
         internal static IEnumerable<ASSBase> GetRegisteredSorted(Player player)
@@ -72,14 +81,16 @@ namespace ASS.Settings
             return Groups.OrderByDescending(group => group.Priority).SelectMany(group => group.GetViewableSettingsOrdered(player));
         }
 
-        internal static void ProcessMessage(NetworkConnectionToClient conn, SSSClientResponse message)
+        internal static void ProcessResponseMessage(NetworkConnectionToClient conn, SSSClientResponse message)
         {
+            ServerSpecificSettingsSync.ServerProcessClientResponseMsg(conn, message);
+
             if (!ReferenceHub.TryGetHub(conn, out ReferenceHub hub))
                 return;
 
             Player p = Player.Get(hub);
 
-            ASSBase? setting = SentSettings[p].FirstOrDefault(setting => setting.Id == message.Id);
+            ASSBase? setting = !ReceivedSettings.TryGetValue(p, out ASSBase[] settings) ? null : settings.FirstOrDefault(setting => setting.Id == message.Id);
 
             if (setting is null)
                 return;
@@ -90,29 +101,44 @@ namespace ASS.Settings
                 return;
             }
 
+            setting.Deserialize(NetworkReaderPool.Get(message.Payload));
+
             SettingTriggered(p, setting);
 
-            switch (ServerSpecificSettingsSync.GetCodeFromType(setting.SSSType))
+            switch (setting)
             {
-                case 1:
+                case ASSKeybind keybind:
+                    KeybindPressed(p, keybind);
                     break;
-                case 2:
+                case ASSDropdown dropdown:
+                    DropdownTriggered(p, dropdown);
                     break;
-                case 3:
+                case ASSTwoButtons twoButtons:
+                    TwoButtonsPressed(p, twoButtons);
                     break;
-                case 4:
+                case ASSSlider slider:
+                    SliderMoved(p, slider);
                     break;
-                case 5:
-                    break;
-                case 6:
-                    if (setting is not ASSButton button)
-                        throw new InvalidCastException($"Setting {setting} had an SSSType of button, but is not an ASSButton");
-
+                case ASSButton button:
                     ButtonPressed(p, button);
                     break;
-                case 7:
+                case ASSTextInput textInput:
+                    TextInputChanged(p, textInput);
+                    break;
+                default:
+                    Logger.Warn($"Failed to cast setting [{setting}]");
                     break;
             }
+        }
+
+        private static ASSBase[] Copy(ASSBase[] toCopy)
+        {
+            ASSBase[] val = new ASSBase[toCopy.Length];
+
+            for (int i = 0; i < toCopy.Length; i++)
+                val[i] = toCopy[i].Copy();
+
+            return val;
         }
     }
 }

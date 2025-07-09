@@ -26,7 +26,7 @@
         <YamlDotNetVersion>12.0.0</YamlDotNetVersion>
         <StyleCopVersion>1.1.118</StyleCopVersion>
         <SemanticVersioningVersion>1.3.0</SemanticVersioningVersion>
-        <ExiledVersion>9.6.0</ExiledVersion>
+        <ExiledVersion>9.6.3</ExiledVersion>
 
         <Copyright>Copyright © $(Authors) 2020 - $([System.DateTime]::Now.ToString("yyyy"))</Copyright>
 		<RepositoryType>Git</RepositoryType>

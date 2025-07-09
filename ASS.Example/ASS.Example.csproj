@@ -3,13 +3,13 @@
 
     <PropertyGroup>
         <Optimize>true</Optimize>
-        <Configurations>Release</Configurations>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <PlatformTarget>x64</PlatformTarget>
         <DebugType>embedded</DebugType>
         <DebugSymbols>false</DebugSymbols>
         <AssemblyName>ASS.Example</AssemblyName>
+        <Platforms>AnyCPU</Platforms>
     </PropertyGroup>
 
     <Import Project="../plugin.props" />

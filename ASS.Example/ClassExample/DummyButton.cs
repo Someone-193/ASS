@@ -11,9 +11,9 @@ namespace ASS.Example.ClassExample
         {
         }
 
-        protected override void OnPressed(Player sender, ASSBase setting)
+        protected override void OnPressed(Player player, ASSButton button)
         {
-            sender.Kill("Hit the funny class button");
+            player.Kill("Hit the funny class button");
         }
     }
 }

@@ -1,9 +1,8 @@
 namespace ASS.Settings
 {
     using System;
-    using LabApi.Features.Wrappers;
+    using ASS.Settings.Inheritors;
     using Mirror;
-    using UserSettings.ServerSpecific;
 
     public abstract class ASSBase
     {
@@ -13,11 +12,9 @@ namespace ASS.Settings
 
         public string? Hint { get; set; }
 
-        public abstract Type SSSType { get; }
-
         public bool IgnoreNextResponse { get; set; }
 
-        internal abstract ServerSpecificSettingBase.UserResponseMode ResponseMode { get; }
+        internal abstract Type SSSType { get; }
 
         public override string ToString()
         {
@@ -30,5 +27,12 @@ namespace ASS.Settings
             writer.WriteString(Label);
             writer.WriteString(Hint);
         }
+
+        internal virtual void Deserialize(NetworkReaderPooled reader)
+        {
+            reader.Dispose();
+        }
+
+        internal abstract ASSBase Copy();
     }
 }

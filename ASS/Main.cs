@@ -27,7 +27,7 @@
             harmony = new Harmony("ASS");
             harmony.PatchAll();
 
-            NetworkServer.ReplaceHandler<SSSClientResponse>(ASSNetworking.ProcessMessage);
+            NetworkServer.ReplaceHandler<SSSClientResponse>(ASSNetworking.ProcessResponseMessage);
         }
 
         public override void Disable()

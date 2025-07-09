@@ -5,17 +5,14 @@ namespace ASS.Settings.Inheritors
 
     public class ASSHeader : ASSBase
     {
-        public ASSHeader(string label, string? hint = null, bool reducePadding = false)
+        public ASSHeader(string? label, string? hint = null)
         {
             Label = label;
             Hint = hint;
-            ReducePadding = reducePadding;
         }
 
-        public bool ReducePadding { get; set; }
+        internal override Type SSSType { get; } = typeof(SSGroupHeader);
 
-        public override Type SSSType { get; } = typeof(SSGroupHeader);
-
-        internal override ServerSpecificSettingBase.UserResponseMode ResponseMode => ServerSpecificSettingBase.UserResponseMode.None;
+        internal override ASSBase Copy() => new ASSHeader(Label, Hint);
     }
 }

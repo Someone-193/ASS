@@ -24,7 +24,7 @@ namespace ASS.DebugCommands
                 return false;
             }
 
-            ASSNetworking.SendToPlayer(user, [new ASSHeader("Walter White"), new ASSHeader("Jesse Pinkman")]);
+            ASSNetworking.SendToPlayer(user, [new ASSHeader("Header 1"), new ASSHeader("Header 2")]);
 
             response = "Sent Dummy Entries";
             return true;
