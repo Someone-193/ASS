@@ -13,6 +13,8 @@
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
         <OutputPath>../bin/$(Configuration)/</OutputPath>
         <IncludeCopyLocalFilesOutputGroup>false</IncludeCopyLocalFilesOutputGroup>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
     </PropertyGroup>
 
     <PropertyGroup>
@@ -39,7 +41,8 @@
 
     <PropertyGroup Condition="'$(Configuration)' == 'Release'">
         <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
-        <DebugType>Portable</DebugType>
+        <DebugType>none</DebugType>
+		<DebugSymbols>false</DebugSymbols>
     </PropertyGroup>
 
     <!-- Disable warning about disabled generation of xml files on debug build -->

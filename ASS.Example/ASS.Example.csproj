@@ -2,14 +2,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <Optimize>true</Optimize>
-        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <PlatformTarget>x64</PlatformTarget>
-        <DebugType>embedded</DebugType>
-        <DebugSymbols>false</DebugSymbols>
+        <OutputType>Library</OutputType>
         <AssemblyName>ASS.Example</AssemblyName>
-        <Platforms>AnyCPU</Platforms>
     </PropertyGroup>
 
     <Import Project="../plugin.props" />
