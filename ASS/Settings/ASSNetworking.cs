@@ -59,6 +59,7 @@ namespace ASS.Settings
             SendToPlayer(player, GetRegisteredSorted(player).ToArray(), includeBaseGameSettings, registerChange, ignoreResponses, forceLoad);
         }
 
+        // main stuff happening here is we're queuing the actual message if the target doesn't have their SSS tab open, and sending only the necessary settings (A "Loading..." Header and all keybinds) to minimize lag by only sending the queued message once they open up their SSS tab while maintaining seamless functionality
         public static void SendToPlayer(Player player, ASSBase[] settings, bool includeBaseGameSettings = true, bool registerChange = true, bool ignoreResponses = false, bool forceLoad = false)
         {
             if (!NetworkServer.active)
@@ -79,21 +80,35 @@ namespace ASS.Settings
                 ASSUtils.SendASSMessage(player.Connection, new ASSEntriesPack(settings, includeBaseGameSettings ? ServerSpecificSettingsSync.DefinedSettings : [], GetVersion(player)));
             else
             {
-                if (!QueuedUpdates.ContainsKey(player.ReferenceHub))
-                    ASSUtils.SendASSMessage(player.Connection, new ASSEntriesPack([new ASSHeader("Loading...")], null, GetVersion(player, registerChange)));
-                QueuedUpdates[player.ReferenceHub] = () => ASSUtils.SendASSMessage(player.Connection, new ASSEntriesPack(settings, includeBaseGameSettings ? ServerSpecificSettingsSync.DefinedSettings : [], GetVersion(player)));
+                ASSUtils.SendASSMessage(player.Connection, MinimizedPack(settings, includeBaseGameSettings ? ServerSpecificSettingsSync.DefinedSettings : [], GetVersion(player, registerChange)));
+                QueuedUpdates[player.ReferenceHub] = () =>
+                {
+                    if (ignoreResponses)
+                    {
+                        foreach (ASSBase setting in ReceivedSettings[player])
+                        {
+                            if (setting.ResponseMode is ServerSpecificSettingBase.UserResponseMode.AcquisitionAndChange)
+                                setting.IgnoreNextResponse = true;
+                        }
+                    }
+
+                    ASSUtils.SendASSMessage(player.Connection, new ASSEntriesPack(settings, includeBaseGameSettings ? ServerSpecificSettingsSync.DefinedSettings : [], GetVersion(player)));
+                };
             }
         }
 
         public static void SendSSSIncludingASS(Player player, ServerSpecificSettingBase[] settings, int? version, bool forceLoad = false)
         {
+            if (!ReceivedSettings.TryGetValue(player, out ASSBase[] value))
+                ReceivedSettings[player] = value = [];
+
             if (forceLoad || player.TabOpen())
-                ASSUtils.SendASSMessage(player.Connection, new ASSEntriesPack(ReceivedSettings[player], settings, GetVersion(player)));
+                ASSUtils.SendASSMessage(player.Connection, new ASSEntriesPack(value, settings, GetVersion(player)));
             else
             {
                 if (!QueuedUpdates.ContainsKey(player.ReferenceHub))
-                    ASSUtils.SendASSMessage(player.Connection, new ASSEntriesPack([new ASSHeader("Loading...")], null, version ?? GetVersion(player)));
-                QueuedUpdates[player.ReferenceHub] = () => ASSUtils.SendASSMessage(player.Connection, new ASSEntriesPack(ReceivedSettings[player], settings, version ?? GetVersion(player)));
+                    ASSUtils.SendASSMessage(player.Connection, MinimizedPack(value, settings, version ?? GetVersion(player)));
+                QueuedUpdates[player.ReferenceHub] = () => ASSUtils.SendASSMessage(player.Connection, new ASSEntriesPack(value, settings, version ?? GetVersion(player)));
             }
         }
 
@@ -136,6 +151,26 @@ namespace ASS.Settings
 
             Versions[player] = ServerSpecificSettingsSync.Version;
             return ServerSpecificSettingsSync.Version;
+        }
+
+        /// <summary>
+        /// Creates an <see cref="ASSEntriesPack"/> containing only a singular header and all keybinds from the provided settings.
+        /// </summary>
+        /// <param name="assSettings">The ASS settings to search for keybinds.</param>
+        /// <param name="baseGameSettings">The ServerSpecificSetting settings to search for keybinds.</param>
+        /// <param name="version">What version to send this pack with.</param>
+        /// <returns>A minimized <see cref="ASSEntriesPack"/>.</returns>
+        internal static ASSEntriesPack MinimizedPack(ASSBase[] assSettings, ServerSpecificSettingBase[] baseGameSettings, int version)
+        {
+            return new ASSEntriesPack(
+                assSettings
+                    .Prepend(new ASSHeader("Loading...", "A dummy setting while your full list is being sent"))
+                    .Where(setting => setting.SSSType == typeof(SSKeybindSetting))
+                    .ToArray(),
+                baseGameSettings
+                    .Where(setting => setting.GetType() == typeof(SSKeybindSetting))
+                    .ToArray(),
+                version);
         }
 
         internal static void SendByFilter(Func<ReferenceHub, bool> filter)
