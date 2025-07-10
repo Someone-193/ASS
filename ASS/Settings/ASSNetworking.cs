@@ -76,8 +76,7 @@ namespace ASS.Settings
             {
                 foreach (ASSBase setting in ReceivedSettings[player])
                 {
-                    if (setting.ResponseMode is ServerSpecificSettingBase.UserResponseMode.AcquisitionAndChange && !(responseOverride?.Contains(setting) ?? false))
-                        setting.IgnoreNextResponse = true;
+                    setting.IgnoreNextResponse = setting.ResponseMode is ServerSpecificSettingBase.UserResponseMode.AcquisitionAndChange && !(responseOverride?.Contains(setting) ?? false);
                 }
             }
 
@@ -92,8 +91,7 @@ namespace ASS.Settings
                     {
                         foreach (ASSBase setting in ReceivedSettings[player])
                         {
-                            if (setting.ResponseMode is ServerSpecificSettingBase.UserResponseMode.AcquisitionAndChange)
-                                setting.IgnoreNextResponse = true;
+                            setting.IgnoreNextResponse = setting.ResponseMode is ServerSpecificSettingBase.UserResponseMode.AcquisitionAndChange && !(responseOverride?.Contains(setting) ?? false);
                         }
                     }
 
@@ -104,6 +102,9 @@ namespace ASS.Settings
 
         public static void SendSSSIncludingASS(Player player, ServerSpecificSettingBase[] settings, int? version, bool forceLoad = false)
         {
+            if (!NetworkServer.active)
+                return;
+
             if (!ReceivedSettings.TryGetValue(player, out ASSBase[] value))
                 ReceivedSettings[player] = value = [];
 

@@ -1,0 +1,9 @@
+Add private fields to all settings with received values and make remove the private set accessor so the synced values look get-only to devs?
+
+Make abstract classes for each inheritor to enable "setting blueprints" that can be easily instanced with pre-determined behavior?
+
+Add XML documentation (too lazy)
+
+Add OnChanged to mimic Exiled implementation
+
+Add implicit casts from both Exiled settings and base game settings to ASS settings
