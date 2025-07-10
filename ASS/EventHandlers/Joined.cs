@@ -7,7 +7,7 @@ namespace ASS.EventHandlers
     {
         public static void OnJoined(PlayerJoinedEventArgs ev)
         {
-            ASSNetworking.SendToPlayer(ev.Player, registerChange: false, forceLoad: true);
+            ASSNetworking.SendToPlayerFull(ev.Player, registerChange: true, forceLoad: false);
         }
     }
 }

@@ -54,13 +54,18 @@ namespace ASS.Settings
             }
         }
 
-        public static void SendToPlayer(Player player, bool includeBaseGameSettings = true, bool registerChange = true, bool ignoreResponses = false, bool forceLoad = false)
+        public static void SendToPlayer(Player player)
         {
-            SendToPlayer(player, GetRegisteredSorted(player).ToArray(), includeBaseGameSettings, registerChange, ignoreResponses, forceLoad);
+            SendToPlayerFull(player);
+        }
+
+        public static void SendToPlayerFull(Player player, bool includeBaseGameSettings = true, bool registerChange = true, bool forceLoad = false, bool ignoreResponses = false, ASSBase[]? responseOverride = null)
+        {
+            SendCustomToPlayer(player, GetRegisteredSorted(player).ToArray(), includeBaseGameSettings, registerChange, forceLoad, ignoreResponses, responseOverride);
         }
 
         // main stuff happening here is we're queuing the actual message if the target doesn't have their SSS tab open, and sending only the necessary settings (A "Loading..." Header and all keybinds) to minimize lag by only sending the queued message once they open up their SSS tab while maintaining seamless functionality
-        public static void SendToPlayer(Player player, ASSBase[] settings, bool includeBaseGameSettings = true, bool registerChange = true, bool ignoreResponses = false, bool forceLoad = false)
+        public static void SendCustomToPlayer(Player player, ASSBase[] settings, bool includeBaseGameSettings = true, bool registerChange = true, bool forceLoad = false, bool ignoreResponses = false, ASSBase[]? responseOverride = null)
         {
             if (!NetworkServer.active)
                 return;
@@ -71,7 +76,7 @@ namespace ASS.Settings
             {
                 foreach (ASSBase setting in ReceivedSettings[player])
                 {
-                    if (setting.ResponseMode is ServerSpecificSettingBase.UserResponseMode.AcquisitionAndChange)
+                    if (setting.ResponseMode is ServerSpecificSettingBase.UserResponseMode.AcquisitionAndChange && !(responseOverride?.Contains(setting) ?? false))
                         setting.IgnoreNextResponse = true;
                 }
             }
