@@ -1,13 +1,25 @@
 # ASS (Actually Simple SSS)
 
 ASS is a plugin that fundamentally reworks base game ServerSpecificSettings to include better features for:
-    - A queue system to only update a players keybinds while they're not inside the SSS tab leading to less client side lag during gameplay
-    - A ASSGroup class designed to handle grouping together settings with a Priority value to help position settings, a Predicate of a Player to specify what group of players should see the group, and a SubGroups value to let you stack Groups inside each other
-    - A PlayerMenu class designed to handle settings for specific players
-    - Better classes that are easier to read than ServerSpecificSettingBase based objects
-    - Specific events for each type of ASS setting
-    - An IgnoreNextResponse value to help reduce infinite loops in certain cases as well as minimizing accidental keybind triggers
-    - A comprehensive SendToPlayerFull method to specify several values indicating how the settings will be handled (Like what settings to receive responses from, whether or not to increment the version to show the player a red circle in their tab, etc...)
+
+    1. A queue system to only update a players keybinds while they're not inside the SSS tab leading to less client side
+    lag during gameplay
+
+    2. A ASSGroup class designed to handle grouping together settings with a Priority value to help position settings,
+    a Predicate of a Player to specify what group of players should see the group, and a SubGroups value to let you stack
+    Groups inside each other
+
+    3. A PlayerMenu class designed to handle settings for specific players
+
+    4. Better classes that are easier to read than ServerSpecificSettingBase based objects
+
+    5. Specific events for each type of ASS setting
+
+    6. An IgnoreNextResponse value to help reduce infinite loops in certain cases as well as minimizing accidental
+    keybind triggers
+
+    7. A comprehensive SendToPlayerFull method to specify several values indicating how the settings will be handled (Like what settings
+    to receive responses from, whether or not to increment the version to show the player a red circle in their tab, etc...)
 
 Inside this repo there is also an ASS.Example plugin showcasing some of the use cases of ASS, to get a better sense of how to use the plugin, consider reviewing its code.
 
