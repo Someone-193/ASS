@@ -50,9 +50,5 @@ namespace ASS.Settings.Inheritors
         }
 
         internal override ASSBase Copy() => new ASSTwoButtons(Id, Label, LeftOption, RightOption, DefaultRightSelected, Hint);
-
-        protected internal virtual void OnPressed(Player sender, ASSTwoButtons setting)
-        {
-        }
     }
 }

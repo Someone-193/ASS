@@ -19,9 +19,9 @@ namespace ASS.MirrorUtils.Messages
             }
             else
             {
+                writer.WriteByte((byte)((Settings?.Length ?? 0) + (BaseSettings?.Length ?? 0)));
                 if (Settings != null)
                 {
-                    writer.WriteByte((byte)Settings.Length);
                     foreach (ASSBase setting in Settings)
                     {
                         writer.WriteByte(ServerSpecificSettingsSync.GetCodeFromType(setting.SSSType));
@@ -31,7 +31,6 @@ namespace ASS.MirrorUtils.Messages
 
                 if (BaseSettings != null)
                 {
-                    writer.WriteByte((byte)BaseSettings.Length);
                     foreach (ServerSpecificSettingBase setting in BaseSettings)
                     {
                         writer.WriteByte(ServerSpecificSettingsSync.GetCodeFromType(setting.GetType()));

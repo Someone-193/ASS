@@ -80,9 +80,5 @@ namespace ASS.Settings.Inheritors
         }
 
         internal override ASSBase Copy() => new ASSDropdown(Id, Label, Options, DefaultIndex, EntryType, Hint);
-
-        protected internal virtual void OnTriggered(Player sender, ASSDropdown dropdown)
-        {
-        }
     }
 }

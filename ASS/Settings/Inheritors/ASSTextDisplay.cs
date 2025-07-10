@@ -10,7 +10,12 @@ namespace ASS.Settings.Inheritors
 
     public class ASSTextDisplay : ASSBase
     {
-        public ASSTextDisplay(int id, string? content, string? collapsedText, SSTextArea.FoldoutMode foldoutMode, TextAlignmentOptions alignmentOptions)
+        public ASSTextDisplay(
+            int id,
+            string? content = null,
+            string? collapsedText = null,
+            SSTextArea.FoldoutMode foldoutMode = SSTextArea.FoldoutMode.NotCollapsable,
+            TextAlignmentOptions alignmentOptions = TextAlignmentOptions.TopLeft)
         {
             Id = id;
             Label = content;

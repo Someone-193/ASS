@@ -17,17 +17,17 @@ namespace ASS.Settings
 
         public static event Action<Player, ASSBase> SettingTriggered = (_, _) => { };
 
-        public static event Action<Player, ASSKeybind> KeybindPressed = (plyr, keybind) => keybind.OnPressed(plyr, keybind);
+        public static event Action<Player, ASSKeybind> KeybindPressed = (_, _) => { };
 
-        public static event Action<Player, ASSDropdown> DropdownTriggered = (plyr, dropdown) => dropdown.OnTriggered(plyr, dropdown);
+        public static event Action<Player, ASSDropdown> DropdownTriggered = (_, _) => { };
 
-        public static event Action<Player, ASSTwoButtons> TwoButtonsPressed = (plyr, button) => button.OnPressed(plyr, button);
+        public static event Action<Player, ASSTwoButtons> TwoButtonsPressed = (_, _) => { };
 
-        public static event Action<Player, ASSSlider> SliderMoved = (plyr, slider) => slider.OnMoved(plyr, slider);
+        public static event Action<Player, ASSSlider> SliderMoved = (_, _) => { };
 
-        public static event Action<Player, ASSButton> ButtonPressed = (plyr, button) => button.OnPressed(plyr, button);
+        public static event Action<Player, ASSButton> ButtonPressed = (_, _) => { };
 
-        public static event Action<Player, ASSTextInput> TextInputChanged = (plyr, textInput) => textInput.OnChanged(plyr, textInput);
+        public static event Action<Player, ASSTextInput> TextInputChanged = (_, _) => { };
 
         public static Dictionary<Player, ASSBase[]> ReceivedSettings { get; } = new();
 
@@ -37,11 +37,14 @@ namespace ASS.Settings
 
         public static Dictionary<Player, int> Versions { get; } = new();
 
-        public static T? TryGetSetting<T>(Player player, int id)
-            where T : ASSBase, new()
+        #nullable disable
+        public static bool TryGetSetting<T>(Player player, int id, out T value)
+            where T : ASSBase
         {
-            return !ReceivedSettings.TryGetValue(player, out ASSBase[] settings) ? null : settings.FirstOrDefault(setting => setting.Id == id) as T;
+            value = !ReceivedSettings.TryGetValue(player, out ASSBase[] settings) ? null : settings.FirstOrDefault(setting => setting.Id == id) as T;
+            return value is not null;
         }
+        #nullable restore
 
         public static void SendToAll()
         {
@@ -51,25 +54,28 @@ namespace ASS.Settings
             }
         }
 
-        public static void SendToPlayer(Player player, bool includeBaseGameSettings = true, bool registerChange = true)
+        public static void SendToPlayer(Player player, bool includeBaseGameSettings = true, bool registerChange = true, bool ignoreResponses = false, bool forceLoad = false)
         {
-            SendToPlayer(player, GetRegisteredSorted(player).ToArray(), includeBaseGameSettings, registerChange);
+            SendToPlayer(player, GetRegisteredSorted(player).ToArray(), includeBaseGameSettings, registerChange, ignoreResponses, forceLoad);
         }
 
-        public static void SendToPlayer(Player player, ASSBase[] settings, bool includeBaseGameSettings = true, bool registerChange = true)
+        public static void SendToPlayer(Player player, ASSBase[] settings, bool includeBaseGameSettings = true, bool registerChange = true, bool ignoreResponses = false, bool forceLoad = false)
         {
             if (!NetworkServer.active)
                 return;
 
             ReceivedSettings[player] = Copy(settings);
 
-            foreach (ASSBase setting in ReceivedSettings[player])
+            if (ignoreResponses)
             {
-                if (setting.ResponseMode is ServerSpecificSettingBase.UserResponseMode.AcquisitionAndChange)
-                    setting.IgnoreNextResponse = true;
+                foreach (ASSBase setting in ReceivedSettings[player])
+                {
+                    if (setting.ResponseMode is ServerSpecificSettingBase.UserResponseMode.AcquisitionAndChange)
+                        setting.IgnoreNextResponse = true;
+                }
             }
 
-            if (player.TabOpen())
+            if (forceLoad || player.TabOpen())
                 ASSUtils.SendASSMessage(player.Connection, new ASSEntriesPack(settings, includeBaseGameSettings ? ServerSpecificSettingsSync.DefinedSettings : [], GetVersion(player)));
             else
             {
@@ -79,15 +85,15 @@ namespace ASS.Settings
             }
         }
 
-        public static void SendSSSIncludingASS(Player player, ServerSpecificSettingBase[] settings, int version)
+        public static void SendSSSIncludingASS(Player player, ServerSpecificSettingBase[] settings, int? version, bool forceLoad = false)
         {
-            if (player.TabOpen())
+            if (forceLoad || player.TabOpen())
                 ASSUtils.SendASSMessage(player.Connection, new ASSEntriesPack(ReceivedSettings[player], settings, GetVersion(player)));
             else
             {
                 if (!QueuedUpdates.ContainsKey(player.ReferenceHub))
-                    ASSUtils.SendASSMessage(player.Connection, new ASSEntriesPack([new ASSHeader("Loading...")], null, version));
-                QueuedUpdates[player.ReferenceHub] = () => ASSUtils.SendASSMessage(player.Connection, new ASSEntriesPack(ReceivedSettings[player], settings, version));
+                    ASSUtils.SendASSMessage(player.Connection, new ASSEntriesPack([new ASSHeader("Loading...")], null, version ?? GetVersion(player)));
+                QueuedUpdates[player.ReferenceHub] = () => ASSUtils.SendASSMessage(player.Connection, new ASSEntriesPack(ReceivedSettings[player], settings, version ?? GetVersion(player)));
             }
         }
 
@@ -105,7 +111,14 @@ namespace ASS.Settings
 
         public static void UnregisterGroups(IEnumerable<ASSGroup> groups, IEnumerable<Player>? toUpdate = null)
         {
-            // TODO: Make this work lol
+            groups = groups.Where(group => group != null);
+            Groups.RemoveAll(groups.Contains);
+
+            if (toUpdate is null)
+                return;
+
+            foreach (Player player in toUpdate)
+                SendToPlayer(player);
         }
 
         public static int GetVersion(Player player, bool newVersion = false)
@@ -150,7 +163,11 @@ namespace ASS.Settings
             ASSBase? setting = !ReceivedSettings.TryGetValue(p, out ASSBase[] settings) ? null : settings.FirstOrDefault(setting => setting.Id == message.Id);
 
             if (setting is null)
+            {
                 return;
+            }
+
+            Logger.Debug("Received ASS setting response", Main.Instance.Config?.Debug ?? false);
 
             setting.Deserialize(NetworkReaderPool.Get(message.Payload));
 
@@ -159,6 +176,8 @@ namespace ASS.Settings
                 setting.IgnoreNextResponse = false;
                 return;
             }
+
+            Logger.Debug("Running events", Main.Instance.Config?.Debug ?? false);
 
             SettingTriggered(p, setting);
 

@@ -70,9 +70,5 @@ namespace ASS.Settings.Inheritors
         }
 
         internal override ASSBase Copy() => new ASSSlider(Id, Label, DefaultValue, MinValue, MaxValue, IsInteger, ValueFormat, DisplayFormat, Hint);
-
-        protected internal virtual void OnMoved(Player player, ASSSlider slider)
-        {
-        }
     }
 }

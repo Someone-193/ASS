@@ -47,9 +47,5 @@ namespace ASS.Settings.Inheritors
         }
 
         internal override ASSBase Copy() => new ASSKeybind(Id, Label, SuggestedKeyCode, TriggerInGUI, TriggerInSpectator, Hint);
-
-        protected internal virtual void OnPressed(Player player, ASSKeybind keybind)
-        {
-        }
     }
 }

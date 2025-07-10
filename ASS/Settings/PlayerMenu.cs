@@ -26,7 +26,8 @@ namespace ASS.Settings
         /// Updates a <see cref="PlayerMenu"/> by using the menus <see cref="GroupUpdateHandler"/> to acquire new values.
         /// </summary>
         /// <param name="registerChange">If true, makes a red dot appear next to the owners SSS tab indicating a change.</param>
-        public void Update(bool registerChange = true)
+        /// <param name="ignoreNextResponse">If true, ignores the default response from the updated settings. Useful for avoiding inf loops.</param>
+        public void Update(bool registerChange = true, bool ignoreNextResponse = false)
         {
             ASSGroup newGroup = Generator(Owner);
 
@@ -35,7 +36,7 @@ namespace ASS.Settings
             Current.Viewers = newGroup.Viewers;
             Current.SubGroups = newGroup.SubGroups;
 
-            ASSNetworking.SendToPlayer(Owner, true, registerChange);
+            ASSNetworking.SendToPlayer(Owner, true, registerChange, ignoreNextResponse);
         }
 
         public void Destroy()

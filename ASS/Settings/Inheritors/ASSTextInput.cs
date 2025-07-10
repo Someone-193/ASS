@@ -53,9 +53,5 @@ namespace ASS.Settings.Inheritors
         }
 
         internal override ASSBase Copy() => new ASSTextInput(Id, Label, Placeholder, CharacterLimit, ContentType, Hint);
-
-        protected internal virtual void OnChanged(Player player, ASSTextInput textInput)
-        {
-        }
     }
 }

@@ -5,7 +5,7 @@ namespace ASS.Settings.Inheritors
 
     public class ASSHeader : ASSBase
     {
-        public ASSHeader(string? label, string? hint = null)
+        public ASSHeader(string? label = null, string? hint = null)
         {
             Label = label;
             Hint = hint;
