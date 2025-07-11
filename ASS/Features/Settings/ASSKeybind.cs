@@ -11,6 +11,8 @@ namespace ASS.Features.Settings
 
     public class ASSKeybind : ASSBase
     {
+        private bool isPressed;
+
         public ASSKeybind(
             int id,
             string? label = null,
@@ -29,7 +31,7 @@ namespace ASS.Features.Settings
             OnChanged = onChanged;
         }
 
-        public bool IsPressed { get; private set; }
+        public bool IsPressed => isPressed;
 
         public KeyCode SuggestedKeyCode { get; set; }
 
@@ -66,7 +68,7 @@ namespace ASS.Features.Settings
 
         internal override void Deserialize(NetworkReaderPooled reader)
         {
-            IsPressed = reader.ReadBool();
+            isPressed = reader.ReadBool();
 
             base.Deserialize(reader);
         }

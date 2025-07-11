@@ -13,6 +13,10 @@ namespace ASS.Features.Settings
 
     public class ASSDropdown : ASSBase
     {
+        private int indexSelected;
+
+        private string optionSelected;
+
         public ASSDropdown(
             int id,
             string? label = null,
@@ -54,12 +58,12 @@ namespace ASS.Features.Settings
             Hint = hint;
             OnChanged = onChanged;
 
-            OptionSelected = options[defaultIndex];
+            optionSelected = options[defaultIndex];
         }
 
-        public int IndexSelected { get; private set; }
+        public int IndexSelected => indexSelected;
 
-        public string OptionSelected { get; private set; }
+        public string OptionSelected => optionSelected;
 
         public string[] Options { get; set; }
 
@@ -98,8 +102,8 @@ namespace ASS.Features.Settings
 
         internal override void Deserialize(NetworkReaderPooled reader)
         {
-            IndexSelected = Mathf.Clamp(reader.ReadByte(), 0, Options.Length - 1);
-            OptionSelected = Options[IndexSelected];
+            indexSelected = Mathf.Clamp(reader.ReadByte(), 0, Options.Length - 1);
+            optionSelected = Options[IndexSelected];
 
             base.Deserialize(reader);
         }

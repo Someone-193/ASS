@@ -11,6 +11,8 @@ namespace ASS.Features.Settings
 
     public class ASSTextInput : ASSBase
     {
+        private string inputtedText = string.Empty;
+
         public ASSTextInput(
             int id,
             string? label = null,
@@ -29,7 +31,7 @@ namespace ASS.Features.Settings
             OnChanged = onChanged;
         }
 
-        public string InputtedText { get; private set; } = string.Empty;
+        public string InputtedText => inputtedText;
 
         public string Placeholder { get; set; }
 
@@ -62,7 +64,7 @@ namespace ASS.Features.Settings
 
         internal override void Deserialize(NetworkReaderPooled reader)
         {
-            InputtedText = reader.ReadString();
+            inputtedText = reader.ReadString();
 
             base.Deserialize(reader);
         }

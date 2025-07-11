@@ -10,6 +10,10 @@ namespace ASS.Features.Settings
 
     public class ASSSlider : ASSBase
     {
+        private float value;
+
+        private bool dragging;
+
         public ASSSlider(
             int id,
             string? label,
@@ -34,9 +38,9 @@ namespace ASS.Features.Settings
             OnChanged = onChanged;
         }
 
-        public float Value { get; private set; }
+        public float Value => value;
 
-        public bool Dragging { get; private set; }
+        public bool Dragging => dragging;
 
         public float DefaultValue { get; set; }
 
@@ -86,8 +90,8 @@ namespace ASS.Features.Settings
 
         internal override void Deserialize(NetworkReaderPooled reader)
         {
-            Value = reader.ReadFloat();
-            Dragging = reader.ReadBool();
+            value = reader.ReadFloat();
+            dragging = reader.ReadBool();
 
             base.Deserialize(reader);
         }

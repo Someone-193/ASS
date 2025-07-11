@@ -10,6 +10,8 @@ namespace ASS.Features.Settings
 
     public class ASSTwoButtons : ASSBase
     {
+        private bool rightSelected;
+
         public ASSTwoButtons(
             int id,
             string? label = null,
@@ -27,12 +29,12 @@ namespace ASS.Features.Settings
             Hint = hint;
             OnChanged = onChanged;
 
-            RightSelected = defaultRightSelected;
+            rightSelected = defaultRightSelected;
         }
 
-        public bool LeftSelected => !RightSelected;
+        public bool LeftSelected => !rightSelected;
 
-        public bool RightSelected { get; private set; }
+        public bool RightSelected => rightSelected;
 
         public string? LeftOption { get; set; }
 
@@ -69,7 +71,7 @@ namespace ASS.Features.Settings
 
         internal override void Deserialize(NetworkReaderPooled reader)
         {
-            RightSelected = reader.ReadBool();
+            rightSelected = reader.ReadBool();
 
             base.Deserialize(reader);
         }
