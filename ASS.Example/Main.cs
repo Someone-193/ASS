@@ -19,7 +19,7 @@
 
         public override string Author => "@Someone";
 
-        public override Version Version { get; } = new(1, 0, 0);
+        public override Version Version { get; } = new(2, 0, 0);
 
         #if EXILED
         public override string Prefix => "ASS_Example";
