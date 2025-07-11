@@ -1,6 +1,10 @@
 namespace ASS.Features.Settings
 {
     using System;
+    #if EXILED
+    using Exiled.API.Features.Core.UserSettings;
+    #endif
+    using LabApi.Features.Wrappers;
     using Mirror;
     using UserSettings.ServerSpecific;
 
@@ -15,7 +19,8 @@ namespace ASS.Features.Settings
             bool isInteger = false,
             string valueFormat = "0.##",
             string displayFormat = "{0}",
-            string? hint = null)
+            string? hint = null,
+            Action<Player, ASSBase>? onChanged = null)
         {
             Id = id;
             Label = label;
@@ -26,6 +31,7 @@ namespace ASS.Features.Settings
             ValueFormat = valueFormat;
             DisplayFormat = displayFormat;
             Hint = hint;
+            OnChanged = onChanged;
         }
 
         public float Value { get; private set; }
@@ -47,6 +53,24 @@ namespace ASS.Features.Settings
         public override ServerSpecificSettingBase.UserResponseMode ResponseMode => ServerSpecificSettingBase.UserResponseMode.AcquisitionAndChange;
 
         internal override Type SSSType { get; } = typeof(SSSliderSetting);
+
+        public static implicit operator ASSSlider(SSSliderSetting slider) => new(slider.SettingId, slider.Label, slider.DefaultValue, slider.MinValue, slider.MaxValue, slider.Integer, slider.ValueToStringFormat, slider.FinalDisplayFormat, slider.HintDescription);
+
+        public static implicit operator SSSliderSetting(ASSSlider slider) => new(slider.Id, slider.Label, slider.DefaultValue, slider.MinValue, slider.MaxValue, slider.IsInteger, slider.ValueFormat, slider.DisplayFormat, slider.Hint);
+
+        #if EXILED
+        public static implicit operator ASSSlider(SliderSetting slider) => new(slider.Id, slider.Label, slider.DefaultValue, slider.MinimumValue, slider.MaximumValue, slider.IsInteger, slider.StringFormat, slider.DisplayFormat, slider.HintDescription, slider.OnChanged.Convert())
+        {
+            ExHeader = slider.Header,
+            ExAction = slider.OnChanged,
+        };
+
+        public static implicit operator SliderSetting(ASSSlider slider) => new(slider.Id, slider.Label, slider.DefaultValue, slider.MinValue, slider.MaxValue, slider.IsInteger, slider.ValueFormat, slider.DisplayFormat, slider.Hint)
+        {
+            Header = slider.ExHeader,
+            OnChanged = slider.ExAction,
+        };
+        #endif
 
         internal override void Serialize(NetworkWriter writer)
         {

@@ -7,6 +7,9 @@ namespace ASS.Features
     using ASS.Features.MirrorUtils;
     using ASS.Features.MirrorUtils.Messages;
     using ASS.Features.Settings;
+    #if EXILED
+    using Exiled.API.Features.Core.UserSettings;
+    #endif
     using LabApi.Features.Console;
     using LabApi.Features.Wrappers;
     using Mirror;
@@ -16,7 +19,7 @@ namespace ASS.Features
     {
         private static readonly Dictionary<ReferenceHub, Action> QueuedUpdates = new();
 
-        public static event Action<Player, ASSBase> SettingTriggered = (_, _) => { };
+        public static event Action<Player, ASSBase> SettingTriggered = (plyr, setting) => setting.OnChanged?.Invoke(plyr, setting);
 
         public static event Action<Player, ASSKeybind> KeybindPressed = (_, _) => { };
 
@@ -159,6 +162,16 @@ namespace ASS.Features
             Versions[player] = ServerSpecificSettingsSync.Version;
             return ServerSpecificSettingsSync.Version;
         }
+
+        #if EXILED
+        internal static Action<Player, ASSBase> Convert(this Action<Exiled.API.Features.Player, SettingBase> action)
+        {
+            return (player, setting) =>
+            {
+                action(player, setting);
+            };
+        }
+        #endif
 
         /// <summary>
         /// Creates an <see cref="ASSEntriesPack"/> containing only a singular header and all keybinds from the provided settings.

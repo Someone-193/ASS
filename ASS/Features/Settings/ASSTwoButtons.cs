@@ -1,12 +1,23 @@
 namespace ASS.Features.Settings
 {
     using System;
+    #if EXILED
+    using Exiled.API.Features.Core.UserSettings;
+    #endif
+    using LabApi.Features.Wrappers;
     using Mirror;
     using UserSettings.ServerSpecific;
 
     public class ASSTwoButtons : ASSBase
     {
-        public ASSTwoButtons(int id, string? label = null, string? leftOption = null, string? rightOption = null, bool defaultRightSelected = false, string? hint = null)
+        public ASSTwoButtons(
+            int id,
+            string? label = null,
+            string? leftOption = null,
+            string? rightOption = null,
+            bool defaultRightSelected = false,
+            string? hint = null,
+            Action<Player, ASSBase>? onChanged = null)
         {
             Id = id;
             Label = label;
@@ -14,6 +25,7 @@ namespace ASS.Features.Settings
             RightOption = rightOption;
             DefaultRightSelected = defaultRightSelected;
             Hint = hint;
+            OnChanged = onChanged;
 
             RightSelected = defaultRightSelected;
         }
@@ -31,6 +43,20 @@ namespace ASS.Features.Settings
         public override ServerSpecificSettingBase.UserResponseMode ResponseMode => ServerSpecificSettingBase.UserResponseMode.AcquisitionAndChange;
 
         internal override Type SSSType { get; } = typeof(SSTwoButtonsSetting);
+
+        #if EXILED
+        public static implicit operator ASSTwoButtons(SSTwoButtonsSetting twoButtons) => new(twoButtons.SettingId, twoButtons.Label, twoButtons.OptionA, twoButtons.OptionB, twoButtons.DefaultIsB, twoButtons.HintDescription);
+
+        public static implicit operator SSTwoButtonsSetting(ASSTwoButtons twoButtons) => new(twoButtons.Id, twoButtons.Label, twoButtons.LeftOption, twoButtons.RightOption, twoButtons.DefaultRightSelected, twoButtons.Hint);
+
+        public static implicit operator ASSTwoButtons(TwoButtonsSetting twoButtons) => new(twoButtons.Id, twoButtons.Label, twoButtons.FirstOption, twoButtons.SecondOption, twoButtons.IsSecondDefault, twoButtons.HintDescription, twoButtons.OnChanged.Convert())
+        {
+            ExHeader = twoButtons.Header,
+            ExAction = twoButtons.OnChanged,
+        };
+
+        public static implicit operator TwoButtonsSetting(ASSTwoButtons twoButtons) => new(twoButtons.Id, twoButtons.Label, twoButtons.LeftOption, twoButtons.RightOption, twoButtons.DefaultRightSelected, twoButtons.Hint, twoButtons.ExHeader, twoButtons.ExAction);
+        #endif
 
         internal override void Serialize(NetworkWriter writer)
         {

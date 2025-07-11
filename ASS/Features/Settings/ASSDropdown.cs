@@ -1,6 +1,11 @@
 namespace ASS.Features.Settings
 {
     using System;
+    using System.Linq;
+    #if EXILED
+    using Exiled.API.Features.Core.UserSettings;
+    #endif
+    using LabApi.Features.Wrappers;
     using Mirror;
     using UnityEngine;
     using UserSettings.ServerSpecific;
@@ -8,7 +13,14 @@ namespace ASS.Features.Settings
 
     public class ASSDropdown : ASSBase
     {
-        public ASSDropdown(int id, string? label = null, string[]? options = null, byte defaultIndex = 0, SSDropdownSetting.DropdownEntryType entryType = SSDropdownSetting.DropdownEntryType.Regular, string? hint = null)
+        public ASSDropdown(
+            int id,
+            string? label = null,
+            string[]? options = null,
+            byte defaultIndex = 0,
+            SSDropdownSetting.DropdownEntryType entryType = SSDropdownSetting.DropdownEntryType.Regular,
+            string? hint = null,
+            Action<Player, ASSBase>? onChanged = null)
         {
             if (options is null || options.Length == 0)
             {
@@ -40,6 +52,7 @@ namespace ASS.Features.Settings
             DefaultIndex = defaultIndex;
             EntryType = entryType;
             Hint = hint;
+            OnChanged = onChanged;
 
             OptionSelected = options[defaultIndex];
         }
@@ -57,6 +70,20 @@ namespace ASS.Features.Settings
         public override ServerSpecificSettingBase.UserResponseMode ResponseMode => ServerSpecificSettingBase.UserResponseMode.AcquisitionAndChange;
 
         internal override Type SSSType { get; } = typeof(SSDropdownSetting);
+
+        public static implicit operator ASSDropdown(SSDropdownSetting dropdown) => new(dropdown.SettingId, dropdown.Label, dropdown.Options, (byte)dropdown.DefaultOptionIndex, dropdown.EntryType, dropdown.HintDescription);
+
+        public static implicit operator SSDropdownSetting(ASSDropdown dropdown) => new(dropdown.Id, dropdown.Label, dropdown.Options, dropdown.DefaultIndex, dropdown.EntryType, dropdown.Hint);
+
+        #if EXILED
+        public static implicit operator ASSDropdown(DropdownSetting dropdown) => new(dropdown.Id, dropdown.Label, dropdown.Options.ToArray(), (byte)dropdown.DefaultOptionIndex, dropdown.DropdownType, dropdown.HintDescription, dropdown.OnChanged.Convert())
+        {
+            ExHeader = dropdown.Header,
+            ExAction = dropdown.OnChanged,
+        };
+
+        public static implicit operator DropdownSetting(ASSDropdown dropdown) => new(dropdown.Id, dropdown.Label, dropdown.Options, dropdown.DefaultIndex, dropdown.EntryType, dropdown.Hint, dropdown.ExHeader, dropdown.ExAction);
+        #endif
 
         internal override void Serialize(NetworkWriter writer)
         {

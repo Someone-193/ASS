@@ -3,6 +3,9 @@ namespace ASS.Features.Settings
     using System;
     using ASS.Features.MirrorUtils;
     using ASS.Features.MirrorUtils.Messages;
+    #if EXILED
+    using Exiled.API.Features.Core.UserSettings;
+    #endif
     using LabApi.Features.Wrappers;
     using Mirror;
     using TMPro;
@@ -15,13 +18,15 @@ namespace ASS.Features.Settings
             string? content = null,
             string? collapsedText = null,
             SSTextArea.FoldoutMode foldoutMode = SSTextArea.FoldoutMode.NotCollapsable,
-            TextAlignmentOptions alignmentOptions = TextAlignmentOptions.TopLeft)
+            TextAlignmentOptions alignmentOptions = TextAlignmentOptions.TopLeft,
+            Action<Player, ASSBase>? onChanged = null)
         {
             Id = id;
             Label = content;
             Hint = collapsedText;
             FoldoutMode = foldoutMode;
             AlignmentOptions = alignmentOptions;
+            OnChanged = onChanged;
         }
 
         public SSTextArea.FoldoutMode FoldoutMode { get; set; }
@@ -31,6 +36,20 @@ namespace ASS.Features.Settings
         public override ServerSpecificSettingBase.UserResponseMode ResponseMode => ServerSpecificSettingBase.UserResponseMode.None;
 
         internal override Type SSSType { get; } = typeof(SSTextArea);
+
+        public static implicit operator ASSTextDisplay(SSTextArea textArea) => new(textArea.SettingId, textArea.Label, textArea.HintDescription, textArea.Foldout, textArea.AlignmentOptions);
+
+        public static implicit operator SSTextArea(ASSTextDisplay textArea) => new(textArea.Id, textArea.Label, textArea.FoldoutMode, textArea.Hint, textArea.AlignmentOptions);
+
+        #if EXILED
+        public static implicit operator ASSTextDisplay(TextInputSetting textArea) => new(textArea.Id, textArea.Label, textArea.HintDescription, textArea.FoldoutMode, textArea.Alignment, textArea.OnChanged.Convert())
+        {
+            ExHeader = textArea.Header,
+            ExAction = textArea.OnChanged,
+        };
+
+        public static implicit operator TextInputSetting(ASSTextDisplay textArea) => new(textArea.Id, textArea.Label, textArea.FoldoutMode, textArea.AlignmentOptions, textArea.Hint, textArea.ExHeader, textArea.ExAction);
+        #endif
 
         public void SendTextUpdate(string newText, bool applyOverride = true, Predicate<Player>? filter = null)
         {

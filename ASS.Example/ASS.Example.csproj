@@ -4,6 +4,7 @@
     <PropertyGroup>
         <OutputType>Library</OutputType>
         <AssemblyName>ASS.Example</AssemblyName>
+        <Configurations>LabAPI;Exiled</Configurations>
     </PropertyGroup>
 
     <Import Project="../plugin.props" />
