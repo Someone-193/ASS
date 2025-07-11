@@ -44,11 +44,11 @@ namespace ASS.Features.Settings
 
         internal override Type SSSType { get; } = typeof(SSTwoButtonsSetting);
 
-        #if EXILED
         public static implicit operator ASSTwoButtons(SSTwoButtonsSetting twoButtons) => new(twoButtons.SettingId, twoButtons.Label, twoButtons.OptionA, twoButtons.OptionB, twoButtons.DefaultIsB, twoButtons.HintDescription);
 
         public static implicit operator SSTwoButtonsSetting(ASSTwoButtons twoButtons) => new(twoButtons.Id, twoButtons.Label, twoButtons.LeftOption, twoButtons.RightOption, twoButtons.DefaultRightSelected, twoButtons.Hint);
 
+        #if EXILED
         public static implicit operator ASSTwoButtons(TwoButtonsSetting twoButtons) => new(twoButtons.Id, twoButtons.Label, twoButtons.FirstOption, twoButtons.SecondOption, twoButtons.IsSecondDefault, twoButtons.HintDescription, twoButtons.OnChanged.Convert())
         {
             ExHeader = twoButtons.Header,

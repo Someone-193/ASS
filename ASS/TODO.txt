@@ -4,6 +4,6 @@ Make abstract classes for each inheritor to enable "setting blueprints" that can
 
 Add XML documentation (too lazy)
 
-Add OnChanged to mimic Exiled implementation
+Add OnChanged to mimic Exiled implementation [Done]
 
-Add implicit casts from both Exiled settings and base game settings to ASS settings
+Add implicit casts from both Exiled settings and base game settings to ASS settings [Done]

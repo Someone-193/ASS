@@ -39,7 +39,7 @@
         <DefineConstants Condition="$(PublicBeta) == 'true'">$(DefineConstants);PUBLIC_BETA</DefineConstants>
     </PropertyGroup>
 
-    <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <PropertyGroup>
         <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
         <DebugType>none</DebugType>
 		<DebugSymbols>false</DebugSymbols>
