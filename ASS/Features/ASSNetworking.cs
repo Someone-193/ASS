@@ -215,7 +215,7 @@ namespace ASS.Features
 
             Player p = Player.Get(hub);
 
-            ASSBase? setting = !ReceivedSettings.TryGetValue(p, out ASSBase[] settings) ? null : settings.FirstOrDefault(setting => setting.Id == message.Id);
+            ASSBase? setting = ReceivedSettings.TryGetValue(p, out ASSBase[] settings) ? settings.FirstOrDefault(setting => setting.Id == message.Id) : null;
 
             if (setting is null)
             {

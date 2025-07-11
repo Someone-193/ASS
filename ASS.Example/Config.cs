@@ -9,7 +9,7 @@ namespace ASS.Example
     #endif
     {
         #if EXILED
-        public bool IsEnabled { get; set; }
+        public bool IsEnabled { get; set; } = true;
         #endif
 
         public bool Debug { get; set; }
