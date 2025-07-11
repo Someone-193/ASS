@@ -1,8 +1,8 @@
-namespace ASS.MirrorUtils
+namespace ASS.Features.MirrorUtils
 {
     using System;
     using System.Linq;
-    using ASS.MirrorUtils.Messages;
+    using ASS.Features.MirrorUtils.Messages;
     using LabApi.Features.Console;
     using LabApi.Features.Wrappers;
     using Mirror;

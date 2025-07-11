@@ -1,4 +1,4 @@
-namespace ASS.Settings.Inheritors
+namespace ASS.Features.Settings
 {
     using System;
     using UserSettings.ServerSpecific;

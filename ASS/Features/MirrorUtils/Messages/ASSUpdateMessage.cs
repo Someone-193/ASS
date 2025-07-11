@@ -1,7 +1,7 @@
-namespace ASS.MirrorUtils.Messages
+namespace ASS.Features.MirrorUtils.Messages
 {
     using System;
-    using ASS.Settings;
+    using ASS.Features.Settings;
     using Mirror;
     using UserSettings.ServerSpecific;
 

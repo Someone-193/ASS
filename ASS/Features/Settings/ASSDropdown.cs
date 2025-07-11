@@ -1,11 +1,9 @@
-namespace ASS.Settings.Inheritors
+namespace ASS.Features.Settings
 {
     using System;
-    using LabApi.Features.Wrappers;
     using Mirror;
     using UnityEngine;
     using UserSettings.ServerSpecific;
-
     using Logger = LabApi.Features.Console.Logger;
 
     public class ASSDropdown : ASSBase

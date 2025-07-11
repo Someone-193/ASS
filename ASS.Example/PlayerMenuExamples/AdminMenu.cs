@@ -1,8 +1,8 @@
 namespace ASS.Example.PlayerMenuExamples
 {
     using System.Collections.Generic;
-    using ASS.Settings;
-    using ASS.Settings.Inheritors;
+    using ASS.Features.Collections;
+    using ASS.Features.Settings;
     using LabApi.Events.Arguments.PlayerEvents;
     using LabApi.Features.Wrappers;
 

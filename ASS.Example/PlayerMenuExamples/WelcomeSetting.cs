@@ -1,8 +1,8 @@
 namespace ASS.Example.PlayerMenuExamples
 {
     using System.Collections.Generic;
-    using ASS.Settings;
-    using ASS.Settings.Inheritors;
+    using ASS.Features.Collections;
+    using ASS.Features.Settings;
     using LabApi.Events.Arguments.PlayerEvents;
     using LabApi.Features.Wrappers;
 
@@ -12,11 +12,13 @@ namespace ASS.Example.PlayerMenuExamples
 
         public static void OnJoined(PlayerJoinedEventArgs ev)
         {
+            AbstractExample.Instance.Add(ev.Player);
             Menus[ev.Player] = new PlayerMenu(Generator, ev.Player);
         }
 
         public static void OnLeft(PlayerLeftEventArgs ev)
         {
+            AbstractExample.Instance.Remove(ev.Player);
             if (Menus.TryGetValue(ev.Player, out PlayerMenu menu))
                 menu.Destroy();
         }

@@ -1,7 +1,6 @@
-namespace ASS.Settings.Inheritors
+namespace ASS.Features.Settings
 {
     using System;
-    using LabApi.Features.Wrappers;
     using Mirror;
     using UnityEngine;
     using UserSettings.ServerSpecific;

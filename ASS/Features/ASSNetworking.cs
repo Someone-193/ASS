@@ -1,11 +1,12 @@
-namespace ASS.Settings
+namespace ASS.Features
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using ASS.MirrorUtils;
-    using ASS.MirrorUtils.Messages;
-    using ASS.Settings.Inheritors;
+    using ASS.Features.Collections;
+    using ASS.Features.MirrorUtils;
+    using ASS.Features.MirrorUtils.Messages;
+    using ASS.Features.Settings;
     using LabApi.Features.Console;
     using LabApi.Features.Wrappers;
     using Mirror;

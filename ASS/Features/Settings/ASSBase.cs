@@ -1,7 +1,6 @@
-namespace ASS.Settings
+namespace ASS.Features.Settings
 {
     using System;
-    using ASS.Settings.Inheritors;
     using Mirror;
     using UserSettings.ServerSpecific;
 

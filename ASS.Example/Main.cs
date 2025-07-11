@@ -4,7 +4,7 @@
     using ASS.Example.DefaultExample;
     using ASS.Example.EventExample;
     using ASS.Example.PlayerMenuExamples;
-    using ASS.Settings;
+    using ASS.Features;
     using LabApi.Events.Handlers;
     using LabApi.Features;
     using LabApi.Loader.Features.Plugins;

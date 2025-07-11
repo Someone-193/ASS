@@ -1,7 +1,6 @@
 namespace ASS.Example.DefaultExample
 {
-    using ASS.Settings;
-    using ASS.Settings.Inheritors;
+    using ASS.Features.Settings;
     using LabApi.Features.Wrappers;
 
     public class SettingTriggered

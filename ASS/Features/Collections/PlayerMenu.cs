@@ -1,4 +1,4 @@
-namespace ASS.Settings
+namespace ASS.Features.Collections
 {
     using LabApi.Features.Wrappers;
 

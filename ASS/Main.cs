@@ -2,7 +2,7 @@
 {
     using System;
     using ASS.EventHandlers;
-    using ASS.Settings;
+    using ASS.Features;
     using HarmonyLib;
     using LabApi.Events.Handlers;
     using LabApi.Features;

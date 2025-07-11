@@ -1,8 +1,8 @@
-namespace ASS.Settings.Inheritors
+namespace ASS.Features.Settings
 {
     using System;
-    using ASS.MirrorUtils;
-    using ASS.MirrorUtils.Messages;
+    using ASS.Features.MirrorUtils;
+    using ASS.Features.MirrorUtils.Messages;
     using LabApi.Features.Wrappers;
     using Mirror;
     using TMPro;

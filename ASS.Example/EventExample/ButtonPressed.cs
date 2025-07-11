@@ -1,6 +1,6 @@
 namespace ASS.Example.EventExample
 {
-    using ASS.Settings.Inheritors;
+    using ASS.Features.Settings;
     using LabApi.Features.Wrappers;
 
     public class ButtonPressed

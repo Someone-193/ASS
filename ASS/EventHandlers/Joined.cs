@@ -1,6 +1,6 @@
 namespace ASS.EventHandlers
 {
-    using ASS.Settings;
+    using ASS.Features;
     using LabApi.Events.Arguments.PlayerEvents;
     using MEC;
 
