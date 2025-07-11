@@ -3,15 +3,16 @@
 
     <PropertyGroup>
         <OutputType>Library</OutputType>
+        <AssemblyName>ASS.Example</AssemblyName>
         <Configurations>LabAPI;Exiled</Configurations>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'LabAPI|AnyCPU' ">
-        <AssemblyName>ASS.Example-LabAPI</AssemblyName>
+        <TargetName>ASS.Example-LabAPI</TargetName>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Exiled|AnyCPU' ">
-        <AssemblyName>ASS.Example-Exiled</AssemblyName>
+        <TargetName>ASS.Example-Exiled</TargetName>
     </PropertyGroup>
 
     <Import Project="../plugin.props" />
