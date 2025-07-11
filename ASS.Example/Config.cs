@@ -1,4 +1,4 @@
-namespace ASS
+namespace ASS.Example
 {
     #if EXILED
     using Exiled.API.Interfaces;
