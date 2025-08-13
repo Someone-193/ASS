@@ -25,7 +25,12 @@ namespace ASS.Example.PlayerMenuExamples
 
         private static ASSGroup Generator(Player owner)
         {
-            return new ASSGroup([new ASSHeader($"Welcome {owner.DisplayName}!"), new ASSButton(-10, "Test 1"), new ASSButton(-11, "Test 2")], 5);
+            return new ASSGroup(
+            [
+                new ASSHeader(-12, $"Welcome {owner.DisplayName}!"),
+                new ASSButton(-10, "Test 1"),
+                new ASSButton(-11, "Test 2")
+            ], 5);
         }
     }
 }

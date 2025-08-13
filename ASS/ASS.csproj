@@ -21,7 +21,7 @@
         <PackageReference Include="Northwood.LabAPI" Version="1.0.2" />
         <PackageReference Include="Lib.Harmony" Version="$(HarmonyVersion)" />
         <PackageReference Include="StyleCop.Analyzers" Version="$(StyleCopVersion)" />
-        <PackageReference Include="ExMod.Exiled" Version="$(ExiledVersion)" />
+        <PackageReference Include="ExMod.Exiled" Version="9.7.0-rc.2" />
     </ItemGroup>
 
     <ItemGroup>

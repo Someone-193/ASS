@@ -3,14 +3,12 @@
     using System;
     using ASS.EventHandlers;
     using ASS.Features;
+
     #if EXILED
     using Exiled.API.Enums;
     #endif
     using HarmonyLib;
     using LabApi.Events.Handlers;
-    using LabApi.Features;
-    using LabApi.Loader.Features.Plugins;
-    using LabApi.Loader.Features.Plugins.Enums;
     using Mirror;
     using UserSettings.ServerSpecific;
 
@@ -23,6 +21,8 @@
         private static readonly Action HandlerAction = () => NetworkServer.ReplaceHandler<SSSClientResponse>(ASSNetworking.ProcessResponseMessage);
 
         private static Harmony harmony = null!;
+
+        public static bool Debug => Instance.Config?.Debug ?? false;
 
         public static Main Instance { get; private set; } = null!;
 
@@ -57,6 +57,10 @@
             CustomNetworkManager.OnClientReady += HandlerAction;
 
             PlayerEvents.Joined += Joined.OnJoined;
+            PlayerEvents.Left += Left.OnLeft;
+
+            ServerSpecificSettingsSync.SendOnJoinFilter = _ => false;
+            ServerSpecificSettingsSync.DefinedSettings ??= [];
         }
 
         public override void OnDisabled()
@@ -68,6 +72,7 @@
             CustomNetworkManager.OnClientReady -= HandlerAction;
 
             PlayerEvents.Joined -= Joined.OnJoined;
+            PlayerEvents.Left -= Left.OnLeft;
         }
         #elif LABAPI
         public override void Enable()
@@ -82,6 +87,8 @@
             CustomNetworkManager.OnClientReady += HandlerAction;
 
             PlayerEvents.Joined += Joined.OnJoined;
+
+            ServerSpecificSettingsSync.DefinedSettings ??= [];
         }
 
         public override void Disable()

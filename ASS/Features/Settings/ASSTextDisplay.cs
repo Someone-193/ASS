@@ -18,15 +18,13 @@ namespace ASS.Features.Settings
             string? content = null,
             string? collapsedText = null,
             SSTextArea.FoldoutMode foldoutMode = SSTextArea.FoldoutMode.NotCollapsable,
-            TextAlignmentOptions alignmentOptions = TextAlignmentOptions.TopLeft,
-            Action<Player, ASSBase>? onChanged = null)
+            TextAlignmentOptions alignmentOptions = TextAlignmentOptions.TopLeft)
         {
             Id = id;
             Label = content;
             Hint = collapsedText;
             FoldoutMode = foldoutMode;
             AlignmentOptions = alignmentOptions;
-            OnChanged = onChanged;
         }
 
         public SSTextArea.FoldoutMode FoldoutMode { get; set; }
@@ -42,10 +40,9 @@ namespace ASS.Features.Settings
         public static implicit operator SSTextArea(ASSTextDisplay textArea) => new(textArea.Id, textArea.Label, textArea.FoldoutMode, textArea.Hint, textArea.AlignmentOptions);
 
         #if EXILED
-        public static implicit operator ASSTextDisplay(TextInputSetting textArea) => new(textArea.Id, textArea.Label, textArea.HintDescription, textArea.FoldoutMode, textArea.Alignment, textArea.OnChanged.Convert())
+        public static implicit operator ASSTextDisplay(TextInputSetting textArea) => new(textArea.Id, textArea.Label, textArea.HintDescription, textArea.FoldoutMode, textArea.Alignment)
         {
             ExHeader = textArea.Header,
-            ExAction = textArea.OnChanged,
         };
 
         public static implicit operator TextInputSetting(ASSTextDisplay textArea) => new(textArea.Id, textArea.Label, textArea.FoldoutMode, textArea.AlignmentOptions, textArea.Hint, textArea.ExHeader, textArea.ExAction);

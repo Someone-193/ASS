@@ -17,14 +17,13 @@ namespace ASS.Example.PlayerMenuExamples
             if (ev.Group is null)
                 return;
 
-            if (ServerStatic.PermissionsHandler.IsRaPermitted(ev.Group.Permissions))
+            if (!Menus.TryGetValue(ev.Player, out PlayerMenu menu) && ServerStatic.PermissionsHandler.IsRaPermitted(ev.Group.Permissions))
             {
                 Menus[ev.Player] = new PlayerMenu(Generator, ev.Player);
             }
             else
             {
-                if (Menus.TryGetValue(ev.Player, out PlayerMenu menu))
-                    menu.Destroy();
+                menu?.Destroy();
             }
         }
 
@@ -44,7 +43,12 @@ namespace ASS.Example.PlayerMenuExamples
 
         private static ASSGroup Generator(Player owner)
         {
-            return new ASSGroup([new ASSButton(-13, "Toggle Godmode", "Toggle", 1F, "Toggles godmode")], 1, Valid);
+            return new ASSGroup(
+                [
+                    new ASSButton(-13, "Toggle Godmode", "Toggle", 1F, "Toggles godmode")
+                ],
+                1,
+                Valid);
         }
 
         private static bool Valid(Player player)

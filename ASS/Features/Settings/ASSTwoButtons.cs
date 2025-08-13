@@ -19,7 +19,8 @@ namespace ASS.Features.Settings
             string? rightOption = null,
             bool defaultRightSelected = false,
             string? hint = null,
-            Action<Player, ASSBase>? onChanged = null)
+            Action<Player, ASSBase>? onChanged = null,
+            byte collectionId = byte.MaxValue)
         {
             Id = id;
             Label = label;
@@ -46,18 +47,18 @@ namespace ASS.Features.Settings
 
         internal override Type SSSType { get; } = typeof(SSTwoButtonsSetting);
 
-        public static implicit operator ASSTwoButtons(SSTwoButtonsSetting twoButtons) => new(twoButtons.SettingId, twoButtons.Label, twoButtons.OptionA, twoButtons.OptionB, twoButtons.DefaultIsB, twoButtons.HintDescription);
+        public static implicit operator ASSTwoButtons(SSTwoButtonsSetting twoButtons) => new(twoButtons.SettingId, twoButtons.Label, twoButtons.OptionA, twoButtons.OptionB, twoButtons.DefaultIsB, twoButtons.HintDescription, null, twoButtons.CollectionId);
 
-        public static implicit operator SSTwoButtonsSetting(ASSTwoButtons twoButtons) => new(twoButtons.Id, twoButtons.Label, twoButtons.LeftOption, twoButtons.RightOption, twoButtons.DefaultRightSelected, twoButtons.Hint);
+        public static implicit operator SSTwoButtonsSetting(ASSTwoButtons twoButtons) => new(twoButtons.Id, twoButtons.Label, twoButtons.LeftOption, twoButtons.RightOption, twoButtons.DefaultRightSelected, twoButtons.Hint, twoButtons.CollectionId);
 
         #if EXILED
-        public static implicit operator ASSTwoButtons(TwoButtonsSetting twoButtons) => new(twoButtons.Id, twoButtons.Label, twoButtons.FirstOption, twoButtons.SecondOption, twoButtons.IsSecondDefault, twoButtons.HintDescription, twoButtons.OnChanged.Convert())
+        public static implicit operator ASSTwoButtons(TwoButtonsSetting twoButtons) => new(twoButtons.Id, twoButtons.Label, twoButtons.FirstOption, twoButtons.SecondOption, twoButtons.IsSecondDefault, twoButtons.HintDescription, twoButtons.OnChanged.Convert(), twoButtons.CollectionId)
         {
             ExHeader = twoButtons.Header,
             ExAction = twoButtons.OnChanged,
         };
 
-        public static implicit operator TwoButtonsSetting(ASSTwoButtons twoButtons) => new(twoButtons.Id, twoButtons.Label, twoButtons.LeftOption, twoButtons.RightOption, twoButtons.DefaultRightSelected, twoButtons.Hint, twoButtons.ExHeader, twoButtons.ExAction);
+        public static implicit operator TwoButtonsSetting(ASSTwoButtons twoButtons) => new(twoButtons.Id, twoButtons.Label, twoButtons.LeftOption, twoButtons.RightOption, twoButtons.DefaultRightSelected, twoButtons.Hint, twoButtons.CollectionId, false, twoButtons.ExHeader, twoButtons.ExAction);
         #endif
 
         internal override void Serialize(NetworkWriter writer)
@@ -76,6 +77,6 @@ namespace ASS.Features.Settings
             base.Deserialize(reader);
         }
 
-        internal override ASSBase Copy() => new ASSTwoButtons(Id, Label, LeftOption, RightOption, DefaultRightSelected, Hint);
+        internal override ASSBase Copy() => new ASSTwoButtons(Id, Label, LeftOption, RightOption, DefaultRightSelected, Hint, OnChanged, CollectionId);
     }
 }

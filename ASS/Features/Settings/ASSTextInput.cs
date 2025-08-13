@@ -20,7 +20,8 @@ namespace ASS.Features.Settings
             int characterLimit = 64,
             TMP_InputField.ContentType contentType = TMP_InputField.ContentType.Standard,
             string? hint = null,
-            Action<Player, ASSBase>? onChanged = null)
+            Action<Player, ASSBase>? onChanged = null,
+            byte collectionId = byte.MaxValue)
         {
             Id = id;
             Label = label;
@@ -29,6 +30,7 @@ namespace ASS.Features.Settings
             ContentType = contentType;
             Hint = hint;
             OnChanged = onChanged;
+            CollectionId = collectionId;
         }
 
         public string InputtedText => inputtedText;
@@ -48,9 +50,13 @@ namespace ASS.Features.Settings
         public static implicit operator SSPlaintextSetting(ASSTextInput text) => new(text.Id, text.Label, text.Placeholder, text.CharacterLimit, text.ContentType, text.Hint);
 
         #if EXILED
-        public static implicit operator ASSTextInput(UserTextInputSetting text) => new(text.Id, text.Label, text.PlaceHolder, text.CharacterLimit, text.ContentType, text.HintDescription);
+        public static implicit operator ASSTextInput(UserTextInputSetting text) => new(text.Id, text.Label, text.PlaceHolder, text.CharacterLimit, text.ContentType, text.HintDescription, text.OnChanged.Convert(), text.CollectionId)
+        {
+            ExHeader = text.Header,
+            ExAction = text.OnChanged,
+        };
 
-        public static implicit operator UserTextInputSetting(ASSTextInput text) => new(text.Id, text.Label, text.Placeholder, text.CharacterLimit, text.ContentType, text.Hint);
+        public static implicit operator UserTextInputSetting(ASSTextInput text) => new(text.Id, text.Label, text.Placeholder, text.CharacterLimit, text.ContentType, text.Hint, text.CollectionId, false, text.ExHeader, text.ExAction);
         #endif
 
         internal override void Serialize(NetworkWriter writer)
@@ -69,6 +75,6 @@ namespace ASS.Features.Settings
             base.Deserialize(reader);
         }
 
-        internal override ASSBase Copy() => new ASSTextInput(Id, Label, Placeholder, CharacterLimit, ContentType, Hint);
+        internal override ASSBase Copy() => new ASSTextInput(Id, Label, Placeholder, CharacterLimit, ContentType, Hint, OnChanged, CollectionId);
     }
 }

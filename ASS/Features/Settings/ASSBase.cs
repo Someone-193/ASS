@@ -1,24 +1,61 @@
 namespace ASS.Features.Settings
 {
     using System;
+    using System.Collections.Generic;
+    using System.Linq;
+
+    using ASS.Features.MirrorUtils.Messages;
+
     #if EXILED
     using Exiled.API.Features.Core.UserSettings;
     #endif
+
     using LabApi.Features.Wrappers;
+
     using Mirror;
+
     using UserSettings.ServerSpecific;
 
     public abstract class ASSBase
     {
+        private string? label;
+        private string? hint;
+
         public int Id { get; set; }
 
-        public string? Label { get; set; }
+        public string? Label
+        {
+            get => label;
+            set
+            {
+                label = value;
+                Update(this, ASSNetworking.ReceivedSettings.Where(kvp => kvp.Value.Contains(this)).Select(kvp => kvp.Key));
+            }
+        }
 
-        public string? Hint { get; set; }
+        public string? Hint
+        {
+            get => hint;
+            set
+            {
+                hint = value;
+                Update(this, ASSNetworking.ReceivedSettings.Where(kvp => kvp.Value.Contains(this)).Select(kvp => kvp.Key));
+            }
+        }
+
+        public byte CollectionId { get; set; } = byte.MaxValue;
 
         public Action<Player, ASSBase>? OnChanged { get; set; }
 
         public bool IgnoreNextResponse { get; set; }
+
+        public virtual bool IsServerOnly => false;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the properties of this setting automatically sync to clients
+        /// <br/>(if true, changing properties like <see cref="Label"/> will automatically update on clients).
+        /// </summary>
+        public bool AutoSync { get; set; } = true;
 
         /// <summary>
         /// Gets the <see cref="ServerSpecificSettingBase.UserResponseMode"/> of the setting. Acquisition implies a response when the setting is received and Change implies a response whenever the setting is triggered.
@@ -26,6 +63,11 @@ namespace ASS.Features.Settings
         public abstract ServerSpecificSettingBase.UserResponseMode ResponseMode { get; }
 
         internal abstract Type SSSType { get; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether this setting is an original setting or a copy (Only copies can sync values, so this reduces required and accidental enumeration in setters).
+        /// </summary>
+        internal bool IsInstance { get; set; } = false;
 
         #if EXILED
         internal HeaderSetting? ExHeader { get; init; }
@@ -105,9 +147,72 @@ namespace ASS.Features.Settings
             return bgSetting;
         }
 
+        /// <summary>
+        /// Updates the <see cref="Label"/> of a specified setting for clients.
+        /// </summary>
+        /// <param name="label">The new label.</param>
+        /// <param name="setting">Which setting to update.</param>
+        /// <param name="players">Those who receive the update.</param>
+        public static void UpdateLabel(string? label, ASSBase setting, IEnumerable<Player>? players)
+        {
+            MirrorUtils.ASSUtils.SendASSMessageToPlayersConditionally(
+                new ASSUpdateMessage(setting, writer =>
+                {
+                    writer.WriteBool(true);
+                    writer.WriteString(label);
+                    writer.WriteString(setting.Hint);
+                }), p => players?.Contains(p) ?? true);
+        }
+
+        /// <summary>
+        /// Updates the <see cref="Hint"/> of a specified setting for clients.
+        /// </summary>
+        /// <param name="hint">The new hint.</param>
+        /// <param name="setting">Which setting to update.</param>
+        /// <param name="players">Those who receive the update.</param>
+        public static void UpdateHint(string? hint, ASSBase setting, IEnumerable<Player>? players)
+        {
+            MirrorUtils.ASSUtils.SendASSMessageToPlayersConditionally(
+                new ASSUpdateMessage(setting, writer =>
+                {
+                    writer.WriteBool(true);
+                    writer.WriteString(setting.Label);
+                    writer.WriteString(hint);
+                }), p => players?.Contains(p) ?? true);
+        }
+
+        /// <summary>
+        /// Sync the specified settings <see cref="Label"/> and <see cref="Hint"/> for clients.
+        /// </summary>
+        /// <param name="setting">Which setting to update.</param>
+        /// <param name="players">Those who receive the update.</param>
+        public static void Update(ASSBase setting, IEnumerable<Player>? players)
+        {
+            MirrorUtils.ASSUtils.SendASSMessageToPlayersConditionally(
+                new ASSUpdateMessage(setting, writer =>
+                {
+                    writer.WriteBool(true);
+                    writer.WriteString(setting.Label);
+                    writer.WriteString(setting.Hint);
+                }), p => players?.Contains(p) ?? true);
+        }
+
         public override string ToString()
         {
             return $"({Id}) {{{Label ?? "NULL"}}} [{Hint ?? "NULL"}] <{SSSType.Name}>";
+        }
+
+        // for derived update methods
+        internal static void UpdateDerived(Action<NetworkWriter> action, ASSBase setting, IEnumerable<Player>? players)
+        {
+            MirrorUtils.ASSUtils.SendASSMessageToPlayersConditionally(
+                new ASSUpdateMessage(setting, writer =>
+                {
+                    writer.WriteBool(true);
+                    writer.WriteString(setting.Label);
+                    writer.WriteString(setting.Hint);
+                    action(writer);
+                }), p => players?.Contains(p) ?? true);
         }
 
         internal virtual void Serialize(NetworkWriter writer)
@@ -115,6 +220,8 @@ namespace ASS.Features.Settings
             writer.WriteInt(Id);
             writer.WriteString(Label);
             writer.WriteString(Hint);
+            writer.WriteByte(CollectionId);
+            writer.WriteBool(IsServerOnly);
         }
 
         internal virtual void Deserialize(NetworkReaderPooled reader)

@@ -24,7 +24,8 @@ namespace ASS.Features.Settings
             byte defaultIndex = 0,
             SSDropdownSetting.DropdownEntryType entryType = SSDropdownSetting.DropdownEntryType.Regular,
             string? hint = null,
-            Action<Player, ASSBase>? onChanged = null)
+            Action<Player, ASSBase>? onChanged = null,
+            byte collectionId = byte.MaxValue)
         {
             if (options is null || options.Length == 0)
             {
@@ -57,6 +58,7 @@ namespace ASS.Features.Settings
             EntryType = entryType;
             Hint = hint;
             OnChanged = onChanged;
+            CollectionId = collectionId;
 
             optionSelected = options[defaultIndex];
         }
@@ -75,18 +77,18 @@ namespace ASS.Features.Settings
 
         internal override Type SSSType { get; } = typeof(SSDropdownSetting);
 
-        public static implicit operator ASSDropdown(SSDropdownSetting dropdown) => new(dropdown.SettingId, dropdown.Label, dropdown.Options, (byte)dropdown.DefaultOptionIndex, dropdown.EntryType, dropdown.HintDescription);
+        public static implicit operator ASSDropdown(SSDropdownSetting dropdown) => new(dropdown.SettingId, dropdown.Label, dropdown.Options, (byte)dropdown.DefaultOptionIndex, dropdown.EntryType, dropdown.HintDescription, null, dropdown.CollectionId);
 
-        public static implicit operator SSDropdownSetting(ASSDropdown dropdown) => new(dropdown.Id, dropdown.Label, dropdown.Options, dropdown.DefaultIndex, dropdown.EntryType, dropdown.Hint);
+        public static implicit operator SSDropdownSetting(ASSDropdown dropdown) => new(dropdown.Id, dropdown.Label, dropdown.Options, dropdown.DefaultIndex, dropdown.EntryType, dropdown.Hint, dropdown.CollectionId);
 
         #if EXILED
-        public static implicit operator ASSDropdown(DropdownSetting dropdown) => new(dropdown.Id, dropdown.Label, dropdown.Options.ToArray(), (byte)dropdown.DefaultOptionIndex, dropdown.DropdownType, dropdown.HintDescription, dropdown.OnChanged.Convert())
+        public static implicit operator ASSDropdown(DropdownSetting dropdown) => new(dropdown.Id, dropdown.Label, dropdown.Options.ToArray(), (byte)dropdown.DefaultOptionIndex, dropdown.DropdownType, dropdown.HintDescription, dropdown.OnChanged.Convert(), dropdown.CollectionId)
         {
             ExHeader = dropdown.Header,
             ExAction = dropdown.OnChanged,
         };
 
-        public static implicit operator DropdownSetting(ASSDropdown dropdown) => new(dropdown.Id, dropdown.Label, dropdown.Options, dropdown.DefaultIndex, dropdown.EntryType, dropdown.Hint, dropdown.ExHeader, dropdown.ExAction);
+        public static implicit operator DropdownSetting(ASSDropdown dropdown) => new(dropdown.Id, dropdown.Label, dropdown.Options, dropdown.DefaultIndex, dropdown.EntryType, dropdown.Hint, dropdown.CollectionId, false, dropdown.ExHeader, dropdown.ExAction);
         #endif
 
         internal override void Serialize(NetworkWriter writer)
@@ -108,6 +110,6 @@ namespace ASS.Features.Settings
             base.Deserialize(reader);
         }
 
-        internal override ASSBase Copy() => new ASSDropdown(Id, Label, Options, DefaultIndex, EntryType, Hint);
+        internal override ASSBase Copy() => new ASSDropdown(Id, Label, Options, DefaultIndex, EntryType, Hint, OnChanged, CollectionId);
     }
 }

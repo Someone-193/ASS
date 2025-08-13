@@ -17,6 +17,8 @@ namespace ASS.Features
 
     public static class ASSNetworking
     {
+        internal static readonly HashSet<ReferenceHub> FixedPlayers = [];
+
         private static readonly Dictionary<ReferenceHub, Action> QueuedUpdates = new();
 
         public static event Action<Player, ASSBase> SettingTriggered = (plyr, setting) => setting.OnChanged?.Invoke(plyr, setting);
@@ -85,9 +87,13 @@ namespace ASS.Features
             }
 
             if (forceLoad || player.TabOpen())
+            {
+                Logger.Debug($"Sending {settings.Length} settings to {player.Nickname} via {nameof(SendCustomToPlayer)}", Main.Debug);
                 ASSUtils.SendASSMessage(player.Connection, new ASSEntriesPack(settings, includeBaseGameSettings ? ServerSpecificSettingsSync.DefinedSettings : [], GetVersion(player)));
+            }
             else
             {
+                Logger.Debug($"Sending {settings.Length} (pre-minimizing) settings to {player.Nickname} via {nameof(SendCustomToPlayer)}", Main.Debug);
                 ASSUtils.SendASSMessage(player.Connection, MinimizedPack(settings, includeBaseGameSettings ? ServerSpecificSettingsSync.DefinedSettings : [], GetVersion(player, registerChange)));
                 QueuedUpdates[player.ReferenceHub] = () =>
                 {
@@ -99,6 +105,7 @@ namespace ASS.Features
                         }
                     }
 
+                    Logger.Debug($"Sending {settings.Length} settings to {player.Nickname} via {nameof(SendCustomToPlayer)} after tab was opened", Main.Debug);
                     ASSUtils.SendASSMessage(player.Connection, new ASSEntriesPack(settings, includeBaseGameSettings ? ServerSpecificSettingsSync.DefinedSettings : [], GetVersion(player)));
                 };
             }
@@ -117,8 +124,16 @@ namespace ASS.Features
             else
             {
                 if (!QueuedUpdates.ContainsKey(player.ReferenceHub))
+                {
+                    Logger.Debug($"Sending {settings.Length} settings (pre-minimizing) to {player.Nickname} via {nameof(SendSSSIncludingASS)}", Main.Debug);
                     ASSUtils.SendASSMessage(player.Connection, MinimizedPack(value, settings, version ?? GetVersion(player)));
-                QueuedUpdates[player.ReferenceHub] = () => ASSUtils.SendASSMessage(player.Connection, new ASSEntriesPack(value, settings, version ?? GetVersion(player)));
+                }
+
+                QueuedUpdates[player.ReferenceHub] = () =>
+                {
+                    Logger.Debug($"Sending {settings.Length} settings to {player.Nickname} via {nameof(SendSSSIncludingASS)} after tab was opened", Main.Debug);
+                    ASSUtils.SendASSMessage(player.Connection, new ASSEntriesPack(value, settings, version ?? GetVersion(player)));
+                };
             }
         }
 
@@ -180,11 +195,11 @@ namespace ASS.Features
         /// <param name="baseGameSettings">The ServerSpecificSetting settings to search for keybinds.</param>
         /// <param name="version">What version to send this pack with.</param>
         /// <returns>A minimized <see cref="ASSEntriesPack"/>.</returns>
+        // TODO: obsolete this in favour of update methods
         internal static ASSEntriesPack MinimizedPack(ASSBase[] assSettings, ServerSpecificSettingBase[] baseGameSettings, int version)
         {
             return new ASSEntriesPack(
                 assSettings
-                    .Prepend(new ASSHeader("Loading...", "A dummy setting while your full list is being sent"))
                     .Where(setting => setting.SSSType == typeof(SSKeybindSetting))
                     .ToArray(),
                 baseGameSettings
@@ -222,7 +237,7 @@ namespace ASS.Features
                 return;
             }
 
-            Logger.Debug("Received ASS setting response", Main.Instance.Config?.Debug ?? false);
+            Logger.Debug("Received ASS setting response", Main.Debug);
 
             setting.Deserialize(NetworkReaderPool.Get(message.Payload));
 
@@ -232,7 +247,7 @@ namespace ASS.Features
                 return;
             }
 
-            Logger.Debug("Running events", Main.Instance.Config?.Debug ?? false);
+            Logger.Debug("Running events", Main.Debug);
 
             SettingTriggered(p, setting);
 
@@ -264,6 +279,13 @@ namespace ASS.Features
 
         internal static void OnStatusReceived(ReferenceHub hub, SSSUserStatusReport report)
         {
+            if (report.TabOpen && FixedPlayers.Add(hub))
+            {
+                Player p = Player.Get(hub);
+
+                SendToPlayerFull(p, true, false, true);
+            }
+
             if (report.TabOpen && QueuedUpdates.TryGetValue(hub, out Action update))
             {
                 QueuedUpdates.Remove(hub);
@@ -276,7 +298,10 @@ namespace ASS.Features
             ASSBase[] val = new ASSBase[toCopy.Length];
 
             for (int i = 0; i < toCopy.Length; i++)
+            {
                 val[i] = toCopy[i].Copy();
+                val[i].IsInstance = true;
+            }
 
             return val;
         }

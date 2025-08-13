@@ -9,7 +9,7 @@ namespace ASS.EventHandlers
         public static void OnJoined(PlayerJoinedEventArgs ev)
         {
             // gives ASS priority on joining syncs
-            Timing.CallDelayed(0, () => ASSNetworking.SendToPlayerFull(ev.Player, true, false, true, true));
+            Timing.CallDelayed(0, () => ASSNetworking.SendToPlayerFull(ev.Player, true, false, true));
         }
     }
 }

@@ -10,7 +10,7 @@ namespace ASS.Example.PlayerMenuExamples
 
         protected override ASSGroup Generate(Player owner)
         {
-            return new ASSGroup([new ASSHeader("This came from an AbstractMenu")]);
+            return new ASSGroup([new ASSHeader(-14, "This came from an AbstractMenu")]);
         }
     }
 }
