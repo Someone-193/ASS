@@ -2,10 +2,15 @@ namespace ASS.Features.MirrorUtils
 {
     using System;
     using System.Linq;
+
     using ASS.Features.MirrorUtils.Messages;
+    using ASS.Features.Settings;
+
     using LabApi.Features.Console;
     using LabApi.Features.Wrappers;
+
     using Mirror;
+
     using UserSettings.ServerSpecific;
 
     internal static class ASSUtils
@@ -24,6 +29,16 @@ namespace ASS.Features.MirrorUtils
             switch (message)
             {
                 case ASSEntriesPack pack:
+                    Player? player = Player.Get(connection.identity);
+                    if (player is not null)
+                    {
+                        foreach (ASSBase setting in pack.Settings ?? [])
+                        {
+                            // C# kinda annoying. And I don't want to copy paste Exileds events rn.
+                            ASSNetworking.Bridge(player, setting);
+                        }
+                    }
+
                     writer.WriteUShort(NetworkMessageId<SSSEntriesPack>.Id);
                     pack.Serialize(writer);
                     break;

@@ -3,16 +3,21 @@ namespace ASS.Features
     using System;
     using System.Collections.Generic;
     using System.Linq;
+
     using ASS.Features.Collections;
     using ASS.Features.MirrorUtils;
     using ASS.Features.MirrorUtils.Messages;
     using ASS.Features.Settings;
+
     #if EXILED
     using Exiled.API.Features.Core.UserSettings;
     #endif
+
     using LabApi.Features.Console;
     using LabApi.Features.Wrappers;
+
     using Mirror;
+
     using UserSettings.ServerSpecific;
 
     public static class ASSNetworking
@@ -20,6 +25,16 @@ namespace ASS.Features
         internal static readonly HashSet<ReferenceHub> FixedPlayers = [];
 
         private static readonly Dictionary<ReferenceHub, Action> QueuedUpdates = new();
+
+        /// <summary>
+        /// Called whenever a setting is sent to a client.
+        /// </summary>
+        /// <remarks>
+        /// Can be called multiple times (for keybinds) by one SendToPlayer call because of ASS's minimization logic.
+        /// <br/>
+        /// Useful for ignoring responses from particular settings manually.
+        /// </remarks>
+        public static event Action<Player, ASSBase> SettingSent = (_, _) => { };
 
         public static event Action<Player, ASSBase> SettingTriggered = (plyr, setting) => setting.OnChanged?.Invoke(plyr, setting);
 
@@ -291,6 +306,11 @@ namespace ASS.Features
                 QueuedUpdates.Remove(hub);
                 update();
             }
+        }
+
+        internal static void Bridge(Player receiver, ASSBase setting)
+        {
+            SettingSent(receiver, setting);
         }
 
         private static ASSBase[] Copy(ASSBase[] toCopy)
