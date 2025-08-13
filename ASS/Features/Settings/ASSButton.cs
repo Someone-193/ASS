@@ -45,9 +45,9 @@ namespace ASS.Features.Settings
             get => holdTime;
             set
             {
+                holdTime = value;
                 if (AutoSync && IsInstance)
-                    holdTime = value;
-                UpdateButton(ASSNetworking.ReceivedSettings.Where(kvp => kvp.Value.Contains(this)).Select(kvp => kvp.Key));
+                    UpdateButton(ASSNetworking.ReceivedSettings.Where(kvp => kvp.Value.Contains(this)).Select(kvp => kvp.Key));
             }
         }
 

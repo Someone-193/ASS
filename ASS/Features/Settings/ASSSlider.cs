@@ -37,6 +37,7 @@ namespace ASS.Features.Settings
             DisplayFormat = displayFormat;
             Hint = hint;
             OnChanged = onChanged;
+            CollectionId = collectionId;
         }
 
         public float Value => value;

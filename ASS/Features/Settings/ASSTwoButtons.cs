@@ -29,6 +29,7 @@ namespace ASS.Features.Settings
             DefaultRightSelected = defaultRightSelected;
             Hint = hint;
             OnChanged = onChanged;
+            CollectionId = collectionId;
 
             rightSelected = defaultRightSelected;
         }
