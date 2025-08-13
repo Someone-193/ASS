@@ -1,11 +1,13 @@
 namespace ASS.Features.Settings
 {
     using System;
+
     using Mirror;
 
-        #if EXILED
+    #if EXILED
     using Exiled.API.Features.Core.UserSettings;
-        #endif
+    #endif
+
     using UserSettings.ServerSpecific;
 
     public class ASSHeader : ASSBase

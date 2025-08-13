@@ -29,7 +29,8 @@ namespace ASS.Features.Settings
             set
             {
                 label = value;
-                Update(this, ASSNetworking.ReceivedSettings.Where(kvp => kvp.Value.Contains(this)).Select(kvp => kvp.Key));
+                if (AutoSync && IsInstance)
+                    Update(ASSNetworking.ReceivedSettings.Where(kvp => kvp.Value.Contains(this)).Select(kvp => kvp.Key));
             }
         }
 
@@ -39,7 +40,8 @@ namespace ASS.Features.Settings
             set
             {
                 hint = value;
-                Update(this, ASSNetworking.ReceivedSettings.Where(kvp => kvp.Value.Contains(this)).Select(kvp => kvp.Key));
+                if (AutoSync && IsInstance)
+                    Update(ASSNetworking.ReceivedSettings.Where(kvp => kvp.Value.Contains(this)).Select(kvp => kvp.Key));
             }
         }
 
@@ -67,7 +69,7 @@ namespace ASS.Features.Settings
         /// <summary>
         /// Gets or sets a value indicating whether this setting is an original setting or a copy (Only copies can sync values, so this reduces required and accidental enumeration in setters).
         /// </summary>
-        internal bool IsInstance { get; set; } = false;
+        internal bool IsInstance { get; set; }
 
         #if EXILED
         internal HeaderSetting? ExHeader { get; init; }
@@ -150,50 +152,47 @@ namespace ASS.Features.Settings
         /// <summary>
         /// Updates the <see cref="Label"/> of a specified setting for clients.
         /// </summary>
-        /// <param name="label">The new label.</param>
-        /// <param name="setting">Which setting to update.</param>
+        /// <param name="newLabel">The new label.</param>
         /// <param name="players">Those who receive the update.</param>
-        public static void UpdateLabel(string? label, ASSBase setting, IEnumerable<Player>? players)
+        public void UpdateLabel(string? newLabel, IEnumerable<Player>? players)
         {
             MirrorUtils.ASSUtils.SendASSMessageToPlayersConditionally(
-                new ASSUpdateMessage(setting, writer =>
+                new ASSUpdateMessage(this, writer =>
                 {
                     writer.WriteBool(true);
-                    writer.WriteString(label);
-                    writer.WriteString(setting.Hint);
+                    writer.WriteString(newLabel);
+                    writer.WriteString(Hint);
                 }), p => players?.Contains(p) ?? true);
         }
 
         /// <summary>
         /// Updates the <see cref="Hint"/> of a specified setting for clients.
         /// </summary>
-        /// <param name="hint">The new hint.</param>
-        /// <param name="setting">Which setting to update.</param>
+        /// <param name="newHint">The new hint.</param>
         /// <param name="players">Those who receive the update.</param>
-        public static void UpdateHint(string? hint, ASSBase setting, IEnumerable<Player>? players)
+        public void UpdateHint(string? newHint, IEnumerable<Player>? players)
         {
             MirrorUtils.ASSUtils.SendASSMessageToPlayersConditionally(
-                new ASSUpdateMessage(setting, writer =>
+                new ASSUpdateMessage(this, writer =>
                 {
                     writer.WriteBool(true);
-                    writer.WriteString(setting.Label);
-                    writer.WriteString(hint);
+                    writer.WriteString(Label);
+                    writer.WriteString(newHint);
                 }), p => players?.Contains(p) ?? true);
         }
 
         /// <summary>
         /// Sync the specified settings <see cref="Label"/> and <see cref="Hint"/> for clients.
         /// </summary>
-        /// <param name="setting">Which setting to update.</param>
         /// <param name="players">Those who receive the update.</param>
-        public static void Update(ASSBase setting, IEnumerable<Player>? players)
+        public void Update(IEnumerable<Player>? players)
         {
             MirrorUtils.ASSUtils.SendASSMessageToPlayersConditionally(
-                new ASSUpdateMessage(setting, writer =>
+                new ASSUpdateMessage(this, writer =>
                 {
                     writer.WriteBool(true);
-                    writer.WriteString(setting.Label);
-                    writer.WriteString(setting.Hint);
+                    writer.WriteString(Label);
+                    writer.WriteString(Hint);
                 }), p => players?.Contains(p) ?? true);
         }
 
@@ -203,14 +202,12 @@ namespace ASS.Features.Settings
         }
 
         // for derived update methods
-        internal static void UpdateDerived(Action<NetworkWriter> action, ASSBase setting, IEnumerable<Player>? players)
+        internal void UpdateDerived(Action<NetworkWriter> action, IEnumerable<Player>? players)
         {
             MirrorUtils.ASSUtils.SendASSMessageToPlayersConditionally(
-                new ASSUpdateMessage(setting, writer =>
+                new ASSUpdateMessage(this, writer =>
                 {
-                    writer.WriteBool(true);
-                    writer.WriteString(setting.Label);
-                    writer.WriteString(setting.Hint);
+                    writer.WriteBool(false);
                     action(writer);
                 }), p => players?.Contains(p) ?? true);
         }

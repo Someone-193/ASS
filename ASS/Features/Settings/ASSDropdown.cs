@@ -60,6 +60,7 @@ namespace ASS.Features.Settings
             OnChanged = onChanged;
             CollectionId = collectionId;
 
+            indexSelected = defaultIndex;
             optionSelected = options[defaultIndex];
         }
 

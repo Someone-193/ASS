@@ -92,6 +92,7 @@ namespace ASS.Features
                 return;
 
             ReceivedSettings[player] = Copy(settings);
+            settings = ReceivedSettings[player];
 
             if (ignoreResponses)
             {

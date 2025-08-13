@@ -35,7 +35,8 @@ namespace ASS.Features.Settings
             set
             {
                 buttonText = value;
-                UpdateButton(this, ASSNetworking.ReceivedSettings.Where(kvp => kvp.Value.Contains(this)).Select(kvp => kvp.Key));
+                if (AutoSync && IsInstance)
+                    UpdateButton(ASSNetworking.ReceivedSettings.Where(kvp => kvp.Value.Contains(this)).Select(kvp => kvp.Key));
             }
         }
 
@@ -44,8 +45,9 @@ namespace ASS.Features.Settings
             get => holdTime;
             set
             {
-                holdTime = value;
-                UpdateButton(this, ASSNetworking.ReceivedSettings.Where(kvp => kvp.Value.Contains(this)).Select(kvp => kvp.Key));
+                if (AutoSync && IsInstance)
+                    holdTime = value;
+                UpdateButton(ASSNetworking.ReceivedSettings.Where(kvp => kvp.Value.Contains(this)).Select(kvp => kvp.Key));
             }
         }
 
@@ -67,19 +69,19 @@ namespace ASS.Features.Settings
         public static implicit operator ButtonSetting(ASSButton button) => new(button.Id, button.Label, button.ButtonText, button.HoldTime, button.Hint, button.ExHeader, button.ExAction);
         #endif
 
-        public static void UpdateButtonText(string buttonText, ASSButton button, IEnumerable<Player>? players)
+        public void UpdateButtonText(string newText, IEnumerable<Player>? players)
         {
-            UpdateDerived(GetAction(buttonText, button.HoldTime), button, players);
+            UpdateDerived(GetAction(newText, HoldTime), players);
         }
 
-        public static void UpdateHoldTime(float holdTime, ASSButton button, IEnumerable<Player>? players)
+        public void UpdateHoldTime(float newTime, IEnumerable<Player>? players)
         {
-            UpdateDerived(GetAction(button.ButtonText, holdTime), button, players);
+            UpdateDerived(GetAction(ButtonText, newTime), players);
         }
 
-        public static void UpdateButton(ASSButton button, IEnumerable<Player>? players)
+        public void UpdateButton(IEnumerable<Player>? players)
         {
-            UpdateDerived(GetAction(button.ButtonText, button.HoldTime), button, players);
+            UpdateDerived(GetAction(ButtonText, HoldTime), players);
         }
 
         internal override void Serialize(NetworkWriter writer)
