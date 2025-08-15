@@ -1,6 +1,7 @@
 namespace ASS.Features.MirrorUtils
 {
     using System;
+    using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
 
@@ -13,6 +14,8 @@ namespace ASS.Features.MirrorUtils
     using LabApi.Features.Wrappers;
 
     using Mirror;
+
+    using NorthwoodLib.Pools;
 
     using UserSettings.ServerSpecific;
 
@@ -40,16 +43,39 @@ namespace ASS.Features.MirrorUtils
             switch (message)
             {
                 case ASSEntriesPack pack:
-                    foreach (ASSBase setting in pack.Settings.ToArray())
+                    // Add PersistantKeybinds without overlapping keybinds.
+                    HashSet<int> existing = HashSetPool<int>.Shared.Rent(pack.Settings.Select(setting => setting.Id));
+
+                    bool flag = false;
+                    foreach (ASSKeybind keybind in ASSNetworking.PersistantKeybinds)
                     {
-                        SendingSettingEventArgs ev1 = new(player, setting);
-                        SettingEvents.OnSendingSetting(ev1);
-                        if (!ev1.IsAllowed)
-                            pack.Settings.Remove(ev1.Setting);
+                        if (!existing.Add(keybind.Id))
+                            continue;
+
+                        if (!flag)
+                        {
+                            pack.Settings.Add(new ASSHeader("Plz No Hash Collision 2: Electric Boogaloo".GetStableHashCode(), "Keybinds", "These are here so you can always use your keybinds, even if typically hidden"));
+                            flag = true;
+                        }
+
+                        pack.Settings.Add(keybind);
                     }
 
+                    HashSetPool<int>.Shared.Return(existing);
+
+                    // Call SendingSettings event
+                    SendingSettingsEventArgs ev1 = new(player, pack.Settings);
+                    SettingEvents.OnSendingSettings(ev1);
+                    if (!ev1.IsAllowed)
+                    {
+                        ListPool<ASSBase>.Shared.Return(pack.Settings);
+                        return;
+                    }
+
+                    // Save settings being sent
                     ASSNetworking.ReceivedSettings[player] = pack.Settings.ToArray();
 
+                    // Debugging
                     if (Main.Debug)
                     {
                         Logger.Debug("Sending Settings:");
@@ -59,6 +85,7 @@ namespace ASS.Features.MirrorUtils
                         }
                     }
 
+                    // Actually serialize
                     writer.WriteUShort(NetworkMessageId<SSSEntriesPack>.Id);
                     pack.Serialize(writer);
                     break;

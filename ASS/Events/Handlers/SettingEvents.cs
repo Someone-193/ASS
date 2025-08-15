@@ -14,7 +14,7 @@ namespace ASS.Events.Handlers
         /// <br/>
         /// Useful for ignoring responses from particular settings manually.
         /// </remarks>
-        public static event LabEventHandler<SendingSettingEventArgs>? SendingSetting;
+        public static event LabEventHandler<SendingSettingsEventArgs>? SendingSettings;
 
         public static event LabEventHandler<UpdatingSettingEventArgs>? UpdatingSetting;
 
@@ -32,7 +32,7 @@ namespace ASS.Events.Handlers
 
         public static event LabEventHandler<TextInputChangedEventArgs>? TextInputChanged;
 
-        public static void OnSendingSetting(SendingSettingEventArgs ev) => SendingSetting?.InvokeEvent(ev);
+        public static void OnSendingSettings(SendingSettingsEventArgs ev) => SendingSettings?.InvokeEvent(ev);
 
         public static void OnUpdatingSetting(UpdatingSettingEventArgs ev) => UpdatingSetting?.InvokeEvent(ev);
 
