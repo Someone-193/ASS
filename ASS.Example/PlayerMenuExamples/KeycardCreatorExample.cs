@@ -107,19 +107,21 @@ namespace ASS.Example.PlayerMenuExamples
                     TryParseHexColor(labelHex, out Color labelColor);
                     TryParseHexColor(permsHex, out Color permsColor);
 
+                    Player target = ASSNetworking.TryGetSetting(ev.Player, 101, out ASSDropdown playerDropdown) ? Player.ReadyList.ElementAt(playerDropdown.IndexSelected) : ev.Player;
+
                     switch (index)
                     {
                         case 0:
-                            KeycardItem.CreateCustomKeycardTaskForce(ev.Player, itemName, holderName, levels, keycardColor, permsColor, serialLabel, rankIndex);
+                            KeycardItem.CreateCustomKeycardTaskForce(target, itemName, holderName, levels, keycardColor, permsColor, serialLabel, rankIndex);
                             break;
                         case 1:
-                            KeycardItem.CreateCustomKeycardSite02(ev.Player, itemName, holderName, label, levels, keycardColor, permsColor, labelColor, wearLevel);
+                            KeycardItem.CreateCustomKeycardSite02(target, itemName, holderName, label, levels, keycardColor, permsColor, labelColor, wearLevel);
                             break;
                         case 2:
-                            KeycardItem.CreateCustomKeycardManagement(ev.Player, itemName, label, levels, keycardColor, permsColor, labelColor);
+                            KeycardItem.CreateCustomKeycardManagement(target, itemName, label, levels, keycardColor, permsColor, labelColor);
                             break;
                         case 3:
-                            KeycardItem.CreateCustomKeycardMetal(ev.Player, itemName, holderName, label, levels, keycardColor, permsColor, labelColor, wearLevel, serialLabel);
+                            KeycardItem.CreateCustomKeycardMetal(target, itemName, holderName, label, levels, keycardColor, permsColor, labelColor, wearLevel, serialLabel);
                             break;
                         default:
                             throw new ArgumentOutOfRangeException(nameof(ev.Setting), ev.Setting, null);

@@ -34,7 +34,8 @@ namespace ASS.Features.MirrorUtils
             Player? player = Player.Get(connection.identity);
             if (player is null)
             {
-                Logger.Error("Failed to find player from NetworkConnection in ASSUtils.SendASSMessage<T>();");
+                // can happen when players disconnect.
+                Logger.Debug("Failed to find player from NetworkConnection in ASSUtils.SendASSMessage<T>();", Main.Debug);
                 return;
             }
 
