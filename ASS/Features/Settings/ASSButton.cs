@@ -2,7 +2,6 @@ namespace ASS.Features.Settings
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
 
     #if EXILED
     using Exiled.API.Features.Core.UserSettings;
@@ -16,15 +15,15 @@ namespace ASS.Features.Settings
 
     public class ASSButton : ASSBase
     {
-        private string buttonText = null!;
+        private string buttonText;
         private float holdTime;
 
         public ASSButton(int id, string? buttonLabel = null, string buttonText = "", float holdTime = 0, string? hint = null, Action<Player, ASSBase>? onChanged = null)
         {
             Id = id;
             Label = buttonLabel;
-            ButtonText = buttonText;
-            HoldTime = holdTime;
+            this.buttonText = buttonText;
+            this.holdTime = holdTime;
             Hint = hint;
             OnChanged = onChanged;
         }
@@ -36,7 +35,7 @@ namespace ASS.Features.Settings
             {
                 buttonText = value;
                 if (AutoSync && IsInstance)
-                    UpdateButton(ASSNetworking.ReceivedSettings.Where(kvp => kvp.Value.Contains(this)).Select(kvp => kvp.Key));
+                    UpdateButton(this.SettingHolders());
             }
         }
 
@@ -47,7 +46,7 @@ namespace ASS.Features.Settings
             {
                 holdTime = value;
                 if (AutoSync && IsInstance)
-                    UpdateButton(ASSNetworking.ReceivedSettings.Where(kvp => kvp.Value.Contains(this)).Select(kvp => kvp.Key));
+                    UpdateButton(this.SettingHolders());
             }
         }
 

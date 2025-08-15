@@ -1,6 +1,7 @@
 namespace ASS.EventHandlers
 {
     using ASS.Features;
+
     using LabApi.Events.Arguments.PlayerEvents;
 
     public class Left

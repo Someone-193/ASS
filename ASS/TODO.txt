@@ -10,4 +10,6 @@ Add implicit casts from both Exiled settings and base game settings to ASS setti
 
 use #if to make all ASS methods use Exiled players in the Exiled version instead of LabAPI players (too lazy)
 
-Add Update methods for all ASS settings and make setters use them with the AutoSync bool (or whatever I called it lol)
+Add Update methods for all ASS settings and make setters use them with the AutoSync bool (or whatever I called it lol) [Done]
+
+Add Display variants of all applicable settings

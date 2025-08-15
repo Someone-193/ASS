@@ -3,8 +3,11 @@ namespace ASS.Features.Collections
     using System;
     using System.Collections.Generic;
     using System.Linq;
+
     using ASS.Features.Settings;
+
     using LabApi.Features.Wrappers;
+
     using NorthwoodLib.Pools;
 
     public class ASSGroup

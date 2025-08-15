@@ -1,8 +1,11 @@
 namespace ASS.Example.PlayerMenuExamples
 {
     using System.Collections.Generic;
+
+    using ASS.Events.EventArgs;
     using ASS.Features.Collections;
     using ASS.Features.Settings;
+
     using LabApi.Events.Arguments.PlayerEvents;
     using LabApi.Features.Wrappers;
 
@@ -33,11 +36,11 @@ namespace ASS.Example.PlayerMenuExamples
                 menu.Destroy();
         }
 
-        public static void OnSettingTriggered(Player sender, ASSBase setting)
+        public static void OnSettingTriggered(SettingTriggeredEventArgs ev)
         {
-            if (setting.Id is -13 && Valid(sender))
+            if (ev.Setting.Id is -13 && Valid(ev.Player))
             {
-                sender.IsGodModeEnabled = !sender.IsGodModeEnabled;
+                ev.Player.IsGodModeEnabled = !ev.Player.IsGodModeEnabled;
             }
         }
 

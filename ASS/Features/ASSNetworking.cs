@@ -4,10 +4,13 @@ namespace ASS.Features
     using System.Collections.Generic;
     using System.Linq;
 
+    using ASS.Events.EventArgs;
+    using ASS.Events.Handlers;
     using ASS.Features.Collections;
     using ASS.Features.MirrorUtils;
     using ASS.Features.MirrorUtils.Messages;
     using ASS.Features.Settings;
+    using ASS.Features.Settings.Displays;
 
     #if EXILED
     using Exiled.API.Features.Core.UserSettings;
@@ -25,30 +28,6 @@ namespace ASS.Features
         internal static readonly HashSet<ReferenceHub> FixedPlayers = [];
 
         private static readonly Dictionary<ReferenceHub, Action> QueuedUpdates = new();
-
-        /// <summary>
-        /// Called whenever a setting is sent to a client.
-        /// </summary>
-        /// <remarks>
-        /// Can be called multiple times (for keybinds) by one SendToPlayer call because of ASS's minimization logic.
-        /// <br/>
-        /// Useful for ignoring responses from particular settings manually.
-        /// </remarks>
-        public static event Action<Player, ASSBase> SettingSent = (_, _) => { };
-
-        public static event Action<Player, ASSBase> SettingTriggered = (plyr, setting) => setting.OnChanged?.Invoke(plyr, setting);
-
-        public static event Action<Player, ASSKeybind> KeybindPressed = (_, _) => { };
-
-        public static event Action<Player, ASSDropdown> DropdownTriggered = (_, _) => { };
-
-        public static event Action<Player, ASSTwoButtons> TwoButtonsPressed = (_, _) => { };
-
-        public static event Action<Player, ASSSlider> SliderMoved = (_, _) => { };
-
-        public static event Action<Player, ASSButton> ButtonPressed = (_, _) => { };
-
-        public static event Action<Player, ASSTextInput> TextInputChanged = (_, _) => { };
 
         public static Dictionary<Player, ASSBase[]> ReceivedSettings { get; } = new();
 
@@ -194,6 +173,8 @@ namespace ASS.Features
             return ServerSpecificSettingsSync.Version;
         }
 
+        public static IEnumerable<Player> SettingHolders(this ASSBase setting) => ReceivedSettings.Where(kvp => kvp.Value.Contains(setting)).Select(kvp => kvp.Key);
+
         #if EXILED
         internal static Action<Player, ASSBase> Convert(this Action<Exiled.API.Features.Player, SettingBase> action)
         {
@@ -211,7 +192,6 @@ namespace ASS.Features
         /// <param name="baseGameSettings">The ServerSpecificSetting settings to search for keybinds.</param>
         /// <param name="version">What version to send this pack with.</param>
         /// <returns>A minimized <see cref="ASSEntriesPack"/>.</returns>
-        // TODO: obsolete this in favour of update methods
         internal static ASSEntriesPack MinimizedPack(ASSBase[] assSettings, ServerSpecificSettingBase[] baseGameSettings, int version)
         {
             return new ASSEntriesPack(
@@ -265,27 +245,30 @@ namespace ASS.Features
 
             Logger.Debug("Running events", Main.Debug);
 
-            SettingTriggered(p, setting);
+            SettingEvents.OnSettingTriggered(new SettingTriggeredEventArgs(p, setting));
 
             switch (setting)
             {
                 case ASSKeybind keybind:
-                    KeybindPressed(p, keybind);
+                    SettingEvents.OnKeybindPressed(new KeybindPressedEventArgs(p, keybind));
                     break;
                 case ASSDropdown dropdown:
-                    DropdownTriggered(p, dropdown);
+                    SettingEvents.OnDropdownTriggered(new DropdownTriggeredEventArgs(p, dropdown));
                     break;
                 case ASSTwoButtons twoButtons:
-                    TwoButtonsPressed(p, twoButtons);
+                    SettingEvents.OnTwoButtonsPressed(new TwoButtonsPressedEventArgs(p, twoButtons));
                     break;
                 case ASSSlider slider:
-                    SliderMoved(p, slider);
+                    SettingEvents.OnSliderMoved(new SliderMovedEventArgs(p, slider));
                     break;
                 case ASSButton button:
-                    ButtonPressed(p, button);
+                    SettingEvents.OnButtonPressed(new ButtonPressedEventArgs(p, button));
                     break;
                 case ASSTextInput textInput:
-                    TextInputChanged(p, textInput);
+                    SettingEvents.OnTextInputChanged(new TextInputChangedEventArgs(p, textInput));
+                    break;
+                case ASSDisplay:
+                    Logger.Warn($"Received setting from ASS display [{setting}]! Please verify you are handling your settings correctly.");
                     break;
                 default:
                     Logger.Warn($"Failed to cast setting [{setting}]");
@@ -307,11 +290,6 @@ namespace ASS.Features
                 QueuedUpdates.Remove(hub);
                 update();
             }
-        }
-
-        internal static void Bridge(Player receiver, ASSBase setting)
-        {
-            SettingSent(receiver, setting);
         }
 
         private static ASSBase[] Copy(ASSBase[] toCopy)

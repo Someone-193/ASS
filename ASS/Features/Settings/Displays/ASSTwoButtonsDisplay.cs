@@ -13,14 +13,15 @@ namespace ASS.Features.Settings
 
     using UserSettings.ServerSpecific;
 
-    public class ASSTwoButtons : ASSBase
+    // TODO: fix n change stuff
+    public class ASSTwoButtonsDisplay : ASSBase
     {
         private bool rightSelected;
 
         private string leftOption;
         private string rightOption;
 
-        public ASSTwoButtons(
+        public ASSTwoButtonsDisplay(
             int id,
             string? label = null,
             string leftOption = "",
@@ -74,18 +75,18 @@ namespace ASS.Features.Settings
 
         internal override Type SSSType { get; } = typeof(SSTwoButtonsSetting);
 
-        public static implicit operator ASSTwoButtons(SSTwoButtonsSetting twoButtons) => new(twoButtons.SettingId, twoButtons.Label, twoButtons.OptionA, twoButtons.OptionB, twoButtons.DefaultIsB, twoButtons.HintDescription, null, twoButtons.CollectionId);
+        public static implicit operator ASSTwoButtonsDisplay(SSTwoButtonsSetting twoButtons) => new(twoButtons.SettingId, twoButtons.Label, twoButtons.OptionA, twoButtons.OptionB, twoButtons.DefaultIsB, twoButtons.HintDescription, null, twoButtons.CollectionId);
 
-        public static implicit operator SSTwoButtonsSetting(ASSTwoButtons twoButtons) => new(twoButtons.Id, twoButtons.Label, twoButtons.LeftOption, twoButtons.RightOption, twoButtons.DefaultRightSelected, twoButtons.Hint, twoButtons.CollectionId);
+        public static implicit operator SSTwoButtonsSetting(ASSTwoButtonsDisplay twoButtons) => new(twoButtons.Id, twoButtons.Label, twoButtons.LeftOption, twoButtons.RightOption, twoButtons.DefaultRightSelected, twoButtons.Hint, twoButtons.CollectionId);
 
         #if EXILED
-        public static implicit operator ASSTwoButtons(TwoButtonsSetting twoButtons) => new(twoButtons.Id, twoButtons.Label, twoButtons.FirstOption, twoButtons.SecondOption, twoButtons.IsSecondDefault, twoButtons.HintDescription, twoButtons.OnChanged.Convert(), twoButtons.CollectionId)
+        public static implicit operator ASSTwoButtonsDisplay(TwoButtonsSetting twoButtons) => new(twoButtons.Id, twoButtons.Label, twoButtons.FirstOption, twoButtons.SecondOption, twoButtons.IsSecondDefault, twoButtons.HintDescription, twoButtons.OnChanged.Convert(), twoButtons.CollectionId)
         {
             ExHeader = twoButtons.Header,
             ExAction = twoButtons.OnChanged,
         };
 
-        public static implicit operator TwoButtonsSetting(ASSTwoButtons twoButtons) => new(twoButtons.Id, twoButtons.Label, twoButtons.LeftOption, twoButtons.RightOption, twoButtons.DefaultRightSelected, twoButtons.Hint, twoButtons.CollectionId, false, twoButtons.ExHeader, twoButtons.ExAction);
+        public static implicit operator TwoButtonsSetting(ASSTwoButtonsDisplay twoButtons) => new(twoButtons.Id, twoButtons.Label, twoButtons.LeftOption, twoButtons.RightOption, twoButtons.DefaultRightSelected, twoButtons.Hint, twoButtons.CollectionId, false, twoButtons.ExHeader, twoButtons.ExAction);
         #endif
 
         public void UpdateLeftOption(string newLeftOption, IEnumerable<Player>? players)

@@ -1,6 +1,7 @@
 namespace ASS.Features.Collections
 {
     using System.Collections.Generic;
+
     using LabApi.Features.Wrappers;
 
     public abstract class AbstractMenu

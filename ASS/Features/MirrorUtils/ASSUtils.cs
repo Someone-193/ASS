@@ -3,6 +3,8 @@ namespace ASS.Features.MirrorUtils
     using System;
     using System.Linq;
 
+    using ASS.Events.EventArgs;
+    using ASS.Events.Handlers;
     using ASS.Features.MirrorUtils.Messages;
     using ASS.Features.Settings;
 
@@ -34,8 +36,7 @@ namespace ASS.Features.MirrorUtils
                     {
                         foreach (ASSBase setting in pack.Settings ?? [])
                         {
-                            // C# kinda annoying. And I don't want to copy paste Exileds events rn.
-                            ASSNetworking.Bridge(player, setting);
+                            SettingEvents.OnSettingSent(new SettingSentEventArgs(player, setting));
                         }
                     }
 

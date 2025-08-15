@@ -1,4 +1,4 @@
-namespace ASS.Features.Settings
+namespace ASS.Features.Settings.Displays
 {
     using System;
     using System.Collections.Generic;
@@ -13,7 +13,7 @@ namespace ASS.Features.Settings
 
     using UserSettings.ServerSpecific;
 
-    public class ASSSlider : ASSBase
+    public class ASSSliderDisplay : ASSBase
     {
         private float value;
 
@@ -24,37 +24,37 @@ namespace ASS.Features.Settings
         private string valueFormat;
         private string displayFormat;
 
-        public ASSSlider(
+        public ASSSliderDisplay(
             int id,
             string? label,
-            float defaultValue = 0,
+            float value = 0,
             float minValue = -10,
             float maxValue = 10,
             bool isInteger = false,
             string valueFormat = "0.##",
             string displayFormat = "{0}",
-            string? hint = null,
-            Action<Player, ASSBase>? onChanged = null,
-            byte collectionId = byte.MaxValue)
+            string? hint = null)
         {
             Id = id;
             Label = label;
-            DefaultValue = defaultValue;
+            this.value = value;
             this.minValue = minValue;
             this.maxValue = maxValue;
             this.isInteger = isInteger;
             this.valueFormat = valueFormat;
             this.displayFormat = displayFormat;
             Hint = hint;
-            OnChanged = onChanged;
-            CollectionId = collectionId;
         }
 
-        public float Value => value;
-
-        public bool Dragging => dragging;
-
-        public float DefaultValue { get; set; }
+        public float Value
+        {
+            get => value;
+            set
+            {
+                this.value = value;
+                UpdateValue(value, this.SettingHolders());
+            }
+        }
 
         public float MinValue
         {
@@ -115,19 +115,30 @@ namespace ASS.Features.Settings
 
         internal override Type SSSType { get; } = typeof(SSSliderSetting);
 
-        public static implicit operator ASSSlider(SSSliderSetting slider) => new(slider.SettingId, slider.Label, slider.DefaultValue, slider.MinValue, slider.MaxValue, slider.Integer, slider.ValueToStringFormat, slider.FinalDisplayFormat, slider.HintDescription, null, slider.CollectionId);
+        public static implicit operator ASSSliderDisplay(SSSliderSetting slider) => new(slider.SettingId, slider.Label, slider.DefaultValue, slider.MinValue, slider.MaxValue, slider.Integer, slider.ValueToStringFormat, slider.FinalDisplayFormat, slider.HintDescription);
 
-        public static implicit operator SSSliderSetting(ASSSlider slider) => new(slider.Id, slider.Label, slider.DefaultValue, slider.MinValue, slider.MaxValue, slider.IsInteger, slider.ValueFormat, slider.DisplayFormat, slider.Hint, slider.CollectionId);
+        public static implicit operator SSSliderSetting(ASSSliderDisplay slider) => new(slider.Id, slider.Label, slider.Value, slider.MinValue, slider.MaxValue, slider.IsInteger, slider.ValueFormat, slider.DisplayFormat, slider.Hint, slider.CollectionId, true);
 
         #if EXILED
-        public static implicit operator ASSSlider(SliderSetting slider) => new(slider.Id, slider.Label, slider.DefaultValue, slider.MinimumValue, slider.MaximumValue, slider.IsInteger, slider.StringFormat, slider.DisplayFormat, slider.HintDescription, slider.OnChanged.Convert(), slider.CollectionId)
+        public static implicit operator ASSSliderDisplay(SliderSetting slider) => new(slider.Id, slider.Label, slider.DefaultValue, slider.MinimumValue, slider.MaximumValue, slider.IsInteger, slider.StringFormat, slider.DisplayFormat, slider.HintDescription)
         {
             ExHeader = slider.Header,
             ExAction = slider.OnChanged,
         };
 
-        public static implicit operator SliderSetting(ASSSlider slider) => new(slider.Id, slider.Label, slider.DefaultValue, slider.MinValue, slider.MaxValue, slider.IsInteger, slider.ValueFormat, slider.DisplayFormat, slider.Hint, slider.CollectionId, false, slider.ExHeader, slider.ExAction);
+        public static implicit operator SliderSetting(ASSSliderDisplay slider) => new(slider.Id, slider.Label, slider.Value, slider.MinValue, slider.MaxValue, slider.IsInteger, slider.ValueFormat, slider.DisplayFormat, slider.Hint, slider.CollectionId, true, slider.ExHeader, slider.ExAction);
         #endif
+
+        public void UpdateValue(float newValue, IEnumerable<Player>? players)
+        {
+            UpdateDerived(
+                writer =>
+                {
+                    writer.WriteByte(1);
+                    writer.WriteFloat(newValue);
+                },
+                players);
+        }
 
         public void UpdateMin(float newMinValue, IEnumerable<Player>? players)
         {
@@ -163,7 +174,7 @@ namespace ASS.Features.Settings
         {
             base.Serialize(writer);
 
-            writer.WriteFloat(DefaultValue);
+            writer.WriteFloat(Value);
             writer.WriteFloat(MinValue);
             writer.WriteFloat(MaxValue);
             writer.WriteBool(IsInteger);
@@ -179,7 +190,7 @@ namespace ASS.Features.Settings
             base.Deserialize(reader);
         }
 
-        internal override ASSBase Copy() => new ASSSlider(Id, Label, DefaultValue, MinValue, MaxValue, IsInteger, ValueFormat, DisplayFormat, Hint, OnChanged, CollectionId);
+        internal override ASSBase Copy() => new ASSSlider(Id, Label, Value, MinValue, MaxValue, IsInteger, ValueFormat, DisplayFormat, Hint, OnChanged, CollectionId);
 
         private static Action<NetworkWriter> GetAction(float newMinValue, float newMaxValue, bool newIsInteger, string newValueFormat, string newDisplayFormat)
         {

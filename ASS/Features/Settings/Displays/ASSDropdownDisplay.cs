@@ -9,13 +9,20 @@ namespace ASS.Features.Settings.Displays
     #endif
 
     using LabApi.Features.Wrappers;
+
     using Mirror;
+
     using UnityEngine;
+
     using UserSettings.ServerSpecific;
+
     using Logger = LabApi.Features.Console.Logger;
 
     public class ASSDropdownDisplay : ASSDisplay
     {
+        private byte indexSelected;
+        private string[] options;
+
         public ASSDropdownDisplay(
             int id,
             string? label = null,
@@ -50,32 +57,39 @@ namespace ASS.Features.Settings.Displays
 
             Id = id;
             Label = label;
-            Options = options;
-            IndexSelected = indexSelected;
+            this.options = options;
+            this.indexSelected = indexSelected;
             EntryType = entryType;
             Hint = hint;
 
             IndexSelected = indexSelected;
-            OptionSelected = options[indexSelected];
         }
 
-        public byte IndexSelected { get; set; }
+        public byte IndexSelected
+        {
+            get => indexSelected;
+            set
+            {
+                indexSelected = value;
+                UpdateSelection(value, this.SettingHolders());
+            }
+        }
 
-        public string OptionSelected { get; set; }
-
-        public string[] Options { get; set; }
+        public string[] Options
+        {
+            get => options;
+            set => options = value;
+        }
 
         public SSDropdownSetting.DropdownEntryType EntryType { get; set; }
 
         public override ServerSpecificSettingBase.UserResponseMode ResponseMode => ServerSpecificSettingBase.UserResponseMode.AcquisitionAndChange;
 
-        public override bool IsServerOnly => true;
-
         internal override Type SSSType { get; } = typeof(SSDropdownSetting);
 
         public static implicit operator ASSDropdownDisplay(SSDropdownSetting dropdown) => new(dropdown.SettingId, dropdown.Label, dropdown.Options, (byte)dropdown.DefaultOptionIndex, dropdown.EntryType, dropdown.HintDescription);
 
-        public static implicit operator SSDropdownSetting(ASSDropdownDisplay dropdown) => new(dropdown.Id, dropdown.Label, dropdown.Options, dropdown.IndexSelected, dropdown.EntryType, dropdown.Hint, dropdown.CollectionId);
+        public static implicit operator SSDropdownSetting(ASSDropdownDisplay dropdown) => new(dropdown.Id, dropdown.Label, dropdown.Options, dropdown.IndexSelected, dropdown.EntryType, dropdown.Hint, dropdown.CollectionId, true);
 
         #if EXILED
         public static implicit operator ASSDropdownDisplay(DropdownSetting dropdown) => new(dropdown.Id, dropdown.Label, dropdown.Options.ToArray(), (byte)dropdown.DefaultOptionIndex, dropdown.DropdownType, dropdown.HintDescription)
@@ -84,7 +98,7 @@ namespace ASS.Features.Settings.Displays
             ExAction = dropdown.OnChanged,
         };
 
-        public static implicit operator DropdownSetting(ASSDropdownDisplay dropdown) => new(dropdown.Id, dropdown.Label, dropdown.Options, dropdown.IndexSelected, dropdown.EntryType, dropdown.Hint, dropdown.CollectionId, false, dropdown.ExHeader, dropdown.ExAction);
+        public static implicit operator DropdownSetting(ASSDropdownDisplay dropdown) => new(dropdown.Id, dropdown.Label, dropdown.Options, dropdown.IndexSelected, dropdown.EntryType, dropdown.Hint, dropdown.CollectionId, true, dropdown.ExHeader, dropdown.ExAction);
         #endif
 
         public void UpdateSelection(byte selection, IEnumerable<Player>? players)
@@ -96,6 +110,16 @@ namespace ASS.Features.Settings.Displays
                     writer.WriteByte(selection);
                 },
                 players);
+        }
+
+        public void UpdateOptions(string[]? newOptions, IEnumerable<Player>? players)
+        {
+            UpdateDerived(GetAction(newOptions), players);
+        }
+
+        public void UpdateDropdown(IEnumerable<Player>? players)
+        {
+            UpdateDerived(GetAction(Options), players);
         }
 
         internal override void Serialize(NetworkWriter writer)
@@ -110,5 +134,18 @@ namespace ASS.Features.Settings.Displays
         }
 
         internal override ASSBase Copy() => new ASSDropdown(Id, Label, Options, IndexSelected, EntryType, Hint, OnChanged, CollectionId);
+
+        private static Action<NetworkWriter> GetAction(string[]? newOptions)
+        {
+            if (newOptions is null || newOptions.Length == 0)
+                newOptions = [string.Empty];
+
+            return writer =>
+            {
+                writer.WriteByte(2);
+                writer.WriteByte((byte)newOptions.Length);
+                newOptions.ForEach(writer.WriteString);
+            };
+        }
     }
 }

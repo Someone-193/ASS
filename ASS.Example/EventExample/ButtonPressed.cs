@@ -1,15 +1,14 @@
 namespace ASS.Example.EventExample
 {
-    using ASS.Features.Settings;
-    using LabApi.Features.Wrappers;
+    using ASS.Events.EventArgs;
 
     public class ButtonPressed
     {
-        public static void OnButtonPressed(Player sender, ASSButton button)
+        public static void OnButtonPressed(ButtonPressedEventArgs ev)
         {
-            if (button.Id is -10)
+            if (ev.Button.Id is -10)
             {
-                sender.Kill("Hit the funny event button");
+                ev.Player.Kill("Hit the funny event button");
             }
         }
     }

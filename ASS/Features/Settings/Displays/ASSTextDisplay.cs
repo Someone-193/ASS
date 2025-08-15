@@ -1,17 +1,18 @@
-namespace ASS.Features.Settings
+namespace ASS.Features.Settings.Displays
 {
     using System;
-    using ASS.Features.MirrorUtils;
-    using ASS.Features.MirrorUtils.Messages;
+
     #if EXILED
     using Exiled.API.Features.Core.UserSettings;
     #endif
-    using LabApi.Features.Wrappers;
+
     using Mirror;
+
     using TMPro;
+
     using UserSettings.ServerSpecific;
 
-    public class ASSTextDisplay : ASSBase
+    public class ASSTextDisplay : ASSDisplay
     {
         public ASSTextDisplay(
             int id,
@@ -47,17 +48,6 @@ namespace ASS.Features.Settings
 
         public static implicit operator TextInputSetting(ASSTextDisplay textArea) => new(textArea.Id, textArea.Label, textArea.FoldoutMode, textArea.AlignmentOptions, textArea.Hint, textArea.ExHeader, textArea.ExAction);
         #endif
-
-        public void SendTextUpdate(string newText, bool applyOverride = true, Predicate<Player>? filter = null)
-        {
-            if (applyOverride)
-                Label = newText;
-            ASSUpdateMessage assUpdateMessage = new(this, writer => writer.WriteString(newText));
-            if (filter == null)
-                ASSUtils.SendASSMessageToAuthenticated(assUpdateMessage);
-            else
-                ASSUtils.SendASSMessageToPlayersConditionally(assUpdateMessage, filter);
-        }
 
         internal override void Serialize(NetworkWriter writer)
         {

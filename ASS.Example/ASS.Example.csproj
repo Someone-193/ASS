@@ -18,7 +18,7 @@
     <Import Project="../plugin.props" />
 
     <ItemGroup>
-        <PackageReference Include="Northwood.LabAPI" Version="1.0.2" />
+        <PackageReference Include="Northwood.LabAPI" Version="1.1.1" />
         <PackageReference Include="Lib.Harmony" Version="$(HarmonyVersion)" />
         <PackageReference Include="StyleCop.Analyzers" Version="$(StyleCopVersion)" />
     </ItemGroup>

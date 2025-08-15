@@ -1,16 +1,16 @@
 namespace ASS.Example.DefaultExample
 {
+    using ASS.Events.EventArgs;
     using ASS.Features.Settings;
-    using LabApi.Features.Wrappers;
 
     public class SettingTriggered
     {
-        public static void OnSettingTriggered(Player sender, ASSBase setting)
+        public static void OnSettingTriggered(SettingTriggeredEventArgs ev)
         {
-            switch (setting)
+            switch (ev.Setting)
             {
                 case ASSButton { Id: -11 } button:
-                    sender.Kill($"Hit the funny default button with Id {button.Id}");
+                    ev.Player.Kill($"Hit the funny default button with Id {button.Id}");
                     break;
             }
         }

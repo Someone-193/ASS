@@ -5,15 +5,14 @@ namespace ASS.Features.Settings
     using System.Linq;
 
     using ASS.Features.MirrorUtils.Messages;
+    using ASS.Features.Settings.Displays;
 
     #if EXILED
     using Exiled.API.Features.Core.UserSettings;
     #endif
 
     using LabApi.Features.Wrappers;
-
     using Mirror;
-
     using UserSettings.ServerSpecific;
 
     public abstract class ASSBase
@@ -30,7 +29,7 @@ namespace ASS.Features.Settings
             {
                 label = value;
                 if (AutoSync && IsInstance)
-                    Update(ASSNetworking.ReceivedSettings.Where(kvp => kvp.Value.Contains(this)).Select(kvp => kvp.Key));
+                    Update(this.SettingHolders());
             }
         }
 
@@ -41,7 +40,7 @@ namespace ASS.Features.Settings
             {
                 hint = value;
                 if (AutoSync && IsInstance)
-                    Update(ASSNetworking.ReceivedSettings.Where(kvp => kvp.Value.Contains(this)).Select(kvp => kvp.Key));
+                    Update(this.SettingHolders());
             }
         }
 
@@ -162,7 +161,7 @@ namespace ASS.Features.Settings
                     writer.WriteBool(true);
                     writer.WriteString(newLabel);
                     writer.WriteString(Hint);
-                }), p => players?.Contains(p) ?? true);
+                }), players is null ? p => this.SettingHolders().Contains(p) : players.Contains);
         }
 
         /// <summary>
@@ -178,7 +177,7 @@ namespace ASS.Features.Settings
                     writer.WriteBool(true);
                     writer.WriteString(Label);
                     writer.WriteString(newHint);
-                }), p => players?.Contains(p) ?? true);
+                }), players is null ? p => this.SettingHolders().Contains(p) : players.Contains);
         }
 
         /// <summary>
@@ -193,7 +192,7 @@ namespace ASS.Features.Settings
                     writer.WriteBool(true);
                     writer.WriteString(Label);
                     writer.WriteString(Hint);
-                }), p => players?.Contains(p) ?? true);
+                }), players is null ? p => this.SettingHolders().Contains(p) : players.Contains);
         }
 
         public override string ToString()
@@ -209,7 +208,7 @@ namespace ASS.Features.Settings
                 {
                     writer.WriteBool(false);
                     action(writer);
-                }), p => players?.Contains(p) ?? true);
+                }), players is null ? p => this.SettingHolders().Contains(p) : players.Contains);
         }
 
         internal virtual void Serialize(NetworkWriter writer)

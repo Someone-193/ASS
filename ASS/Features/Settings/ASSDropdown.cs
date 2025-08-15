@@ -1,14 +1,21 @@
 namespace ASS.Features.Settings
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
+
     #if EXILED
     using Exiled.API.Features.Core.UserSettings;
     #endif
+
     using LabApi.Features.Wrappers;
+
     using Mirror;
+
     using UnityEngine;
+
     using UserSettings.ServerSpecific;
+
     using Logger = LabApi.Features.Console.Logger;
 
     public class ASSDropdown : ASSBase
@@ -16,6 +23,7 @@ namespace ASS.Features.Settings
         private int indexSelected;
 
         private string optionSelected;
+        private string[] options;
 
         public ASSDropdown(
             int id,
@@ -53,7 +61,7 @@ namespace ASS.Features.Settings
 
             Id = id;
             Label = label;
-            Options = options;
+            this.options = options;
             DefaultIndex = defaultIndex;
             EntryType = entryType;
             Hint = hint;
@@ -68,7 +76,16 @@ namespace ASS.Features.Settings
 
         public string OptionSelected => optionSelected;
 
-        public string[] Options { get; set; }
+        public string[] Options
+        {
+            get => options;
+            set
+            {
+                options = value;
+                if (AutoSync && IsInstance)
+                    UpdateDropdown(this.SettingHolders());
+            }
+        }
 
         public byte DefaultIndex { get; set; }
 
@@ -92,6 +109,16 @@ namespace ASS.Features.Settings
         public static implicit operator DropdownSetting(ASSDropdown dropdown) => new(dropdown.Id, dropdown.Label, dropdown.Options, dropdown.DefaultIndex, dropdown.EntryType, dropdown.Hint, dropdown.CollectionId, false, dropdown.ExHeader, dropdown.ExAction);
         #endif
 
+        public void UpdateOptions(string[]? newOptions, IEnumerable<Player>? players)
+        {
+            UpdateDerived(GetAction(newOptions), players);
+        }
+
+        public void UpdateDropdown(IEnumerable<Player>? players)
+        {
+            UpdateDerived(GetAction(Options), players);
+        }
+
         internal override void Serialize(NetworkWriter writer)
         {
             base.Serialize(writer);
@@ -112,5 +139,18 @@ namespace ASS.Features.Settings
         }
 
         internal override ASSBase Copy() => new ASSDropdown(Id, Label, Options, DefaultIndex, EntryType, Hint, OnChanged, CollectionId);
+
+        private static Action<NetworkWriter> GetAction(string[]? newOptions)
+        {
+            if (newOptions is null || newOptions.Length == 0)
+                newOptions = [string.Empty];
+
+            return writer =>
+            {
+                writer.WriteByte(2);
+                writer.WriteByte((byte)newOptions.Length);
+                newOptions.ForEach(writer.WriteString);
+            };
+        }
     }
 }
