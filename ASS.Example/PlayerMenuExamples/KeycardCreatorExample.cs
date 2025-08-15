@@ -140,7 +140,7 @@ namespace ASS.Example.PlayerMenuExamples
                     new ASSHeader(100, "Keycard Creator"),
                     new ASSDropdown(101, "Player:", Player.ReadyList.Select(p => p.Nickname).ToArray(), hint: "The player who will receive the keycard"),
                     new ASSDropdown(102, "Keycard Type", [ItemType.KeycardCustomTaskForce.ToString(), ItemType.KeycardCustomSite02.ToString(), ItemType.KeycardCustomManagement.ToString(), ItemType.KeycardCustomMetalCase.ToString()]),
-                    new ASSTextInput(103, "Item Name", "My Cool Keycard!"),
+                    new ASSTextInput(103, "Item Name", "My Cool Keycard!", ushort.MaxValue),
                     new ASSSlider(104, "Containment Level", 1, 0, 3, true),
                     new ASSSlider(105, "Armory Level", 2, 0, 3, true),
                     new ASSSlider(106, "Admin Level", 3, 0, 3, true),
@@ -152,29 +152,29 @@ namespace ASS.Example.PlayerMenuExamples
             {
                 case 0:
                     settings.AddRange([
-                        new ASSTextInput(109, "Holder Name", "A very cool person"),
-                        new ASSTextInput(113, "Serial Label", "69420"),
+                        new ASSTextInput(109, "Holder Name", "A very cool person", ushort.MaxValue),
+                        new ASSTextInput(113, "Serial Label", "69420", ushort.MaxValue),
                         new ASSSlider(114, "Rank Index", 0, 0, 100, true),
                     ]);
                     break;
                 case 1:
                     settings.AddRange([
-                        new ASSTextInput(109, "Holder Name", "A very cool person"),
-                        new ASSTextInput(110, "Keycard Label", "Meth Card"),
+                        new ASSTextInput(109, "Holder Name", "A very cool person", ushort.MaxValue),
+                        new ASSTextInput(110, "Keycard Label", "Meth Card", ushort.MaxValue),
                         new ASSTextInput(111, "Label Color (Hex)", "#00FFFF", 7),
                         new ASSSlider(112, "Wear Level", 0, 0, 255, true),
                     ]);
                     break;
                 case 2:
                     settings.AddRange([
-                        new ASSTextInput(110, "Keycard Label", "Meth Card"),
+                        new ASSTextInput(110, "Keycard Label", "Meth Card", ushort.MaxValue),
                         new ASSTextInput(111, "Label Color (Hex)", "#00FFFF", 7),
                     ]);
                     break;
                 case 3:
                     settings.AddRange([
-                        new ASSTextInput(109, "Holder Name", "A very cool person"),
-                        new ASSTextInput(110, "Keycard Label", "Meth Card"),
+                        new ASSTextInput(109, "Holder Name", "A very cool person", ushort.MaxValue),
+                        new ASSTextInput(110, "Keycard Label", "Meth Card", ushort.MaxValue),
                         new ASSTextInput(111, "Label Color (Hex)", "#00FFFF", 7),
                         new ASSSlider(112, "Wear Level", 0, 0, 255, true),
                         new ASSTextInput(113, "Serial Label", "69420"),
