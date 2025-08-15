@@ -1,6 +1,7 @@
 namespace ASS.Features.MirrorUtils
 {
     using System;
+    using System.Diagnostics;
     using System.Linq;
 
     using ASS.Events.EventArgs;
@@ -27,16 +28,34 @@ namespace ASS.Features.MirrorUtils
         public static void SendASSMessage<T>(NetworkConnection connection, T message, int channelId = 0) 
             where T : struct, NetworkMessage
         {
+            Player? player = Player.Get(connection.identity);
+            if (player is null)
+            {
+                Logger.Error("Failed to find player from NetworkConnection in ASSUtils.SendASSMessage<T>();");
+                return;
+            }
+
             using NetworkWriterPooled writer = NetworkWriterPool.Get();
+
             switch (message)
             {
                 case ASSEntriesPack pack:
-                    Player? player = Player.Get(connection.identity);
-                    if (player is not null)
+                    foreach (ASSBase setting in pack.Settings.ToArray())
                     {
-                        foreach (ASSBase setting in pack.Settings ?? [])
+                        SendingSettingEventArgs ev1 = new(player, setting);
+                        SettingEvents.OnSendingSetting(ev1);
+                        if (!ev1.IsAllowed)
+                            pack.Settings.Remove(ev1.Setting);
+                    }
+
+                    ASSNetworking.ReceivedSettings[player] = pack.Settings.ToArray();
+
+                    if (Main.Debug)
+                    {
+                        Logger.Debug("Sending Settings:");
+                        foreach (ASSBase setting in pack.Settings)
                         {
-                            SettingEvents.OnSettingSent(new SettingSentEventArgs(player, setting));
+                            Logger.Debug(setting);
                         }
                     }
 
@@ -44,6 +63,29 @@ namespace ASS.Features.MirrorUtils
                     pack.Serialize(writer);
                     break;
                 case ASSUpdateMessage update:
+                    if (!ASSNetworking.ReceivedSettings.TryGetValue(player, out ASSBase[] settings))
+                        return;
+
+                    ASSBase? toUpdate;
+                    try
+                    {
+                        toUpdate = settings.Single(setting => setting.Id == update.Id);
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        StackTrace trace = new();
+
+                        Logger.Error("A method tried to update an ASS setting despite not existing in ASSNetworking.ReceivedSettings!");
+                        Logger.Error("Stack Trace:");
+                        Logger.Error(trace);
+                        return;
+                    }
+
+                    UpdatingSettingEventArgs ev2 = new(player, toUpdate);
+                    SettingEvents.OnUpdatingSetting(ev2);
+                    if (!ev2.IsAllowed)
+                        return;
+
                     writer.WriteUShort(NetworkMessageId<SSSUpdateMessage>.Id);
                     update.Serialize(writer);
                     break;

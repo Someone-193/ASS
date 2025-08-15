@@ -9,10 +9,12 @@
 
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'LabAPI|AnyCPU' ">
         <TargetName>ASS-LabAPI</TargetName>
+        <Optimize>true</Optimize>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Exiled|AnyCPU' ">
         <TargetName>ASS-Exiled</TargetName>
+        <Optimize>true</Optimize>
     </PropertyGroup>
 
     <Import Project="../plugin.props" />

@@ -28,6 +28,7 @@
         <Reference Include="NorthwoodLib.dll" HintPath="$(SL_REFERENCES)\NorthwoodLib.dll" Private="false" />
         <Reference Include="CommandSystem.Core.dll" HintPath="$(SL_REFERENCES)\CommandSystem.Core.dll" Private="false" />
         <Reference Include="Mirror.dll" HintPath="$(SL_REFERENCES)\Mirror-Publicized.dll" Private="false" />
+        <Reference Include="Unity.TextMeshPro" HintPath="$(SL_REFERENCES)\Unity.TextMeshPro.dll" Private="false" />
         <Reference Include="UnityEngine.CoreModule.dll" HintPath="$(SL_REFERENCES)\UnityEngine.CoreModule.dll" Private="false" />
     </ItemGroup>
 

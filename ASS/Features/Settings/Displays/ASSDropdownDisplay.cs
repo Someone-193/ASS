@@ -133,7 +133,7 @@ namespace ASS.Features.Settings.Displays
             Options.ForEach(writer.WriteString);
         }
 
-        internal override ASSBase Copy() => new ASSDropdown(Id, Label, Options, IndexSelected, EntryType, Hint, OnChanged, CollectionId);
+        internal override ASSBase Copy() => new ASSDropdownDisplay(Id, Label, Options, IndexSelected, EntryType, Hint);
 
         private static Action<NetworkWriter> GetAction(string[]? newOptions)
         {

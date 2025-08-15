@@ -42,6 +42,10 @@
             PlayerEvents.Joined += WelcomeSetting.OnJoined;
             PlayerEvents.Left += WelcomeSetting.OnLeft;
 
+            PlayerEvents.Joined += KeycardCreatorExample.OnJoined;
+            PlayerEvents.Left += KeycardCreatorExample.OnLeft;
+            SettingEvents.SettingTriggered += KeycardCreatorExample.OnSettingTriggered;
+
             PlayerEvents.GroupChanged += AdminMenu.OnChangedGroup;
             PlayerEvents.Left += AdminMenu.OnLeft;
             SettingEvents.SettingTriggered += AdminMenu.OnSettingTriggered;
@@ -54,6 +58,10 @@
 
             PlayerEvents.Joined -= WelcomeSetting.OnJoined;
             PlayerEvents.Left -= WelcomeSetting.OnLeft;
+
+            PlayerEvents.Joined -= KeycardCreatorExample.OnJoined;
+            PlayerEvents.Left -= KeycardCreatorExample.OnLeft;
+            SettingEvents.SettingTriggered -= KeycardCreatorExample.OnSettingTriggered;
 
             PlayerEvents.GroupChanged -= AdminMenu.OnChangedGroup;
             PlayerEvents.Left -= AdminMenu.OnLeft;

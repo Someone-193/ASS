@@ -13,7 +13,6 @@ namespace ASS.Features.Settings
 
     using UserSettings.ServerSpecific;
 
-    // TODO: fix n change stuff
     public class ASSTwoButtonsDisplay : ASSBase
     {
         private bool rightSelected;
@@ -26,26 +25,45 @@ namespace ASS.Features.Settings
             string? label = null,
             string leftOption = "",
             string rightOption = "",
-            bool defaultRightSelected = false,
-            string? hint = null,
-            Action<Player, ASSBase>? onChanged = null,
-            byte collectionId = byte.MaxValue)
+            bool rightSelected = false,
+            string? hint = null)
         {
             Id = id;
             Label = label;
             this.leftOption = leftOption;
             this.rightOption = rightOption;
-            DefaultRightSelected = defaultRightSelected;
             Hint = hint;
-            OnChanged = onChanged;
-            CollectionId = collectionId;
 
-            rightSelected = defaultRightSelected;
+            this.rightSelected = rightSelected;
         }
 
-        public bool LeftSelected => !rightSelected;
+        public bool LeftSelected
+        {
+            get
+            {
+                return !rightSelected;
+            }
 
-        public bool RightSelected => rightSelected;
+            set
+            {
+                rightSelected = !value;
+                UpdateValue(!value, this.SettingHolders());
+            }
+        }
+
+        public bool RightSelected
+        {
+            get
+            {
+                return rightSelected;
+            }
+
+            set
+            {
+                rightSelected = value;
+                UpdateValue(value, this.SettingHolders());
+            }
+        }
 
         public string LeftOption
         {
@@ -69,25 +87,34 @@ namespace ASS.Features.Settings
             }
         }
 
-        public bool DefaultRightSelected { get; set; }
-
         public override ServerSpecificSettingBase.UserResponseMode ResponseMode => ServerSpecificSettingBase.UserResponseMode.AcquisitionAndChange;
 
         internal override Type SSSType { get; } = typeof(SSTwoButtonsSetting);
 
-        public static implicit operator ASSTwoButtonsDisplay(SSTwoButtonsSetting twoButtons) => new(twoButtons.SettingId, twoButtons.Label, twoButtons.OptionA, twoButtons.OptionB, twoButtons.DefaultIsB, twoButtons.HintDescription, null, twoButtons.CollectionId);
+        public static implicit operator ASSTwoButtonsDisplay(SSTwoButtonsSetting twoButtons) => new(twoButtons.SettingId, twoButtons.Label, twoButtons.OptionA, twoButtons.OptionB, twoButtons.DefaultIsB, twoButtons.HintDescription);
 
-        public static implicit operator SSTwoButtonsSetting(ASSTwoButtonsDisplay twoButtons) => new(twoButtons.Id, twoButtons.Label, twoButtons.LeftOption, twoButtons.RightOption, twoButtons.DefaultRightSelected, twoButtons.Hint, twoButtons.CollectionId);
+        public static implicit operator SSTwoButtonsSetting(ASSTwoButtonsDisplay twoButtons) => new(twoButtons.Id, twoButtons.Label, twoButtons.LeftOption, twoButtons.RightOption, twoButtons.RightSelected, twoButtons.Hint, twoButtons.CollectionId, true);
 
         #if EXILED
-        public static implicit operator ASSTwoButtonsDisplay(TwoButtonsSetting twoButtons) => new(twoButtons.Id, twoButtons.Label, twoButtons.FirstOption, twoButtons.SecondOption, twoButtons.IsSecondDefault, twoButtons.HintDescription, twoButtons.OnChanged.Convert(), twoButtons.CollectionId)
+        public static implicit operator ASSTwoButtonsDisplay(TwoButtonsSetting twoButtons) => new(twoButtons.Id, twoButtons.Label, twoButtons.FirstOption, twoButtons.SecondOption, twoButtons.IsSecondDefault, twoButtons.HintDescription)
         {
             ExHeader = twoButtons.Header,
             ExAction = twoButtons.OnChanged,
         };
 
-        public static implicit operator TwoButtonsSetting(ASSTwoButtonsDisplay twoButtons) => new(twoButtons.Id, twoButtons.Label, twoButtons.LeftOption, twoButtons.RightOption, twoButtons.DefaultRightSelected, twoButtons.Hint, twoButtons.CollectionId, false, twoButtons.ExHeader, twoButtons.ExAction);
+        public static implicit operator TwoButtonsSetting(ASSTwoButtonsDisplay twoButtons) => new(twoButtons.Id, twoButtons.Label, twoButtons.LeftOption, twoButtons.RightOption, twoButtons.RightSelected, twoButtons.Hint, twoButtons.CollectionId, true, twoButtons.ExHeader, twoButtons.ExAction);
         #endif
+
+        public void UpdateValue(bool newRightSelected, IEnumerable<Player>? players)
+        {
+            UpdateDerived(
+                writer =>
+                {
+                    writer.WriteByte(1);
+                    writer.WriteBool(newRightSelected);
+                },
+                players);
+        }
 
         public void UpdateLeftOption(string newLeftOption, IEnumerable<Player>? players)
         {
@@ -110,7 +137,7 @@ namespace ASS.Features.Settings
 
             writer.WriteString(LeftOption);
             writer.WriteString(RightOption);
-            writer.WriteBool(DefaultRightSelected);
+            writer.WriteBool(RightSelected);
         }
 
         internal override void Deserialize(NetworkReaderPooled reader)
@@ -120,7 +147,7 @@ namespace ASS.Features.Settings
             base.Deserialize(reader);
         }
 
-        internal override ASSBase Copy() => new ASSTwoButtons(Id, Label, LeftOption, RightOption, DefaultRightSelected, Hint, OnChanged, CollectionId);
+        internal override ASSBase Copy() => new ASSTwoButtonsDisplay(Id, Label, LeftOption, RightOption, RightSelected, Hint);
 
         private static Action<NetworkWriter> GetAction(string newLeftOption, string newRightOption)
         {

@@ -57,6 +57,8 @@
         {
             Instance = this;
 
+            ServerSpecificSettingsSync.SendOnJoinFilter = _ => false;
+
             harmony = new Harmony("ASS");
             harmony.PatchAll();
 
@@ -67,7 +69,6 @@
             PlayerEvents.Joined += Joined.OnJoined;
             PlayerEvents.Left += Left.OnLeft;
 
-            ServerSpecificSettingsSync.SendOnJoinFilter = _ => false;
             ServerSpecificSettingsSync.DefinedSettings ??= [];
         }
 

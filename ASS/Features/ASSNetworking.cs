@@ -12,6 +12,8 @@ namespace ASS.Features
     using ASS.Features.Settings;
     using ASS.Features.Settings.Displays;
 
+    using NorthwoodLib.Pools;
+
     #if EXILED
     using Exiled.API.Features.Core.UserSettings;
     #endif
@@ -29,6 +31,9 @@ namespace ASS.Features
 
         private static readonly Dictionary<ReferenceHub, Action> QueuedUpdates = new();
 
+        /// <summary>
+        /// Gets a dictionary assigning an <see cref="Array"/> of <see cref="ASSBase"/> to every player. Gets updated before settings are sent.
+        /// </summary>
         public static Dictionary<Player, ASSBase[]> ReceivedSettings { get; } = new();
 
         public static List<ASSGroup> Groups { get; } = [];
@@ -36,6 +41,22 @@ namespace ASS.Features
         public static IEnumerable<ASSBase> Settings { get; } = Groups.SelectMany(group => group.GetAllSettings());
 
         public static Dictionary<Player, int> Versions { get; } = new();
+
+        /// <summary>
+        /// Gets a <see cref="List{T}"/> of <see cref="ASSBase"/> containing all settings that will be sent to clients when verified, before displaying by groups.
+        /// </summary>
+        /// <remarks>
+        /// This is useful if you hide certain options behind other settings (like a scrollable tab for groups of settings) and you want to read all stored client values for all settings before going back to your tab based approach.
+        /// </remarks>
+        public static List<ASSBase> InitializingSettings { get; } = [];
+
+        /// <summary>
+        /// Gets a <see cref="List{T}"/> of <see cref="ASSKeybind"/> containing all keybinds that will be visible below all other settings no matter what groups are visible.
+        /// </summary>
+        /// <remarks>
+        /// Useful if you hide your keybinds behind other settings (say you bind keybinds when you set a <see cref="ASSDropdown"/> to "Keybinds") but you want to maintain functionality.
+        /// </remarks>
+        public static List<ASSKeybind> PersistantKeybinds { get; } = [];
 
         #nullable disable
         public static bool TryGetSetting<T>(Player player, int id, out T value)
@@ -70,12 +91,11 @@ namespace ASS.Features
             if (!NetworkServer.active)
                 return;
 
-            ReceivedSettings[player] = Copy(settings);
-            settings = ReceivedSettings[player];
+            List<ASSBase> list = Copy(settings);
 
             if (ignoreResponses)
             {
-                foreach (ASSBase setting in ReceivedSettings[player])
+                foreach (ASSBase setting in list)
                 {
                     setting.IgnoreNextResponse = setting.ResponseMode is ServerSpecificSettingBase.UserResponseMode.AcquisitionAndChange && !(responseOverride?.Contains(setting) ?? false);
                 }
@@ -84,24 +104,24 @@ namespace ASS.Features
             if (forceLoad || player.TabOpen())
             {
                 Logger.Debug($"Sending {settings.Length} settings to {player.Nickname} via {nameof(SendCustomToPlayer)}", Main.Debug);
-                ASSUtils.SendASSMessage(player.Connection, new ASSEntriesPack(settings, includeBaseGameSettings ? ServerSpecificSettingsSync.DefinedSettings : [], GetVersion(player)));
+                ASSUtils.SendASSMessage(player.Connection, new ASSEntriesPack(list, includeBaseGameSettings ? ServerSpecificSettingsSync.DefinedSettings : [], GetVersion(player)));
             }
             else
             {
                 Logger.Debug($"Sending {settings.Length} (pre-minimizing) settings to {player.Nickname} via {nameof(SendCustomToPlayer)}", Main.Debug);
-                ASSUtils.SendASSMessage(player.Connection, MinimizedPack(settings, includeBaseGameSettings ? ServerSpecificSettingsSync.DefinedSettings : [], GetVersion(player, registerChange)));
+                ASSUtils.SendASSMessage(player.Connection, MinimizedPack(list, includeBaseGameSettings ? ServerSpecificSettingsSync.DefinedSettings : [], GetVersion(player, registerChange)));
                 QueuedUpdates[player.ReferenceHub] = () =>
                 {
                     if (ignoreResponses)
                     {
-                        foreach (ASSBase setting in ReceivedSettings[player])
+                        foreach (ASSBase setting in list)
                         {
                             setting.IgnoreNextResponse = setting.ResponseMode is ServerSpecificSettingBase.UserResponseMode.AcquisitionAndChange && !(responseOverride?.Contains(setting) ?? false);
                         }
                     }
 
                     Logger.Debug($"Sending {settings.Length} settings to {player.Nickname} via {nameof(SendCustomToPlayer)} after tab was opened", Main.Debug);
-                    ASSUtils.SendASSMessage(player.Connection, new ASSEntriesPack(settings, includeBaseGameSettings ? ServerSpecificSettingsSync.DefinedSettings : [], GetVersion(player)));
+                    ASSUtils.SendASSMessage(player.Connection, new ASSEntriesPack(list, includeBaseGameSettings ? ServerSpecificSettingsSync.DefinedSettings : [], GetVersion(player)));
                 };
             }
         }
@@ -115,7 +135,7 @@ namespace ASS.Features
                 ReceivedSettings[player] = value = [];
 
             if (forceLoad || player.TabOpen())
-                ASSUtils.SendASSMessage(player.Connection, new ASSEntriesPack(value, settings, GetVersion(player)));
+                ASSUtils.SendASSMessage(player.Connection, new ASSEntriesPack(ListPool<ASSBase>.Shared.Rent(value), settings, GetVersion(player)));
             else
             {
                 if (!QueuedUpdates.ContainsKey(player.ReferenceHub))
@@ -127,7 +147,7 @@ namespace ASS.Features
                 QueuedUpdates[player.ReferenceHub] = () =>
                 {
                     Logger.Debug($"Sending {settings.Length} settings to {player.Nickname} via {nameof(SendSSSIncludingASS)} after tab was opened", Main.Debug);
-                    ASSUtils.SendASSMessage(player.Connection, new ASSEntriesPack(value, settings, version ?? GetVersion(player)));
+                    ASSUtils.SendASSMessage(player.Connection, new ASSEntriesPack(ListPool<ASSBase>.Shared.Rent(value), settings, version ?? GetVersion(player)));
                 };
             }
         }
@@ -192,12 +212,12 @@ namespace ASS.Features
         /// <param name="baseGameSettings">The ServerSpecificSetting settings to search for keybinds.</param>
         /// <param name="version">What version to send this pack with.</param>
         /// <returns>A minimized <see cref="ASSEntriesPack"/>.</returns>
-        internal static ASSEntriesPack MinimizedPack(ASSBase[] assSettings, ServerSpecificSettingBase[] baseGameSettings, int version)
+        internal static ASSEntriesPack MinimizedPack(IEnumerable<ASSBase> assSettings, IEnumerable<ServerSpecificSettingBase> baseGameSettings, int version)
         {
             return new ASSEntriesPack(
-                assSettings
+                ListPool<ASSBase>.Shared.Rent(assSettings
                     .Where(setting => setting.SSSType == typeof(SSKeybindSetting))
-                    .ToArray(),
+                    .Prepend(new ASSHeader("Plz No Hash Collision".GetStableHashCode(), "Loading...", "ASS is currently loading all of your settings!"))),
                 baseGameSettings
                     .Where(setting => setting.GetType() == typeof(SSKeybindSetting))
                     .ToArray(),
@@ -292,13 +312,13 @@ namespace ASS.Features
             }
         }
 
-        private static ASSBase[] Copy(ASSBase[] toCopy)
+        private static List<ASSBase> Copy(ASSBase[] toCopy)
         {
-            ASSBase[] val = new ASSBase[toCopy.Length];
+            List<ASSBase> val = ListPool<ASSBase>.Shared.Rent(toCopy.Length);
 
             for (int i = 0; i < toCopy.Length; i++)
             {
-                val[i] = toCopy[i].Copy();
+                val.Add(toCopy[i].Copy());
                 val[i].IsInstance = true;
             }
 

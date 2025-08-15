@@ -12,7 +12,9 @@ namespace ASS.Features.Settings
     #endif
 
     using LabApi.Features.Wrappers;
+
     using Mirror;
+
     using UserSettings.ServerSpecific;
 
     public abstract class ASSBase

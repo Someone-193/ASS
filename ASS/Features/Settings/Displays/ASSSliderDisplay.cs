@@ -190,7 +190,7 @@ namespace ASS.Features.Settings.Displays
             base.Deserialize(reader);
         }
 
-        internal override ASSBase Copy() => new ASSSlider(Id, Label, Value, MinValue, MaxValue, IsInteger, ValueFormat, DisplayFormat, Hint, OnChanged, CollectionId);
+        internal override ASSBase Copy() => new ASSSliderDisplay(Id, Label, Value, MinValue, MaxValue, IsInteger, ValueFormat, DisplayFormat, Hint);
 
         private static Action<NetworkWriter> GetAction(float newMinValue, float newMaxValue, bool newIsInteger, string newValueFormat, string newDisplayFormat)
         {

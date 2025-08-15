@@ -14,7 +14,9 @@ namespace ASS.Events.Handlers
         /// <br/>
         /// Useful for ignoring responses from particular settings manually.
         /// </remarks>
-        public static event LabEventHandler<SettingSentEventArgs>? SettingSent;
+        public static event LabEventHandler<SendingSettingEventArgs>? SendingSetting;
+
+        public static event LabEventHandler<UpdatingSettingEventArgs>? UpdatingSetting;
 
         public static event LabEventHandler<SettingTriggeredEventArgs>? SettingTriggered = ev => ev.Setting.OnChanged?.Invoke(ev.Player, ev.Setting);
 
@@ -30,7 +32,9 @@ namespace ASS.Events.Handlers
 
         public static event LabEventHandler<TextInputChangedEventArgs>? TextInputChanged;
 
-        public static void OnSettingSent(SettingSentEventArgs ev) => SettingSent?.InvokeEvent(ev);
+        public static void OnSendingSetting(SendingSettingEventArgs ev) => SendingSetting?.InvokeEvent(ev);
+
+        public static void OnUpdatingSetting(UpdatingSettingEventArgs ev) => UpdatingSetting?.InvokeEvent(ev);
 
         public static void OnSettingTriggered(SettingTriggeredEventArgs ev) => SettingTriggered?.InvokeEvent(ev);
 

@@ -1,35 +1,41 @@
 namespace ASS.Features.MirrorUtils.Messages
 {
+    using System.Collections.Generic;
+
     using ASS.Features.Settings;
+
     using Mirror;
+
+    using NorthwoodLib.Pools;
+
     using UserSettings.ServerSpecific;
 
-    public readonly struct ASSEntriesPack(ASSBase[] settings, ServerSpecificSettingBase[]? baseSettings, int version) : NetworkMessage
+    // make sure all callers of ctor use rented lists.
+    public readonly struct ASSEntriesPack(List<ASSBase> settings, ServerSpecificSettingBase[]? baseSettings, int version) : NetworkMessage
     {
-        public readonly ASSBase[]? Settings = settings;
+        public readonly List<ASSBase> Settings = settings;
         public readonly ServerSpecificSettingBase[]? BaseSettings = baseSettings;
         public readonly int Version = version;
 
         public void Serialize(NetworkWriter writer)
         {
             writer.WriteInt(Version);
-            if (Settings == null && BaseSettings == null)
+            if (Settings.Count is 0 && BaseSettings is null)
             {
                 writer.WriteByte(0);
             }
             else
             {
-                writer.WriteByte((byte)((Settings?.Length ?? 0) + (BaseSettings?.Length ?? 0)));
-                if (Settings != null)
+                writer.WriteByte((byte)(Settings.Count + (BaseSettings?.Length ?? 0)));
+                foreach (ASSBase setting in Settings)
                 {
-                    foreach (ASSBase setting in Settings)
-                    {
-                        writer.WriteByte(ServerSpecificSettingsSync.GetCodeFromType(setting.SSSType));
-                        setting.Serialize(writer);
-                    }
+                    writer.WriteByte(ServerSpecificSettingsSync.GetCodeFromType(setting.SSSType));
+                    setting.Serialize(writer);
                 }
 
-                if (BaseSettings != null)
+                ListPool<ASSBase>.Shared.Return(Settings);
+
+                if (BaseSettings is not null)
                 {
                     foreach (ServerSpecificSettingBase setting in BaseSettings)
                     {
