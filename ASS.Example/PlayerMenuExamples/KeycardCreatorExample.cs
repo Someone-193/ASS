@@ -32,11 +32,12 @@ namespace ASS.Example.PlayerMenuExamples
 
         public static void OnLeft(PlayerLeftEventArgs ev)
         {
-            foreach (KeyValuePair<Player, PlayerMenu> kvp in Menus)
-                kvp.Value.Update(false, true);
-
             if (Menus.TryGetValue(ev.Player, out PlayerMenu menu))
                 menu.Destroy();
+            Menus.Remove(ev.Player);
+
+            foreach (KeyValuePair<Player, PlayerMenu> kvp in Menus)
+                kvp.Value.Update(false, true);
         }
 
         public static void OnSettingTriggered(SettingTriggeredEventArgs ev)

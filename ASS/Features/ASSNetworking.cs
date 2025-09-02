@@ -104,12 +104,12 @@ namespace ASS.Features
             if (forceLoad || player.TabOpen())
             {
                 Logger.Debug($"Sending {settings.Length} settings to {player.Nickname} via {nameof(SendCustomToPlayer)}", Main.Debug);
-                ASSUtils.SendASSMessage(player.Connection, new ASSEntriesPack(list, includeBaseGameSettings ? ServerSpecificSettingsSync.DefinedSettings : [], GetVersion(player)));
+                ASSUtils.SendASSMessage(player.Connection, new ASSEntriesPack(list, includeBaseGameSettings ? ServerSpecificSettingsSync.DefinedSettings ?? [] : [], GetVersion(player)));
             }
             else
             {
                 Logger.Debug($"Sending {settings.Length} (pre-minimizing) settings to {player.Nickname} via {nameof(SendCustomToPlayer)}", Main.Debug);
-                ASSUtils.SendASSMessage(player.Connection, MinimizedPack(list, includeBaseGameSettings ? ServerSpecificSettingsSync.DefinedSettings : [], GetVersion(player, registerChange)));
+                ASSUtils.SendASSMessage(player.Connection, MinimizedPack(list, includeBaseGameSettings ? ServerSpecificSettingsSync.DefinedSettings ?? [] : [], GetVersion(player, registerChange)));
                 QueuedUpdates[player.ReferenceHub] = () =>
                 {
                     if (ignoreResponses)
@@ -121,7 +121,7 @@ namespace ASS.Features
                     }
 
                     Logger.Debug($"Sending {settings.Length} settings to {player.Nickname} via {nameof(SendCustomToPlayer)} after tab was opened", Main.Debug);
-                    ASSUtils.SendASSMessage(player.Connection, new ASSEntriesPack(list, includeBaseGameSettings ? ServerSpecificSettingsSync.DefinedSettings : [], GetVersion(player)));
+                    ASSUtils.SendASSMessage(player.Connection, new ASSEntriesPack(list, includeBaseGameSettings ? ServerSpecificSettingsSync.DefinedSettings ?? [] : [], GetVersion(player)));
                 };
             }
         }
