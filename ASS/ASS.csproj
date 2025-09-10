@@ -31,6 +31,7 @@
         <Reference Include="Unity.TextMeshPro.dll" HintPath="$(SL_REFERENCES)\Unity.TextMeshPro.dll" Private="false" />
         <Reference Include="Assembly-CSharp-firstpass.dll" HintPath="$(SL_REFERENCES)\Assembly-CSharp-firstpass.dll" Private="false" />
         <Reference Include="Mirror.dll" HintPath="$(SL_REFERENCES)\Mirror.dll" Private="false" />
+        <Reference Include="mscorlib.dll" HintPath="$(SL_REFERENCES)\mscorlib.dll" Private="false" />
     </ItemGroup>
 
 </Project>

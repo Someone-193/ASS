@@ -2,6 +2,7 @@ namespace ASS.Features
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
 
     using ASS.Events.EventArgs;
@@ -58,14 +59,20 @@ namespace ASS.Features
         /// </remarks>
         public static List<ASSKeybind> PersistantKeybinds { get; } = [];
 
-        #nullable disable
-        public static bool TryGetSetting<T>(Player player, int id, out T value)
+        /// <summary>
+        /// Gets a <see cref="Dictionary{TKey,TValue}"/> containing overrides for players, meaning if an entry for a given player exists here, SendToPlayer will only send settings from the groups in that entry.
+        /// </summary>
+        /// <remarks>
+        /// Useful if you want to force only a certain group or 2 to be visible to a player (like a setting controlling what settings you can see, then the group of settings you're looking at).
+        /// </remarks>
+        public static Dictionary<Player, ASSGroup[]> PlayerOverrides { get; } = new();
+
+        public static bool TryGetSetting<T>(Player player, int id, [NotNullWhen(true)] out T? value)
             where T : ASSBase
         {
             value = !ReceivedSettings.TryGetValue(player, out ASSBase[] settings) ? null : settings.FirstOrDefault(setting => setting.Id == id) as T;
             return value is not null;
         }
-        #nullable restore
 
         public static void SendToAll()
         {
@@ -234,12 +241,30 @@ namespace ASS.Features
 
         internal static IEnumerable<ASSBase> GetRegisteredSorted(Player player)
         {
-            return Groups.OrderByDescending(group => group.Priority).SelectMany(group => group.GetViewableSettingsOrdered(player));
+            IEnumerable<ASSGroup> groups;
+
+            if (PlayerOverrides.TryGetValue(player, out ASSGroup[] groupArray))
+            {
+                groups = groupArray;
+            }
+            else
+            {
+                groups = Groups;
+            }
+
+            return groups.OrderByDescending(group => group.Priority).SelectMany(group => group.GetViewableSettingsOrdered(player));
         }
 
         internal static void ProcessResponseMessage(NetworkConnectionToClient conn, SSSClientResponse message)
         {
-            ServerSpecificSettingsSync.ServerProcessClientResponseMsg(conn, message);
+            try
+            {
+                ServerSpecificSettingsSync.ServerProcessClientResponseMsg(conn, message);
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"Failed to process SSSClientResponse in base game!\n{ex}");
+            }
 
             if (!ReferenceHub.TryGetHub(conn, out ReferenceHub hub))
                 return;

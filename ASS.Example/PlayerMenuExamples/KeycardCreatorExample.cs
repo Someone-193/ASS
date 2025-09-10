@@ -51,29 +51,29 @@ namespace ASS.Example.PlayerMenuExamples
                     break;
                 case ASSButton { Id: 115 }:
                     int index = 0;
-                    if (ASSNetworking.TryGetSetting(ev.Player, 102, out ASSDropdown typeDropdown))
+                    if (ASSNetworking.TryGetSetting(ev.Player, 102, out ASSDropdown? typeDropdown))
                         index = typeDropdown.IndexSelected;
 
                     string itemName = "Not defined";
                     string holderName = "Not defined";
                     string label = "Not defined";
 
-                    if (ASSNetworking.TryGetSetting(ev.Player, 103, out ASSTextInput nameInput))
+                    if (ASSNetworking.TryGetSetting(ev.Player, 103, out ASSTextInput? nameInput))
                         itemName = nameInput.InputtedText;
-                    if (ASSNetworking.TryGetSetting(ev.Player, 109, out ASSTextInput holderInput))
+                    if (ASSNetworking.TryGetSetting(ev.Player, 109, out ASSTextInput? holderInput))
                         holderName = holderInput.InputtedText;
-                    if (ASSNetworking.TryGetSetting(ev.Player, 110, out ASSTextInput labelInput))
+                    if (ASSNetworking.TryGetSetting(ev.Player, 110, out ASSTextInput? labelInput))
                         label = labelInput.InputtedText;
 
                     int containment = 0;
                     int armory = 0;
                     int admin = 0;
 
-                    if (ASSNetworking.TryGetSetting(ev.Player, 104, out ASSSlider containmentSlider))
+                    if (ASSNetworking.TryGetSetting(ev.Player, 104, out ASSSlider? containmentSlider))
                         containment = (int)containmentSlider.Value;
-                    if (ASSNetworking.TryGetSetting(ev.Player, 105, out ASSSlider armorySlider))
+                    if (ASSNetworking.TryGetSetting(ev.Player, 105, out ASSSlider? armorySlider))
                         armory = (int)armorySlider.Value;
-                    if (ASSNetworking.TryGetSetting(ev.Player, 106, out ASSSlider adminSlider))
+                    if (ASSNetworking.TryGetSetting(ev.Player, 106, out ASSSlider? adminSlider))
                         admin = (int)adminSlider.Value;
 
                     KeycardLevels levels = new(containment, armory, admin);
@@ -82,33 +82,33 @@ namespace ASS.Example.PlayerMenuExamples
                     string permsHex = "#000000";
                     string labelHex = "#000000";
 
-                    if (ASSNetworking.TryGetSetting(ev.Player, 107, out ASSTextInput keycardHexInput))
+                    if (ASSNetworking.TryGetSetting(ev.Player, 107, out ASSTextInput? keycardHexInput))
                         keycardHex = keycardHexInput.InputtedText;
-                    if (ASSNetworking.TryGetSetting(ev.Player, 108, out ASSTextInput permsHexInput))
+                    if (ASSNetworking.TryGetSetting(ev.Player, 108, out ASSTextInput? permsHexInput))
                         permsHex = permsHexInput.InputtedText;
-                    if (ASSNetworking.TryGetSetting(ev.Player, 111, out ASSTextInput labelHexInput))
+                    if (ASSNetworking.TryGetSetting(ev.Player, 111, out ASSTextInput? labelHexInput))
                         labelHex = labelHexInput.InputtedText;
 
                     byte wearLevel = 0;
 
-                    if (ASSNetworking.TryGetSetting(ev.Player, 112, out ASSSlider wearLevelSlider))
+                    if (ASSNetworking.TryGetSetting(ev.Player, 112, out ASSSlider? wearLevelSlider))
                         wearLevel = (byte)wearLevelSlider.Value;
 
                     string serialLabel = string.Empty;
 
-                    if (ASSNetworking.TryGetSetting(ev.Player, 113, out ASSTextInput serialLabelInput))
+                    if (ASSNetworking.TryGetSetting(ev.Player, 113, out ASSTextInput? serialLabelInput))
                         serialLabel = serialLabelInput.InputtedText;
 
                     int rankIndex = 0;
 
-                    if (ASSNetworking.TryGetSetting(ev.Player, 114, out ASSSlider rankIndexSlider))
+                    if (ASSNetworking.TryGetSetting(ev.Player, 114, out ASSSlider? rankIndexSlider))
                         rankIndex = (int)rankIndexSlider.Value;
 
                     TryParseHexColor(keycardHex, out Color keycardColor);
                     TryParseHexColor(labelHex, out Color labelColor);
                     TryParseHexColor(permsHex, out Color permsColor);
 
-                    Player target = ASSNetworking.TryGetSetting(ev.Player, 101, out ASSDropdown playerDropdown) ? Player.ReadyList.ElementAt(playerDropdown.IndexSelected) : ev.Player;
+                    Player target = ASSNetworking.TryGetSetting(ev.Player, 101, out ASSDropdown? playerDropdown) ? Player.ReadyList.ElementAt(playerDropdown.IndexSelected) : ev.Player;
 
                     switch (index)
                     {
@@ -135,7 +135,7 @@ namespace ASS.Example.PlayerMenuExamples
         private static ASSGroup Generator(Player owner)
         {
             int index = 0;
-            if (ASSNetworking.TryGetSetting(owner, 102, out ASSDropdown dropdown))
+            if (ASSNetworking.TryGetSetting(owner, 102, out ASSDropdown? dropdown))
                 index = dropdown.IndexSelected;
 
             List<ASSBase> settings = 
