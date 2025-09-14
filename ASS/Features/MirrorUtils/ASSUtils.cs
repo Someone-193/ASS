@@ -55,7 +55,7 @@ namespace ASS.Features.MirrorUtils
 
                         if (!flag)
                         {
-                            pack.Settings.Add(new ASSHeader("Plz No Hash Collision 2: Electric Boogaloo".GetStableHashCode(), "Keybinds", "These are here so you can always use your keybinds, even if typically hidden"));
+                            pack.Settings.Add(new ASSHeader("Plz No Hash Collision 2: Electric Boogaloo".GetStableHashCode(), "Keybinds", false, "These are here so you can always use your keybinds, even if typically hidden"));
                             flag = true;
                         }
 

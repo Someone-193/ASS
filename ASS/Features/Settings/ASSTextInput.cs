@@ -26,6 +26,7 @@ namespace ASS.Features.Settings
         public ASSTextInput(
             int id,
             string? label = null,
+            string defaultText = "",
             string placeholder = "...",
             ushort characterLimit = 64,
             TMP_InputField.ContentType contentType = TMP_InputField.ContentType.Standard,
@@ -35,6 +36,7 @@ namespace ASS.Features.Settings
         {
             Id = id;
             Label = label;
+            DefaultText = defaultText;
             this.placeholder = placeholder;
             this.characterLimit = characterLimit;
             this.contentType = contentType;
@@ -44,6 +46,14 @@ namespace ASS.Features.Settings
         }
 
         public string InputtedText => inputtedText;
+
+        /// <summary>
+        /// Gets or sets the default value of this <see cref="ASSTextInput"/>.
+        /// </summary>
+        /// <remarks>
+        /// Cannot automatically sync cuz NW moment.
+        /// </remarks>
+        public string DefaultText { get; set; }
 
         public string Placeholder
         {
@@ -82,12 +92,15 @@ namespace ASS.Features.Settings
 
         internal override Type SSSType { get; } = typeof(SSPlaintextSetting);
 
-        public static implicit operator ASSTextInput(SSPlaintextSetting text) => new(text.SettingId, text.Label, text.Placeholder, (ushort)text.CharacterLimit, text.ContentType, text.HintDescription);
+        public static implicit operator ASSTextInput(SSPlaintextSetting text) => new(text.SettingId, text.Label, text.DefaultText, text.Placeholder, (ushort)text.CharacterLimit, text.ContentType, text.HintDescription);
 
-        public static implicit operator SSPlaintextSetting(ASSTextInput text) => new(text.Id, text.Label, text.Placeholder, text.CharacterLimit, text.ContentType, text.Hint);
+        public static implicit operator SSPlaintextSetting(ASSTextInput text) => new(text.Id, text.Label, text.Placeholder, text.CharacterLimit, text.ContentType, text.Hint)
+        {
+            DefaultText = text.DefaultText,
+        };
 
         #if EXILED
-        public static implicit operator ASSTextInput(UserTextInputSetting text) => new(text.Id, text.Label, text.PlaceHolder, (ushort)text.CharacterLimit, text.ContentType, text.HintDescription, text.OnChanged.Convert(), text.CollectionId)
+        public static implicit operator ASSTextInput(UserTextInputSetting text) => new(text.Id, text.Label, text.PlaceHolder, string.Empty, (ushort)text.CharacterLimit, text.ContentType, text.HintDescription, text.OnChanged.Convert(), text.CollectionId)
         {
             ExHeader = text.Header,
             ExAction = text.OnChanged,
@@ -129,6 +142,7 @@ namespace ASS.Features.Settings
         {
             base.Serialize(writer);
 
+            writer.WriteString(DefaultText);
             writer.WriteString(Placeholder);
             writer.WriteUShort(CharacterLimit);
             writer.WriteByte((byte)ContentType);
@@ -141,7 +155,7 @@ namespace ASS.Features.Settings
             base.Deserialize(reader);
         }
 
-        internal override ASSBase Copy() => new ASSTextInput(Id, Label, Placeholder, CharacterLimit, ContentType, Hint, OnChanged, CollectionId);
+        internal override ASSBase Copy() => new ASSTextInput(Id, Label, DefaultText, Placeholder, CharacterLimit, ContentType, Hint, OnChanged, CollectionId);
 
         private static Action<NetworkWriter> GetAction(string newPlaceHolder, ushort newCharacterLimit, TMP_InputField.ContentType newContentType)
         {

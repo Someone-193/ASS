@@ -224,7 +224,7 @@ namespace ASS.Features
             return new ASSEntriesPack(
                 ListPool<ASSBase>.Shared.Rent(assSettings
                     .Where(setting => setting.SSSType == typeof(SSKeybindSetting))
-                    .Prepend(new ASSHeader("Plz No Hash Collision".GetStableHashCode(), "Loading...", "ASS is currently loading all of your settings!"))),
+                    .Prepend(new ASSHeader("Plz No Hash Collision".GetStableHashCode(), "Loading...", false, "ASS is currently loading all of your settings!"))),
                 baseGameSettings
                     .Where(setting => setting.GetType() == typeof(SSKeybindSetting))
                     .ToArray(),

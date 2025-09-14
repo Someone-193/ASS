@@ -52,7 +52,7 @@ namespace ASS.Features.Collections
         /// <br/>
         /// This will automatically update the PlayerMenu when the owner opens up their SSS tab, and can be customized to do other things.
         /// </remarks>
-        public Action<PlayerMenu, Player, SSSUserStatusReport>? DirtyAction { get; set; }
+        public Action<PlayerMenu, SSSUserStatusReport>? DirtyAction { get; set; }
 
         public GroupUpdateHandler Generator { get; set; }
 
@@ -91,7 +91,7 @@ namespace ASS.Features.Collections
                 return;
 
             Dirty = false;
-            DirtyAction?.Invoke(this, Player.Get(hub), report);
+            DirtyAction?.Invoke(this, report);
         }
     }
 }
