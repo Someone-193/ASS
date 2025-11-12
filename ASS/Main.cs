@@ -88,6 +88,8 @@
         {
             Instance = this;
 
+            ServerSpecificSettingsSync.SendOnJoinFilter = _ => false;
+
             harmony = new Harmony("ASS");
             harmony.PatchAll();
 
@@ -96,6 +98,7 @@
             CustomNetworkManager.OnClientReady += HandlerAction;
 
             PlayerEvents.Joined += Joined.OnJoined;
+            PlayerEvents.Left += Left.OnLeft;
 
             ServerSpecificSettingsSync.DefinedSettings ??= [];
         }
@@ -109,6 +112,7 @@
             CustomNetworkManager.OnClientReady -= HandlerAction;
 
             PlayerEvents.Joined -= Joined.OnJoined;
+            PlayerEvents.Left -= Left.OnLeft;
         }
         #endif
     }

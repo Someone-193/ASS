@@ -11,7 +11,7 @@ namespace ASS.Events.EventArgs
     {
         public Player Player { get; set; } = player;
 
-        public List<ASSBase> Settings { get; set; } = settings;
+        public List<ASSBase> Settings { get; } = settings;
 
         public bool IsAllowed { get; set; } = true;
     }

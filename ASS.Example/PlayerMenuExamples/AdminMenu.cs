@@ -51,7 +51,7 @@ namespace ASS.Example.PlayerMenuExamples
                     new ASSButton(-13, "Toggle Godmode", "Toggle", 1F, "Toggles godmode")
                 ],
                 1,
-                Valid);
+                p => p == owner && Valid(p));
         }
 
         private static bool Valid(Player player)
