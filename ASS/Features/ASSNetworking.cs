@@ -104,7 +104,7 @@ namespace ASS.Features
             {
                 foreach (ASSBase setting in list)
                 {
-                    setting.IgnoreNextResponse = setting.ResponseMode is ServerSpecificSettingBase.UserResponseMode.AcquisitionAndChange && !(responseOverride?.Contains(setting) ?? false);
+                    setting.IgnoreNextResponse |= setting.ResponseMode is ServerSpecificSettingBase.UserResponseMode.AcquisitionAndChange && !(responseOverride?.Contains(setting) ?? false);
                 }
             }
 
@@ -330,11 +330,8 @@ namespace ASS.Features
                 SendToPlayerFull(p, true, false, true);
             }
 
-            if (report.TabOpen && QueuedUpdates.TryGetValue(hub, out Action update))
-            {
-                QueuedUpdates.Remove(hub);
+            if (report.TabOpen && QueuedUpdates.Remove(hub, out Action update))
                 update();
-            }
         }
 
         private static List<ASSBase> Copy(ASSBase[] toCopy)
@@ -344,6 +341,7 @@ namespace ASS.Features
             for (int i = 0; i < toCopy.Length; i++)
             {
                 val.Add(toCopy[i].Copy());
+                val[i].IgnoreNextResponse = toCopy[i].IgnoreNextResponse;
                 val[i].IsInstance = true;
             }
 
