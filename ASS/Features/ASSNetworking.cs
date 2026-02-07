@@ -5,6 +5,7 @@ namespace ASS.Features
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
 
+    using ASS.EventHandlers;
     using ASS.Events.EventArgs;
     using ASS.Events.Handlers;
     using ASS.Features.Collections;
@@ -95,7 +96,7 @@ namespace ASS.Features
         // main stuff happening here is we're queuing the actual message if the target doesn't have their SSS tab open, and sending only the necessary settings (A "Loading..." Header and all keybinds) to minimize lag by only sending the queued message once they open up their SSS tab while maintaining seamless functionality
         public static void SendCustomToPlayer(Player player, ASSBase[] settings, bool includeBaseGameSettings = true, bool registerChange = true, bool forceLoad = false, bool ignoreResponses = false, ASSBase[]? responseOverride = null)
         {
-            if (!NetworkServer.active)
+            if (Joined.Locked.Contains(player))
                 return;
 
             List<ASSBase> list = Copy(settings);
@@ -135,7 +136,7 @@ namespace ASS.Features
 
         public static void SendSSSIncludingASS(Player player, ServerSpecificSettingBase[] settings, int? version, bool forceLoad = false)
         {
-            if (!NetworkServer.active)
+            if (Joined.Locked.Contains(player))
                 return;
 
             if (!ReceivedSettings.TryGetValue(player, out ASSBase[] value))
@@ -277,6 +278,9 @@ namespace ASS.Features
             {
                 return;
             }
+
+            if (Joined.Locked.Count > 0)
+                Joined.Locked.Remove(p);
 
             Logger.Debug("Received ASS setting response", Main.Debug);
 

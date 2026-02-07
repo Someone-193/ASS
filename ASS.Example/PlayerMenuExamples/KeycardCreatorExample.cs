@@ -27,7 +27,7 @@ namespace ASS.Example.PlayerMenuExamples
             foreach (KeyValuePair<Player, PlayerMenu> kvp in Menus)
                 kvp.Value.Update(false, true);
 
-            Menus[ev.Player] = new PlayerMenu(Generator, ev.Player);
+            Menus[ev.Player] = new PlayerMenu(Generator, ev.Player, false);
         }
 
         public static void OnLeft(PlayerLeftEventArgs ev)

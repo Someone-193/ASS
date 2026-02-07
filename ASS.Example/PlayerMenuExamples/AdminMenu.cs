@@ -22,9 +22,9 @@ namespace ASS.Example.PlayerMenuExamples
 
             if (!Menus.TryGetValue(ev.Player, out PlayerMenu menu) && ServerStatic.PermissionsHandler.IsRaPermitted(ev.Group.Permissions))
             {
-                Menus[ev.Player] = new PlayerMenu(Generator, ev.Player);
+                Menus[ev.Player] = new PlayerMenu(Generator, ev.Player, true);
             }
-            else
+            else if (!ServerStatic.PermissionsHandler.IsRaPermitted(ev.Group.Permissions))
             {
                 menu?.Destroy();
             }

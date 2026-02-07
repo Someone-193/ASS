@@ -8,14 +8,20 @@ namespace ASS.Features.Collections
     {
         private bool dirty;
 
-        public PlayerMenu(GroupUpdateHandler generator, Player owner)
+        public PlayerMenu(GroupUpdateHandler generator, Player owner, bool updateOwner = true)
         {
             Generator = generator;
             Owner = owner;
 
             Current = generator(owner);
 
-            ASSNetworking.RegisterGroups([Current], [owner]);
+            ASSNetworking.RegisterGroups([Current], updateOwner ? [owner] : []);
+        }
+
+        [Obsolete("Use constructor with \"updateOwner\" instead.")]
+        public PlayerMenu(GroupUpdateHandler generator, Player owner)
+            : this(generator, owner, true)
+        {
         }
 
         public delegate ASSGroup GroupUpdateHandler(Player player);

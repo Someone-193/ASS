@@ -13,7 +13,7 @@ namespace ASS.Example.PlayerMenuExamples
         public static void OnJoined(PlayerJoinedEventArgs ev)
         {
             AbstractExample.Instance.Add(ev.Player);
-            Menus[ev.Player] = new PlayerMenu(Generator, ev.Player);
+            Menus[ev.Player] = new PlayerMenu(Generator, ev.Player, false);
         }
 
         public static void OnLeft(PlayerLeftEventArgs ev)
