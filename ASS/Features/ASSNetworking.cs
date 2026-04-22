@@ -258,6 +258,8 @@ namespace ASS.Features
 
         internal static void ProcessResponseMessage(NetworkConnectionToClient conn, SSSClientResponse message)
         {
+            Logger.Debug("Received SSS client response", Main.Debug);
+
             try
             {
                 ServerSpecificSettingsSync.ServerProcessClientResponseMsg(conn, message);
@@ -282,7 +284,7 @@ namespace ASS.Features
             if (Joined.Locked.Count > 0)
                 Joined.Locked.Remove(p);
 
-            Logger.Debug("Received ASS setting response", Main.Debug);
+            Logger.Debug("Processing ASS setting response", Main.Debug);
 
             setting.Deserialize(NetworkReaderPool.Get(message.Payload));
 

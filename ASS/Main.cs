@@ -7,6 +7,7 @@
 
     using LabApi.Events.Handlers;
     using LabApi.Features;
+    using LabApi.Features.Console;
     using LabApi.Loader.Features.Plugins;
     using LabApi.Loader.Features.Plugins.Enums;
 
@@ -27,12 +28,29 @@
     #endif
     {
         private static readonly Action HandlerAction = () => NetworkServer.ReplaceHandler<SSSClientResponse>(ASSNetworking.ProcessResponseMessage);
+        private static DateTime lastDependencyCheckMessage = DateTime.MinValue;
 
         private static Harmony harmony = null!;
 
-        public static bool Debug => Instance.Config?.Debug ?? false;
+        public static bool Debug
+        {
+            get
+            {
+                if (Instance is not null)
+                    return Instance.Config?.Debug ?? false;
 
-        public static Main Instance { get; private set; } = null!;
+                // minimize log spam, but still have it keep warning, Instance can only be null if ASS was referenced and not enabled
+                if ((DateTime.UtcNow - lastDependencyCheckMessage) > TimeSpan.FromSeconds(5))
+                {
+                    Logger.Warn("ASS is being used as a dependency (or is disabled yet still referenced by another plugin), please install it in the Plugins folder!");
+                    lastDependencyCheckMessage = DateTime.UtcNow;
+                }
+
+                return false;
+            }
+        }
+
+        public static Main? Instance { get; private set; }
 
         public override string Name => "ASS";
 

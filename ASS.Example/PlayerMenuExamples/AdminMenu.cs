@@ -18,15 +18,20 @@ namespace ASS.Example.PlayerMenuExamples
             // NW moment
             // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
             if (ev.Group is null)
-                return;
+            {
+                if (Menus.TryGetValue(ev.Player, out PlayerMenu menu1))
+                    menu1.Destroy();
 
-            if (!Menus.TryGetValue(ev.Player, out PlayerMenu menu) && ServerStatic.PermissionsHandler.IsRaPermitted(ev.Group.Permissions))
+                return;
+            }
+
+            if (!Menus.TryGetValue(ev.Player, out PlayerMenu menu2) && ServerStatic.PermissionsHandler.IsRaPermitted(ev.Group.Permissions))
             {
                 Menus[ev.Player] = new PlayerMenu(Generator, ev.Player, true);
             }
             else if (!ServerStatic.PermissionsHandler.IsRaPermitted(ev.Group.Permissions))
             {
-                menu?.Destroy();
+                menu2?.Destroy();
             }
         }
 
