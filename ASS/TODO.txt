@@ -13,3 +13,13 @@ use #if to make all ASS methods use Exiled players in the Exiled version instead
 Add Update methods for all ASS settings and make setters use them with the AutoSync bool (or whatever I called it lol) [Done]
 
 Add Display variants of all applicable settings [Done]
+
+Setting classes like SecretAPI
+
+Per-Plugin settings, while maintaining access to a global ID or something
+
+More examples
+
+YT video?
+
+Setting definitions in properties like the LabAPI SSS implementation that never released publicly?
