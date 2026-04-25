@@ -88,6 +88,7 @@
             PlayerEvents.Left += Left.OnLeft;
 
             ServerSpecificSettingsSync.DefinedSettings ??= [];
+            base.OnEnabled();
         }
 
         public override void OnDisabled()
@@ -100,6 +101,7 @@
 
             PlayerEvents.Joined -= Joined.OnJoined;
             PlayerEvents.Left -= Left.OnLeft;
+            base.OnDisabled();
         }
         #elif LABAPI
         public override void Enable()

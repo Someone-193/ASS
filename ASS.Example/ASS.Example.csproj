@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
@@ -18,19 +18,153 @@
     <Import Project="../plugin.props" />
 
     <ItemGroup>
-        <PackageReference Include="Northwood.LabAPI" Version="1.1.5" />
-        <PackageReference Include="Lib.Harmony" Version="$(HarmonyVersion)" />
+        <PackageReference Include="ExMod.Exiled" Version="9.13.3" />
+        <PackageReference Include="Northwood.LabAPI" Version="1.1.6.1" />
+        <PackageReference Include="Lib.Harmony" Version="2.4.2" />
         <PackageReference Include="StyleCop.Analyzers" Version="$(StyleCopVersion)" />
     </ItemGroup>
 
     <ItemGroup>
-        <Reference Include="Assembly-CSharp.dll" HintPath="$(SL_REFERENCES)\Assembly-CSharp-Publicized.dll" Private="false" />
-        <Reference Include="NorthwoodLib.dll" HintPath="$(SL_REFERENCES)\NorthwoodLib.dll" Private="false" />
-        <Reference Include="CommandSystem.Core.dll" HintPath="$(SL_REFERENCES)\CommandSystem.Core.dll" Private="false" />
-        <Reference Include="Mirror.dll" HintPath="$(SL_REFERENCES)\Mirror-Publicized.dll" Private="false" />
-        <Reference Include="Unity.TextMeshPro" HintPath="$(SL_REFERENCES)\Unity.TextMeshPro.dll" Private="false" />
-        <Reference Include="UnityEngine.CoreModule.dll" HintPath="$(SL_REFERENCES)\UnityEngine.CoreModule.dll" Private="false" />
-        <Reference Include="Exiled.API.dll" HintPath="$(SL_REFERENCES)\Exiled.API.dll" Private="false" />
+        <Reference Include="Assembly-CSharp-firstpass" HintPath="$(SL_REFERENCES)\Assembly-CSharp-firstpass.dll" />
+        <Reference Include="BouncyCastle.Cryptography" HintPath="$(SL_REFERENCES)\BouncyCastle.Cryptography.dll" />
+        <Reference Include="Caress" HintPath="$(SL_REFERENCES)\Caress.dll" />
+        <Reference Include="CustomPasses" HintPath="$(SL_REFERENCES)\CustomPasses.dll" />
+        <Reference Include="DnsClient" HintPath="$(SL_REFERENCES)\DnsClient.dll" />
+        <Reference Include="Facepunch.Steamworks.Win64" HintPath="$(SL_REFERENCES)\Facepunch.Steamworks.Win64.dll" />
+        <Reference Include="Interop" HintPath="$(SL_REFERENCES)\Interop.dll" />
+        <Reference Include="Microsoft.Bcl.AsyncInterfaces" HintPath="$(SL_REFERENCES)\Microsoft.Bcl.AsyncInterfaces.dll" />
+        <Reference Include="Mirror.Components" HintPath="$(SL_REFERENCES)\Mirror.Components.dll" />
+        <Reference Include="Mirror" HintPath="$(SL_REFERENCES)\Mirror.dll" />
+        <Reference Include="Mono.Security" HintPath="$(SL_REFERENCES)\Mono.Security.dll" />
+        <Reference Include="mscorlib" HintPath="$(SL_REFERENCES)\mscorlib.dll" />
+        <Reference Include="netstandard" HintPath="$(SL_REFERENCES)\netstandard.dll" />
+        <Reference Include="Pooling" HintPath="$(SL_REFERENCES)\Pooling.dll" />
+        <Reference Include="Snake" HintPath="$(SL_REFERENCES)\Snake.dll" />
+        <Reference Include="System.Buffers" HintPath="$(SL_REFERENCES)\System.Buffers.dll" />
+        <Reference Include="System.Collections.Immutable" HintPath="$(SL_REFERENCES)\System.Collections.Immutable.dll" />
+        <Reference Include="System.ComponentModel.Composition" HintPath="$(SL_REFERENCES)\System.ComponentModel.Composition.dll" />
+        <Reference Include="System.ComponentModel.DataAnnotations" HintPath="$(SL_REFERENCES)\System.ComponentModel.DataAnnotations.dll" />
+        <Reference Include="System.Configuration" HintPath="$(SL_REFERENCES)\System.Configuration.dll" />
+        <Reference Include="System.Core" HintPath="$(SL_REFERENCES)\System.Core.dll" />
+        <Reference Include="System.Data.DataSetExtensions" HintPath="$(SL_REFERENCES)\System.Data.DataSetExtensions.dll" />
+        <Reference Include="System.Data" HintPath="$(SL_REFERENCES)\System.Data.dll" />
+        <Reference Include="System.Drawing" HintPath="$(SL_REFERENCES)\System.Drawing.dll" />
+        <Reference Include="System.EnterpriseServices" HintPath="$(SL_REFERENCES)\System.EnterpriseServices.dll" />
+        <Reference Include="System.IO.Compression.FileSystem" HintPath="$(SL_REFERENCES)\System.IO.Compression.FileSystem.dll" />
+        <Reference Include="System.IO.Compression" HintPath="$(SL_REFERENCES)\System.IO.Compression.dll" />
+        <Reference Include="System.IO.Pipelines" HintPath="$(SL_REFERENCES)\System.IO.Pipelines.dll" />
+        <Reference Include="System.Memory" HintPath="$(SL_REFERENCES)\System.Memory.dll" />
+        <Reference Include="System.Net.Http" HintPath="$(SL_REFERENCES)\System.Net.Http.dll" />
+        <Reference Include="System.Numerics.Vectors" HintPath="$(SL_REFERENCES)\System.Numerics.Vectors.dll" />
+        <Reference Include="System.Numerics" HintPath="$(SL_REFERENCES)\System.Numerics.dll" />
+        <Reference Include="System.Runtime.CompilerServices.Unsafe" HintPath="$(SL_REFERENCES)\System.Runtime.CompilerServices.Unsafe.dll" />
+        <Reference Include="System.Runtime.Serialization" HintPath="$(SL_REFERENCES)\System.Runtime.Serialization.dll" />
+        <Reference Include="System.Runtime" HintPath="$(SL_REFERENCES)\System.Runtime.dll" />
+        <Reference Include="System.Security" HintPath="$(SL_REFERENCES)\System.Security.dll" />
+        <Reference Include="System.ServiceModel.Internals" HintPath="$(SL_REFERENCES)\System.ServiceModel.Internals.dll" />
+        <Reference Include="System.Text.Encodings.Web" HintPath="$(SL_REFERENCES)\System.Text.Encodings.Web.dll" />
+        <Reference Include="System.Text.Json" HintPath="$(SL_REFERENCES)\System.Text.Json.dll" />
+        <Reference Include="System.Threading.Tasks.Extensions" HintPath="$(SL_REFERENCES)\System.Threading.Tasks.Extensions.dll" />
+        <Reference Include="System.Transactions" HintPath="$(SL_REFERENCES)\System.Transactions.dll" />
+        <Reference Include="System.Xml.Linq" HintPath="$(SL_REFERENCES)\System.Xml.Linq.dll" />
+        <Reference Include="System.Xml" HintPath="$(SL_REFERENCES)\System.Xml.dll" />
+        <Reference Include="System" HintPath="$(SL_REFERENCES)\System.dll" />
+        <Reference Include="Unity.Burst.Unsafe" HintPath="$(SL_REFERENCES)\Unity.Burst.Unsafe.dll" />
+        <Reference Include="Unity.Burst" HintPath="$(SL_REFERENCES)\Unity.Burst.dll" />
+        <Reference Include="Unity.Collections.LowLevel.ILSupport" HintPath="$(SL_REFERENCES)\Unity.Collections.LowLevel.ILSupport.dll" />
+        <Reference Include="Unity.Collections" HintPath="$(SL_REFERENCES)\Unity.Collections.dll" />
+        <Reference Include="Unity.Mathematics" HintPath="$(SL_REFERENCES)\Unity.Mathematics.dll" />
+        <Reference Include="Unity.ProBuilder.Csg" HintPath="$(SL_REFERENCES)\Unity.ProBuilder.Csg.dll" />
+        <Reference Include="Unity.ProBuilder.KdTree" HintPath="$(SL_REFERENCES)\Unity.ProBuilder.KdTree.dll" />
+        <Reference Include="Unity.ProBuilder.Poly2Tri" HintPath="$(SL_REFERENCES)\Unity.ProBuilder.Poly2Tri.dll" />
+        <Reference Include="Unity.ProBuilder.Stl" HintPath="$(SL_REFERENCES)\Unity.ProBuilder.Stl.dll" />
+        <Reference Include="Unity.ProBuilder" HintPath="$(SL_REFERENCES)\Unity.ProBuilder.dll" />
+        <Reference Include="Unity.Rendering.LightTransport.Runtime" HintPath="$(SL_REFERENCES)\Unity.Rendering.LightTransport.Runtime.dll" />
+        <Reference Include="Unity.RenderPipelines.Core.Runtime.Shared" HintPath="$(SL_REFERENCES)\Unity.RenderPipelines.Core.Runtime.Shared.dll" />
+        <Reference Include="Unity.RenderPipelines.Core.Runtime" HintPath="$(SL_REFERENCES)\Unity.RenderPipelines.Core.Runtime.dll" />
+        <Reference Include="Unity.RenderPipelines.Core.ShaderLibrary" HintPath="$(SL_REFERENCES)\Unity.RenderPipelines.Core.ShaderLibrary.dll" />
+        <Reference Include="Unity.RenderPipelines.GPUDriven.Runtime" HintPath="$(SL_REFERENCES)\Unity.RenderPipelines.GPUDriven.Runtime.dll" />
+        <Reference Include="Unity.RenderPipelines.HighDefinition.Config.Runtime" HintPath="$(SL_REFERENCES)\Unity.RenderPipelines.HighDefinition.Config.Runtime.dll" />
+        <Reference Include="Unity.RenderPipelines.HighDefinition.Runtime" HintPath="$(SL_REFERENCES)\Unity.RenderPipelines.HighDefinition.Runtime.dll" />
+        <Reference Include="Unity.RenderPipelines.ShaderGraph.ShaderGraphLibrary" HintPath="$(SL_REFERENCES)\Unity.RenderPipelines.ShaderGraph.ShaderGraphLibrary.dll" />
+        <Reference Include="Unity.TextMeshPro" HintPath="$(SL_REFERENCES)\Unity.TextMeshPro.dll" />
+        <Reference Include="Unity.VisualEffectGraph.Runtime" HintPath="$(SL_REFERENCES)\Unity.VisualEffectGraph.Runtime.dll" />
+        <Reference Include="UnityEngine.AccessibilityModule" HintPath="$(SL_REFERENCES)\UnityEngine.AccessibilityModule.dll" />
+        <Reference Include="UnityEngine.AIModule" HintPath="$(SL_REFERENCES)\UnityEngine.AIModule.dll" />
+        <Reference Include="UnityEngine.AMDModule" HintPath="$(SL_REFERENCES)\UnityEngine.AMDModule.dll" />
+        <Reference Include="UnityEngine.AndroidJNIModule" HintPath="$(SL_REFERENCES)\UnityEngine.AndroidJNIModule.dll" />
+        <Reference Include="UnityEngine.AnimationModule" HintPath="$(SL_REFERENCES)\UnityEngine.AnimationModule.dll" />
+        <Reference Include="UnityEngine.ARModule" HintPath="$(SL_REFERENCES)\UnityEngine.ARModule.dll" />
+        <Reference Include="UnityEngine.AssetBundleModule" HintPath="$(SL_REFERENCES)\UnityEngine.AssetBundleModule.dll" />
+        <Reference Include="UnityEngine.AudioModule" HintPath="$(SL_REFERENCES)\UnityEngine.AudioModule.dll" />
+        <Reference Include="UnityEngine.ClothModule" HintPath="$(SL_REFERENCES)\UnityEngine.ClothModule.dll" />
+        <Reference Include="UnityEngine.ClusterInputModule" HintPath="$(SL_REFERENCES)\UnityEngine.ClusterInputModule.dll" />
+        <Reference Include="UnityEngine.ClusterRendererModule" HintPath="$(SL_REFERENCES)\UnityEngine.ClusterRendererModule.dll" />
+        <Reference Include="UnityEngine.ContentLoadModule" HintPath="$(SL_REFERENCES)\UnityEngine.ContentLoadModule.dll" />
+        <Reference Include="UnityEngine.CoreModule" HintPath="$(SL_REFERENCES)\UnityEngine.CoreModule.dll" />
+        <Reference Include="UnityEngine.CrashReportingModule" HintPath="$(SL_REFERENCES)\UnityEngine.CrashReportingModule.dll" />
+        <Reference Include="UnityEngine.DirectorModule" HintPath="$(SL_REFERENCES)\UnityEngine.DirectorModule.dll" />
+        <Reference Include="UnityEngine.DSPGraphModule" HintPath="$(SL_REFERENCES)\UnityEngine.DSPGraphModule.dll" />
+        <Reference Include="UnityEngine.GameCenterModule" HintPath="$(SL_REFERENCES)\UnityEngine.GameCenterModule.dll" />
+        <Reference Include="UnityEngine.GIModule" HintPath="$(SL_REFERENCES)\UnityEngine.GIModule.dll" />
+        <Reference Include="UnityEngine.GraphicsStateCollectionSerializerModule" HintPath="$(SL_REFERENCES)\UnityEngine.GraphicsStateCollectionSerializerModule.dll" />
+        <Reference Include="UnityEngine.GridModule" HintPath="$(SL_REFERENCES)\UnityEngine.GridModule.dll" />
+        <Reference Include="UnityEngine.HierarchyCoreModule" HintPath="$(SL_REFERENCES)\UnityEngine.HierarchyCoreModule.dll" />
+        <Reference Include="UnityEngine.HotReloadModule" HintPath="$(SL_REFERENCES)\UnityEngine.HotReloadModule.dll" />
+        <Reference Include="UnityEngine.ImageConversionModule" HintPath="$(SL_REFERENCES)\UnityEngine.ImageConversionModule.dll" />
+        <Reference Include="UnityEngine.IMGUIModule" HintPath="$(SL_REFERENCES)\UnityEngine.IMGUIModule.dll" />
+        <Reference Include="UnityEngine.InputForUIModule" HintPath="$(SL_REFERENCES)\UnityEngine.InputForUIModule.dll" />
+        <Reference Include="UnityEngine.InputLegacyModule" HintPath="$(SL_REFERENCES)\UnityEngine.InputLegacyModule.dll" />
+        <Reference Include="UnityEngine.InputModule" HintPath="$(SL_REFERENCES)\UnityEngine.InputModule.dll" />
+        <Reference Include="UnityEngine.JSONSerializeModule" HintPath="$(SL_REFERENCES)\UnityEngine.JSONSerializeModule.dll" />
+        <Reference Include="UnityEngine.LocalizationModule" HintPath="$(SL_REFERENCES)\UnityEngine.LocalizationModule.dll" />
+        <Reference Include="UnityEngine.MarshallingModule" HintPath="$(SL_REFERENCES)\UnityEngine.MarshallingModule.dll" />
+        <Reference Include="UnityEngine.MultiplayerModule" HintPath="$(SL_REFERENCES)\UnityEngine.MultiplayerModule.dll" />
+        <Reference Include="UnityEngine.NVIDIAModule" HintPath="$(SL_REFERENCES)\UnityEngine.NVIDIAModule.dll" />
+        <Reference Include="UnityEngine.ParticleSystemModule" HintPath="$(SL_REFERENCES)\UnityEngine.ParticleSystemModule.dll" />
+        <Reference Include="UnityEngine.PerformanceReportingModule" HintPath="$(SL_REFERENCES)\UnityEngine.PerformanceReportingModule.dll" />
+        <Reference Include="UnityEngine.Physics2DModule" HintPath="$(SL_REFERENCES)\UnityEngine.Physics2DModule.dll" />
+        <Reference Include="UnityEngine.PhysicsModule" HintPath="$(SL_REFERENCES)\UnityEngine.PhysicsModule.dll" />
+        <Reference Include="UnityEngine.PropertiesModule" HintPath="$(SL_REFERENCES)\UnityEngine.PropertiesModule.dll" />
+        <Reference Include="UnityEngine.RuntimeInitializeOnLoadManagerInitializerModule" HintPath="$(SL_REFERENCES)\UnityEngine.RuntimeInitializeOnLoadManagerInitializerModule.dll" />
+        <Reference Include="UnityEngine.ScreenCaptureModule" HintPath="$(SL_REFERENCES)\UnityEngine.ScreenCaptureModule.dll" />
+        <Reference Include="UnityEngine.ShaderVariantAnalyticsModule" HintPath="$(SL_REFERENCES)\UnityEngine.ShaderVariantAnalyticsModule.dll" />
+        <Reference Include="UnityEngine.SharedInternalsModule" HintPath="$(SL_REFERENCES)\UnityEngine.SharedInternalsModule.dll" />
+        <Reference Include="UnityEngine.SpriteMaskModule" HintPath="$(SL_REFERENCES)\UnityEngine.SpriteMaskModule.dll" />
+        <Reference Include="UnityEngine.SpriteShapeModule" HintPath="$(SL_REFERENCES)\UnityEngine.SpriteShapeModule.dll" />
+        <Reference Include="UnityEngine.StreamingModule" HintPath="$(SL_REFERENCES)\UnityEngine.StreamingModule.dll" />
+        <Reference Include="UnityEngine.SubstanceModule" HintPath="$(SL_REFERENCES)\UnityEngine.SubstanceModule.dll" />
+        <Reference Include="UnityEngine.SubsystemsModule" HintPath="$(SL_REFERENCES)\UnityEngine.SubsystemsModule.dll" />
+        <Reference Include="UnityEngine.TerrainModule" HintPath="$(SL_REFERENCES)\UnityEngine.TerrainModule.dll" />
+        <Reference Include="UnityEngine.TerrainPhysicsModule" HintPath="$(SL_REFERENCES)\UnityEngine.TerrainPhysicsModule.dll" />
+        <Reference Include="UnityEngine.TextCoreFontEngineModule" HintPath="$(SL_REFERENCES)\UnityEngine.TextCoreFontEngineModule.dll" />
+        <Reference Include="UnityEngine.TextCoreTextEngineModule" HintPath="$(SL_REFERENCES)\UnityEngine.TextCoreTextEngineModule.dll" />
+        <Reference Include="UnityEngine.TextRenderingModule" HintPath="$(SL_REFERENCES)\UnityEngine.TextRenderingModule.dll" />
+        <Reference Include="UnityEngine.TilemapModule" HintPath="$(SL_REFERENCES)\UnityEngine.TilemapModule.dll" />
+        <Reference Include="UnityEngine.TLSModule" HintPath="$(SL_REFERENCES)\UnityEngine.TLSModule.dll" />
+        <Reference Include="UnityEngine.UI" HintPath="$(SL_REFERENCES)\UnityEngine.UI.dll" />
+        <Reference Include="UnityEngine.UIElementsModule" HintPath="$(SL_REFERENCES)\UnityEngine.UIElementsModule.dll" />
+        <Reference Include="UnityEngine.UIModule" HintPath="$(SL_REFERENCES)\UnityEngine.UIModule.dll" />
+        <Reference Include="UnityEngine.UmbraModule" HintPath="$(SL_REFERENCES)\UnityEngine.UmbraModule.dll" />
+        <Reference Include="UnityEngine.UnityAnalyticsCommonModule" HintPath="$(SL_REFERENCES)\UnityEngine.UnityAnalyticsCommonModule.dll" />
+        <Reference Include="UnityEngine.UnityAnalyticsModule" HintPath="$(SL_REFERENCES)\UnityEngine.UnityAnalyticsModule.dll" />
+        <Reference Include="UnityEngine.UnityConnectModule" HintPath="$(SL_REFERENCES)\UnityEngine.UnityConnectModule.dll" />
+        <Reference Include="UnityEngine.UnityCurlModule" HintPath="$(SL_REFERENCES)\UnityEngine.UnityCurlModule.dll" />
+        <Reference Include="UnityEngine.UnityTestProtocolModule" HintPath="$(SL_REFERENCES)\UnityEngine.UnityTestProtocolModule.dll" />
+        <Reference Include="UnityEngine.UnityWebRequestAssetBundleModule" HintPath="$(SL_REFERENCES)\UnityEngine.UnityWebRequestAssetBundleModule.dll" />
+        <Reference Include="UnityEngine.UnityWebRequestAudioModule" HintPath="$(SL_REFERENCES)\UnityEngine.UnityWebRequestAudioModule.dll" />
+        <Reference Include="UnityEngine.UnityWebRequestModule" HintPath="$(SL_REFERENCES)\UnityEngine.UnityWebRequestModule.dll" />
+        <Reference Include="UnityEngine.UnityWebRequestTextureModule" HintPath="$(SL_REFERENCES)\UnityEngine.UnityWebRequestTextureModule.dll" />
+        <Reference Include="UnityEngine.UnityWebRequestWWWModule" HintPath="$(SL_REFERENCES)\UnityEngine.UnityWebRequestWWWModule.dll" />
+        <Reference Include="UnityEngine.VehiclesModule" HintPath="$(SL_REFERENCES)\UnityEngine.VehiclesModule.dll" />
+        <Reference Include="UnityEngine.VFXModule" HintPath="$(SL_REFERENCES)\UnityEngine.VFXModule.dll" />
+        <Reference Include="UnityEngine.VideoModule" HintPath="$(SL_REFERENCES)\UnityEngine.VideoModule.dll" />
+        <Reference Include="UnityEngine.VirtualTexturingModule" HintPath="$(SL_REFERENCES)\UnityEngine.VirtualTexturingModule.dll" />
+        <Reference Include="UnityEngine.VRModule" HintPath="$(SL_REFERENCES)\UnityEngine.VRModule.dll" />
+        <Reference Include="UnityEngine.WindModule" HintPath="$(SL_REFERENCES)\UnityEngine.WindModule.dll" />
+        <Reference Include="UnityEngine.XRModule" HintPath="$(SL_REFERENCES)\UnityEngine.XRModule.dll" />
+        <Reference Include="UnityEngine" HintPath="$(SL_REFERENCES)\UnityEngine.dll" />
+        <Reference Include="zxing" HintPath="$(SL_REFERENCES)\zxing.dll" />
     </ItemGroup>
 
     <ItemGroup>

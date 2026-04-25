@@ -48,6 +48,7 @@
             PlayerEvents.GroupChanged += AdminMenu.OnChangedGroup;
             PlayerEvents.Left += AdminMenu.OnLeft;
             SettingEvents.SettingTriggered += AdminMenu.OnSettingTriggered;
+            base.OnEnabled();
         }
 
         public override void OnDisabled()
@@ -65,6 +66,7 @@
             PlayerEvents.GroupChanged -= AdminMenu.OnChangedGroup;
             PlayerEvents.Left -= AdminMenu.OnLeft;
             SettingEvents.SettingTriggered -= AdminMenu.OnSettingTriggered;
+            base.OnDisabled();
         }
         #elif LABAPI
         public override void Enable()
