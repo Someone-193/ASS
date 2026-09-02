@@ -32,10 +32,9 @@ namespace ASS.Features.Collections
 
         public void Remove(Player player)
         {
-            if (!Groups.TryGetValue(player, out ASSGroup group))
+            if (!Groups.Remove(player, out ASSGroup group))
                 return;
 
-            Groups.Remove(player);
             ASSNetworking.UnregisterGroups([group], [player]);
         }
 

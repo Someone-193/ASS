@@ -11,6 +11,8 @@ namespace ASS.EventHandlers
 
     public class Joined
     {
+        public static HashSet<Player> InitializedPlayers { get; } = [];
+
         public static HashSet<Player> Locked { get; } = [];
 
         public static void OnJoined(PlayerJoinedEventArgs ev)
@@ -18,6 +20,9 @@ namespace ASS.EventHandlers
             // gives ASS priority on joining syncs
             Timing.CallDelayed(0, () =>
             {
+                // allow SendToPlayer calls after we do the first one.
+                InitializedPlayers.Add(ev.Player);
+
                 // send all settings that need to be read from client, but might not be typically visible.
                 if (ASSNetworking.InitializingSettings.Count != 0)
                 {
