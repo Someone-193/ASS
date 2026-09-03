@@ -73,40 +73,22 @@
         #if EXILED
         public override void OnEnabled()
         {
-            Instance = this;
-
-            ServerSpecificSettingsSync.SendOnJoinFilter = _ => false;
-
-            harmony = new Harmony("ASS");
-            harmony.PatchAll();
-
-            ServerSpecificSettingsSync.ServerOnStatusReceived += ASSNetworking.OnStatusReceived;
-
-            CustomNetworkManager.OnClientReady += HandlerAction;
-
-            PlayerEvents.Joined += Joined.OnJoined;
-            PlayerEvents.Left += Left.OnLeft;
-
-            ServerSpecificSettingsSync.DefinedSettings ??= [];
-
+            Enabled();
             base.OnEnabled();
         }
 
         public override void OnDisabled()
         {
-            harmony.UnpatchAll(harmony.Id);
-
-            ServerSpecificSettingsSync.ServerOnStatusReceived -= ASSNetworking.OnStatusReceived;
-
-            CustomNetworkManager.OnClientReady -= HandlerAction;
-
-            PlayerEvents.Joined -= Joined.OnJoined;
-            PlayerEvents.Left -= Left.OnLeft;
-
+            Disabled();
             base.OnDisabled();
         }
         #elif LABAPI
-        public override void Enable()
+        public override void Enable() => Enabled();
+
+        public override void Disable() => Disabled();
+        #endif
+
+        private void Enabled()
         {
             Instance = this;
 
@@ -125,7 +107,7 @@
             ServerSpecificSettingsSync.DefinedSettings ??= [];
         }
 
-        public override void Disable()
+        private void Disabled()
         {
             harmony.UnpatchAll(harmony.Id);
 
@@ -136,6 +118,5 @@
             PlayerEvents.Joined -= Joined.OnJoined;
             PlayerEvents.Left -= Left.OnLeft;
         }
-        #endif
     }
 }

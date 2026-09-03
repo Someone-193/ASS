@@ -35,6 +35,23 @@
         #if EXILED
         public override void OnEnabled()
         {
+            Enabled();
+            base.OnEnabled();
+        }
+
+        public override void OnDisabled()
+        {
+            Disabled();
+            base.OnDisabled();
+        }
+        #elif LABAPI
+        public override void Enable() => Enabled();
+
+        public override void Disable() => Disabled();
+        #endif
+
+        private void Enabled()
+        {
             SettingEvents.SettingTriggered += SettingTriggered.OnSettingTriggered;
             SettingEvents.ButtonPressed += ButtonPressed.OnButtonPressed;
 
@@ -50,7 +67,7 @@
             SettingEvents.SettingTriggered += AdminMenu.OnSettingTriggered;
         }
 
-        public override void OnDisabled()
+        private void Disabled()
         {
             SettingEvents.SettingTriggered -= SettingTriggered.OnSettingTriggered;
             SettingEvents.ButtonPressed -= ButtonPressed.OnButtonPressed;
@@ -66,32 +83,5 @@
             PlayerEvents.Left -= AdminMenu.OnLeft;
             SettingEvents.SettingTriggered -= AdminMenu.OnSettingTriggered;
         }
-        #elif LABAPI
-        public override void Enable()
-        {
-            SettingEvents.SettingTriggered += SettingTriggered.OnSettingTriggered;
-            SettingEvents.ButtonPressed += ButtonPressed.OnButtonPressed;
-
-            PlayerEvents.Joined += WelcomeSetting.OnJoined;
-            PlayerEvents.Left += WelcomeSetting.OnLeft;
-
-            PlayerEvents.GroupChanged += AdminMenu.OnChangedGroup;
-            PlayerEvents.Left += AdminMenu.OnLeft;
-            SettingEvents.SettingTriggered += AdminMenu.OnSettingTriggered;
-        }
-
-        public override void Disable()
-        {
-            SettingEvents.SettingTriggered -= SettingTriggered.OnSettingTriggered;
-            SettingEvents.ButtonPressed -= ButtonPressed.OnButtonPressed;
-
-            PlayerEvents.Joined -= WelcomeSetting.OnJoined;
-            PlayerEvents.Left -= WelcomeSetting.OnLeft;
-
-            PlayerEvents.GroupChanged -= AdminMenu.OnChangedGroup;
-            PlayerEvents.Left -= AdminMenu.OnLeft;
-            SettingEvents.SettingTriggered -= AdminMenu.OnSettingTriggered;
-        }
-        #endif
     }
 }
