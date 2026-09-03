@@ -2,6 +2,10 @@ namespace ASS.Example.PlayerMenuExamples
 {
     using System.Collections.Generic;
 
+    #if EXILED
+    using Player = Exiled.API.Features.Player;
+    #endif
+
     using ASS.Events.EventArgs;
     using ASS.Features.Collections;
     using ASS.Features.Settings;
@@ -61,7 +65,11 @@ namespace ASS.Example.PlayerMenuExamples
 
         private static bool Valid(Player player)
         {
+            #if EXILED
+            return ServerStatic.PermissionsHandler.IsRaPermitted(player.Group?.Permissions ?? 0);
+            #else
             return ServerStatic.PermissionsHandler.IsRaPermitted(player.UserGroup?.Permissions ?? 0);
+            #endif
         }
     }
 }

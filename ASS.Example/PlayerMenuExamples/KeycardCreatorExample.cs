@@ -5,6 +5,10 @@ namespace ASS.Example.PlayerMenuExamples
     using System.Globalization;
     using System.Linq;
 
+    #if EXILED
+    using Player = Exiled.API.Features.Player;
+    #endif
+
     using ASS.Events.EventArgs;
     using ASS.Features;
     using ASS.Features.Collections;
@@ -108,7 +112,11 @@ namespace ASS.Example.PlayerMenuExamples
                     TryParseHexColor(labelHex, out Color labelColor);
                     TryParseHexColor(permsHex, out Color permsColor);
 
+                    #if EXILED
+                    Player target = ASSNetworking.TryGetSetting(ev.Player, 101, out ASSDropdown? playerDropdown) ? Player.Enumerable.ElementAt(playerDropdown.IndexSelected) : ev.Player;
+                    #else
                     Player target = ASSNetworking.TryGetSetting(ev.Player, 101, out ASSDropdown? playerDropdown) ? Player.ReadyList.ElementAt(playerDropdown.IndexSelected) : ev.Player;
+                    #endif
 
                     switch (index)
                     {
@@ -141,7 +149,13 @@ namespace ASS.Example.PlayerMenuExamples
             List<ASSBase> settings = 
                 [
                     new ASSHeader(100, "Keycard Creator"),
+
+                    #if EXILED
+                    new ASSDropdown(101, "Player:", Player.Enumerable.Select(p => p.Nickname).ToArray(), hint: "The player who will receive the keycard"),
+                    #else
                     new ASSDropdown(101, "Player:", Player.ReadyList.Select(p => p.Nickname).ToArray(), hint: "The player who will receive the keycard"),
+                    #endif
+
                     new ASSDropdown(102, "Keycard Type", [ItemType.KeycardCustomTaskForce.ToString(), ItemType.KeycardCustomSite02.ToString(), ItemType.KeycardCustomManagement.ToString(), ItemType.KeycardCustomMetalCase.ToString()]),
                     new ASSTextInput(103, "Item Name", string.Empty, "My Cool Keycard!", ushort.MaxValue),
                     new ASSSlider(104, "Containment Level", 1, 0, 3, true),

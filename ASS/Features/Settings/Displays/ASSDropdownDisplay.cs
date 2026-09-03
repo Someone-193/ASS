@@ -6,6 +6,8 @@ namespace ASS.Features.Settings.Displays
 
     #if EXILED
     using Exiled.API.Features.Core.UserSettings;
+
+    using Player = Exiled.API.Features.Player;
     #endif
 
     using LabApi.Features.Wrappers;

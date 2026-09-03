@@ -2,6 +2,10 @@ namespace ASS.Features.Collections
 {
     using System.Collections.Generic;
 
+    #if EXILED
+    using Player = Exiled.API.Features.Player;
+    #endif
+
     using LabApi.Features.Wrappers;
 
     public abstract class AbstractMenu

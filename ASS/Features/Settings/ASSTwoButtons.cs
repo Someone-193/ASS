@@ -5,6 +5,8 @@ namespace ASS.Features.Settings
 
     #if EXILED
     using Exiled.API.Features.Core.UserSettings;
+
+    using Player = Exiled.API.Features.Player;
     #endif
 
     using LabApi.Features.Wrappers;

@@ -4,6 +4,10 @@ namespace ASS.Features.Collections
     using System.Collections.Generic;
     using System.Linq;
 
+    #if EXILED
+    using Player = Exiled.API.Features.Player;
+    #endif
+
     using ASS.Features.Settings;
 
     using LabApi.Features.Wrappers;

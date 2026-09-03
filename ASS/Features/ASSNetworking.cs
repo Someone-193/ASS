@@ -18,6 +18,8 @@ namespace ASS.Features
 
     #if EXILED
     using Exiled.API.Features.Core.UserSettings;
+
+    using Player = Exiled.API.Features.Player;
     #endif
 
     using LabApi.Features.Console;
@@ -77,7 +79,11 @@ namespace ASS.Features
 
         public static void SendToAll()
         {
+            #if EXILED
+            foreach (Player player in Player.Enumerable)
+            #else
             foreach (Player player in Player.ReadyList)
+            #endif
             {
                 SendToPlayer(player);
             }

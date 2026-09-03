@@ -1,8 +1,14 @@
 namespace ASS.Example.PlayerMenuExamples
 {
     using System.Collections.Generic;
+
     using ASS.Features.Collections;
     using ASS.Features.Settings;
+
+    #if EXILED
+    using Player = Exiled.API.Features.Player;
+    #endif
+
     using LabApi.Events.Arguments.PlayerEvents;
     using LabApi.Features.Wrappers;
 
@@ -27,7 +33,13 @@ namespace ASS.Example.PlayerMenuExamples
         {
             return new ASSGroup(
             [
+
+                #if EXILED
+                new ASSHeader(-12, $"Welcome {owner.DisplayNickname}!"),
+                #else
                 new ASSHeader(-12, $"Welcome {owner.DisplayName}!"),
+                #endif
+
                 new ASSButton(-10, "Test 1"),
                 new ASSButton(-11, "Test 2"),
             ],
