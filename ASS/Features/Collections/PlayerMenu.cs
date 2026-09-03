@@ -15,7 +15,7 @@ namespace ASS.Features.Collections
 
             Current = generator(owner);
 
-            ASSNetworking.RegisterGroups([Current], updateOwner ? [owner] : []);
+            ASSNetworking.RegisterObjects([Current], updateOwner ? [owner] : []);
         }
 
         [Obsolete("Use constructor with \"updateOwner\" instead.")]
@@ -79,7 +79,7 @@ namespace ASS.Features.Collections
             Current.Settings = newGroup.Settings;
             Current.Priority = newGroup.Priority;
             Current.Viewers = newGroup.Viewers;
-            Current.SubGroups = newGroup.SubGroups;
+            Current.Children = newGroup.Children;
 
             ASSNetworking.SendToPlayerFull(Owner, true, registerChange, false, ignoreDefaultResponses || onlyGroupsResponses, onlyGroupsResponses ? Current.GetAllSettings().ToArray() : null);
         }
