@@ -9,6 +9,7 @@ namespace ASS.Features
     using ASS.Events.EventArgs;
     using ASS.Events.Handlers;
     using ASS.Features.Collections;
+    using ASS.Features.Interfaces;
     using ASS.Features.MirrorUtils;
     using ASS.Features.MirrorUtils.Messages;
     using ASS.Features.Settings;
@@ -38,9 +39,9 @@ namespace ASS.Features
         /// </summary>
         public static Dictionary<Player, ASSBase[]> ReceivedSettings { get; } = new();
 
-        public static List<ASSGroup> Groups { get; } = [];
+        public static List<IASSObject> Objects { get; } = [];
 
-        public static IEnumerable<ASSBase> Settings { get; } = Groups.SelectMany(group => group.GetAllSettings());
+        public static IEnumerable<ASSBase> Settings { get; } = Objects.SelectMany(obj => obj.GetAllSettings());
 
         public static Dictionary<Player, int> Versions { get; } = new();
 
@@ -66,7 +67,7 @@ namespace ASS.Features
         /// <remarks>
         /// Useful if you want to force only a certain group or 2 to be visible to a player (like a setting controlling what settings you can see, then the group of settings you're looking at).
         /// </remarks>
-        public static Dictionary<Player, ASSGroup[]> PlayerOverrides { get; } = new();
+        public static Dictionary<Player, IASSObject[]> PlayerOverrides { get; } = new();
 
         public static bool TryGetSetting<T>(Player player, int id, [NotNullWhen(true)] out T? value)
             where T : ASSBase
@@ -160,10 +161,10 @@ namespace ASS.Features
             }
         }
 
-        public static void RegisterGroups(IEnumerable<ASSGroup> groups, IEnumerable<Player>? toUpdate = null)
+        public static void RegisterObjects(IEnumerable<IASSObject> groups, IEnumerable<Player>? toUpdate = null)
         {
             groups = groups.Where(group => group != null);
-            Groups.AddRange(groups);
+            Objects.AddRange(groups);
 
             if (toUpdate is null)
                 return;
@@ -175,7 +176,7 @@ namespace ASS.Features
         public static void UnregisterGroups(IEnumerable<ASSGroup> groups, IEnumerable<Player>? toUpdate = null)
         {
             groups = groups.Where(group => group != null);
-            Groups.RemoveAll(groups.Contains);
+            Objects.RemoveAll(groups.Contains);
 
             if (toUpdate is null)
                 return;
@@ -238,18 +239,18 @@ namespace ASS.Features
 
         internal static IEnumerable<ASSBase> GetRegisteredSorted(Player player)
         {
-            IEnumerable<ASSGroup> groups;
+            IEnumerable<IASSObject> objects;
 
-            if (PlayerOverrides.TryGetValue(player, out ASSGroup[] groupArray))
+            if (PlayerOverrides.TryGetValue(player, out IASSObject[] objArray))
             {
-                groups = groupArray;
+                objects = objArray;
             }
             else
             {
-                groups = Groups;
+                objects = Objects;
             }
 
-            return groups.OrderByDescending(group => group.Priority).SelectMany(group => group.GetViewableSettingsOrdered(player));
+            return objects.OrderByDescending(obj => obj.Priority).SelectMany(obj => obj.GetViewableSettingsOrdered(player));
         }
 
         internal static void ProcessResponseMessage(NetworkConnectionToClient conn, SSSClientResponse message)

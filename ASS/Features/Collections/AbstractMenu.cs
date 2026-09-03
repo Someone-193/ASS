@@ -12,7 +12,7 @@ namespace ASS.Features.Collections
         {
             Groups[player] = Generate(player);
 
-            ASSNetworking.RegisterGroups([Groups[player]], [player]);
+            ASSNetworking.RegisterObjects([Groups[player]], [player]);
         }
 
         public void Update(Player player, bool registerChange = true, bool ignoreDefaultResponses = false, bool onlyGroupsResponses = false)
@@ -25,7 +25,7 @@ namespace ASS.Features.Collections
             group.Settings = newGroup.Settings;
             group.Priority = newGroup.Priority;
             group.Viewers = newGroup.Viewers;
-            group.SubGroups = newGroup.SubGroups;
+            group.Children = newGroup.Children;
 
             ASSNetworking.SendToPlayerFull(player, true, registerChange, false, ignoreDefaultResponses || onlyGroupsResponses, onlyGroupsResponses ? group.GetAllSettings().ToArray() : null);
         }
