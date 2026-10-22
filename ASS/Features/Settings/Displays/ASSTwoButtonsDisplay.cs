@@ -1,12 +1,10 @@
-namespace ASS.Features.Settings.Displays
+namespace ASS.Features.Settings
 {
     using System;
     using System.Collections.Generic;
 
     #if EXILED
     using Exiled.API.Features.Core.UserSettings;
-
-    using Player = Exiled.API.Features.Player;
     #endif
 
     using LabApi.Features.Wrappers;

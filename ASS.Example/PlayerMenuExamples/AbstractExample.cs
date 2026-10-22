@@ -2,11 +2,6 @@ namespace ASS.Example.PlayerMenuExamples
 {
     using ASS.Features.Collections;
     using ASS.Features.Settings;
-
-    #if EXILED
-    using Player = Exiled.API.Features.Player;
-    #endif
-
     using LabApi.Features.Wrappers;
 
     public class AbstractExample : AbstractMenu

@@ -1,11 +1,6 @@
 namespace ASS.Features.Collections
 {
     using System;
-
-    #if EXILED
-    using Player = Exiled.API.Features.Player;
-    #endif
-
     using LabApi.Features.Wrappers;
     using UserSettings.ServerSpecific;
 

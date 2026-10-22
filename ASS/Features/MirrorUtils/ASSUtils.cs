@@ -10,10 +10,6 @@ namespace ASS.Features.MirrorUtils
     using ASS.Features.MirrorUtils.Messages;
     using ASS.Features.Settings;
 
-    #if EXILED
-    using Player = Exiled.API.Features.Player;
-    #endif
-
     using LabApi.Features.Console;
     using LabApi.Features.Wrappers;
 

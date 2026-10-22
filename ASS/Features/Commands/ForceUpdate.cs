@@ -2,10 +2,6 @@ namespace ASS.Features.Commands
 {
     using System;
 
-    #if EXILED
-    using Player = Exiled.API.Features.Player;
-    #endif
-
     using CommandSystem;
 
     using LabApi.Features.Wrappers;
