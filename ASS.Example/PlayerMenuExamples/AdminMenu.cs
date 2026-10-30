@@ -2,16 +2,17 @@ namespace ASS.Example.PlayerMenuExamples
 {
     using System.Collections.Generic;
 
-    using ASS.Events.EventArgs;
-    using ASS.Features.Collections;
-    using ASS.Features.Settings;
+    using ASS.Features.Containers;
+    using ASS.Features.Instances;
+    using ASS.Features.Interfaces;
+    using ASS.Features.Templates;
 
     using LabApi.Events.Arguments.PlayerEvents;
     using LabApi.Features.Wrappers;
 
     public class AdminMenu
     {
-        private static readonly Dictionary<Player, PlayerMenu> Menus = new();
+        public static PlayerMenu Menu { get; } = PlayerMenu.Create("Admin Menu", Generator).WithCondition(Valid);
 
         public static void OnChangedGroup(PlayerGroupChangedEventArgs ev)
         {
@@ -19,49 +20,37 @@ namespace ASS.Example.PlayerMenuExamples
             // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
             if (ev.Group is null)
             {
-                if (Menus.TryGetValue(ev.Player, out PlayerMenu menu1))
-                    menu1.Destroy();
-
+                Menu.Remove(ev.Player);
                 return;
             }
 
-            if (!Menus.TryGetValue(ev.Player, out PlayerMenu menu2) && ServerStatic.PermissionsHandler.IsRaPermitted(ev.Group.Permissions))
-            {
-                Menus[ev.Player] = new PlayerMenu(Generator, ev.Player, true);
-            }
+            if (!Menu.Children.ContainsKey(ev.Player) && ServerStatic.PermissionsHandler.IsRaPermitted(ev.Group.Permissions))
+                Menu.Add(ev.Player);
             else if (!ServerStatic.PermissionsHandler.IsRaPermitted(ev.Group.Permissions))
-            {
-                menu2?.Destroy();
-            }
+                Menu.Remove(ev.Player);
         }
 
-        public static void OnLeft(PlayerLeftEventArgs ev)
+        public static void OnLeft(PlayerLeftEventArgs ev) => Menu.Remove(ev.Player, false);
+
+        private static IEnumerable<IASSObject> Generator(Player p)
         {
-            if (Menus.TryGetValue(ev.Player, out PlayerMenu menu))
-                menu.Destroy();
+            yield return ButtonTemplate
+                .Create("Toggle")
+                .WithHandler(Pressed)
+                .WithLabel("Toggle Godmode")
+                .WithButtonText("Toggle")
+                .WithHoldTime(1)
+                .WithHint("Toggles godmode");
         }
 
-        public static void OnSettingTriggered(SettingTriggeredEventArgs ev)
+        private static void Pressed(Player player, ButtonInstance button)
         {
-            if (ev.Setting.Id is -13 && Valid(ev.Player))
-            {
-                ev.Player.IsGodModeEnabled = !ev.Player.IsGodModeEnabled;
-            }
+            if (!Valid(player))
+                return;
+
+            player.IsGodModeEnabled = !player.IsGodModeEnabled;
         }
 
-        private static ASSGroup Generator(Player owner)
-        {
-            return new ASSGroup(
-                [
-                    new ASSButton(-13, "Toggle Godmode", "Toggle", 1F, "Toggles godmode")
-                ],
-                1,
-                p => p == owner && Valid(p));
-        }
-
-        private static bool Valid(Player player)
-        {
-            return ServerStatic.PermissionsHandler.IsRaPermitted(player.UserGroup?.Permissions ?? 0);
-        }
+        private static bool Valid(Player player) => ServerStatic.PermissionsHandler.IsRaPermitted(player.UserGroup?.Permissions ?? 0);
     }
 }

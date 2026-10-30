@@ -25,8 +25,6 @@ namespace ASS.Patches
             yield return new CodeInstruction(OpCodes.Ldc_I4_1);
             yield return new CodeInstruction(OpCodes.Ldc_I4_1);
             yield return new CodeInstruction(OpCodes.Ldc_I4_0);
-            yield return new CodeInstruction(OpCodes.Ldc_I4_1);
-            yield return new CodeInstruction(OpCodes.Ldnull);
             yield return new CodeInstruction(OpCodes.Call, Method(typeof(ASSNetworking), nameof(ASSNetworking.SendToPlayerFull)));
             yield return new CodeInstruction(OpCodes.Ret);
         }

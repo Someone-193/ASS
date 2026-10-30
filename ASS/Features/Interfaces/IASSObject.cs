@@ -1,18 +1,47 @@
 namespace ASS.Features.Interfaces
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using ASS.Features.Settings;
-    using LabApi.Features.Wrappers;
-    using NorthwoodLib.Pools;
+    using LabApi.Features.Console;
 
     public interface IASSObject
     {
-        public List<IASSObject>? Children { get; set; }
+        public string Key { get; }
 
-        public Predicate<Player>? Viewers { get; set; }
+        // parent can only go from: null -> null, obj -> null, null -> obj. You can't switch the parent of an object.
+        public IASSContainer? Parent { get; internal set; }
 
-        public int Priority { get; set; }
+        public bool TrySetParent(IASSContainer? parent)
+        {
+            if (Parent is null || parent is null)
+            {
+                Parent = parent;
+                return true;
+            }
+
+            if (Parent is not null)
+            {
+                Logger.Error($"Invalid Operation: Something tried to set the parent of {ToString()} to {parent} despite {ToString()} already having parent {Parent}");
+                return false;
+            }
+
+            IASSContainer? oldParent = Parent;
+            Parent = parent;
+
+            ASSExtensions.PreviousObjectsForParent.Clear();
+            ASSExtensions.PreviousObjectsForParent.Add(this);
+            IASSContainer? temp = Parent;
+
+            while (temp is not null)
+            {
+                if (!ASSExtensions.PreviousObjectsForParent.Add(temp))
+                {
+                    Parent = oldParent;
+                    return false;
+                }
+
+                temp = temp.Parent;
+            }
+
+            return true;
+        }
     }
 }

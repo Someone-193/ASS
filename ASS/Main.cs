@@ -1,31 +1,27 @@
 ﻿namespace ASS
 {
     using System;
+    using System.Collections.Generic;
+    using System.Linq;
 
     using ASS.EventHandlers;
     using ASS.Features;
+    using ASS.Features.Interfaces;
+
+    using HarmonyLib;
 
     using LabApi.Events.Handlers;
     using LabApi.Features;
     using LabApi.Features.Console;
+    using LabApi.Features.Wrappers;
     using LabApi.Loader.Features.Plugins;
     using LabApi.Loader.Features.Plugins.Enums;
-
-    #if EXILED
-    using Exiled.API.Enums;
-    #endif
-
-    using HarmonyLib;
 
     using Mirror;
 
     using UserSettings.ServerSpecific;
 
-    #if EXILED
-    public class Main : Exiled.API.Features.Plugin<Config>
-    #elif LABAPI
     public class Main : Plugin<Config>
-    #endif
     {
         private static readonly Action HandlerAction = () => NetworkServer.ReplaceHandler<SSSClientResponse>(ASSNetworking.ProcessResponseMessage);
         private static DateTime lastDependencyCheckMessage = DateTime.MinValue;
@@ -52,60 +48,23 @@
 
         public static Main? Instance { get; private set; }
 
+        // the default template generator.
+        public static Func<Player, IEnumerable<IASSObject>> StandardTemplateRootGenerator { get; } = _ => ASSNetworking.Objects.OrderByDescending(kvp => kvp.Value).Select(kvp => kvp.Key);
+
+        public static Func<Player, bool> StandardSendBaseGameSettingsGenerator { get; } = _ => true;
+
         public override string Name => "ASS";
 
         public override string Author => "@Someone";
 
         public override Version Version { get; } = new(2, 0, 0);
 
-        #if EXILED
-        public override string Prefix => "ASS";
-
-        public override PluginPriority Priority => PluginPriority.Higher;
-        #elif LABAPI
         public override LoadPriority Priority => LoadPriority.High;
 
         public override string Description => "Reworks SSS with the goal of improving player specific settings";
 
         public override Version RequiredApiVersion { get; } = new(LabApiProperties.CompiledVersion);
-        #endif
 
-        #if EXILED
-        public override void OnEnabled()
-        {
-            Instance = this;
-
-            ServerSpecificSettingsSync.SendOnJoinFilter = _ => false;
-
-            harmony = new Harmony("ASS");
-            harmony.PatchAll();
-
-            ServerSpecificSettingsSync.ServerOnStatusReceived += ASSNetworking.OnStatusReceived;
-
-            CustomNetworkManager.OnClientReady += HandlerAction;
-
-            PlayerEvents.Joined += Joined.OnJoined;
-            PlayerEvents.Left += Left.OnLeft;
-
-            ServerSpecificSettingsSync.DefinedSettings ??= [];
-
-            base.OnEnabled();
-        }
-
-        public override void OnDisabled()
-        {
-            harmony.UnpatchAll(harmony.Id);
-
-            ServerSpecificSettingsSync.ServerOnStatusReceived -= ASSNetworking.OnStatusReceived;
-
-            CustomNetworkManager.OnClientReady -= HandlerAction;
-
-            PlayerEvents.Joined -= Joined.OnJoined;
-            PlayerEvents.Left -= Left.OnLeft;
-
-            base.OnDisabled();
-        }
-        #elif LABAPI
         public override void Enable()
         {
             Instance = this;
@@ -136,6 +95,5 @@
             PlayerEvents.Joined -= Joined.OnJoined;
             PlayerEvents.Left -= Left.OnLeft;
         }
-        #endif
     }
 }

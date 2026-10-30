@@ -4,12 +4,12 @@ namespace ASS.EventHandlers
 
     using LabApi.Events.Arguments.PlayerEvents;
 
-    public class Left
+    internal class Left
     {
         public static void OnLeft(PlayerLeftEventArgs ev)
         {
             ASSNetworking.FixedPlayers.Remove(ev.Player.ReferenceHub);
-            ASSNetworking.ReceivedSettings.Remove(ev.Player);
+            ASSNetworking.SentSettings.Remove(ev.Player);
         }
     }
 }

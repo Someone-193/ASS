@@ -1,58 +1,68 @@
 ﻿namespace ASS.Pages
 {
     using System;
+    using System.Collections.Generic;
 
+    using ASS.Events.Handlers;
+    using ASS.Features;
+    using ASS.Features.Interfaces;
+    using ASS.Pages.EventHandlers;
+    using ASS.Pages.Features;
+
+    using LabApi.Events.Handlers;
     using LabApi.Features;
+    using LabApi.Features.Wrappers;
     using LabApi.Loader.Features.Plugins;
 
-    #if EXILED
-    public class Main : Exiled.API.Features.Plugin<Config>
-    #elif LABAPI
     public class Main : Plugin
-    #endif
     {
+        // for other developers to use if necessary.
+        public static bool RegisterPagesGenerator { get; set; } = true;
+
+        public static Func<Player, IEnumerable<IASSObject>> PagesRootGenerator { get; } = viewer =>
+        {
+            if (!ASSPage.SelectedPage.TryGetValue(viewer, out Stack<ASSPage>? stack))
+                return [];
+
+            return stack.TryPeek(out ASSPage? page)
+                ? page.GetChildren(viewer)
+                : ASSPage.MainPageController.GetChildren(viewer);
+        };
+
+        public static Func<Player, bool> PagesBaseSettingsGenerator { get; } = viewer => ASSPage.SelectedPage.TryGetValue(viewer, out Stack<ASSPage>? stack) && stack.Count is 0;
+
         public override string Name => "ASS.Pages";
 
         public override string Author => "@Someone";
 
         public override Version Version { get; } = new(1, 0, 0);
 
-        #if EXILED
-        public override string Prefix => "ASS_Pages";
-        #elif LABAPI
         public override string Description => "Adds pages to ASS";
 
         public override Version RequiredApiVersion { get; } = new(LabApiProperties.CompiledVersion);
-        #endif
 
-        #if EXILED
-        public override void OnEnabled()
-        {
-            Enabled();
-        }
-
-        public override void OnDisabled()
-        {
-            Disabled();
-        }
-        #elif LABAPI
         public override void Enable()
         {
-            Enabled();
+            if (RegisterPagesGenerator)
+            {
+                ASSNetworking.TemplateRootGenerator = PagesRootGenerator;
+                ASSNetworking.SendBaseGameSettingsGenerator = PagesBaseSettingsGenerator;
+            }
+
+            PlayerEvents.Joined += Joined.OnJoined;
+            PlayerEvents.Left += Left.OnLeft;
+
+            SettingEvents.ObjectRegistered += ASSPage.OnObjectRegistered;
+            SettingEvents.ObjectUnregistered += ASSPage.OnObjectUnregistered;
         }
 
         public override void Disable()
         {
-            Disabled();
-        }
-        #endif
+            PlayerEvents.Joined -= Joined.OnJoined;
+            PlayerEvents.Left -= Left.OnLeft;
 
-        private void Enabled()
-        {
-        }
-
-        private void Disabled()
-        {
+            SettingEvents.ObjectRegistered -= ASSPage.OnObjectRegistered;
+            SettingEvents.ObjectUnregistered -= ASSPage.OnObjectUnregistered;
         }
     }
 }

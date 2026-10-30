@@ -2,135 +2,117 @@ namespace ASS.Features
 {
     using System;
     using System.Collections.Generic;
+    using System.Collections.ObjectModel;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
 
     using ASS.EventHandlers;
     using ASS.Events.EventArgs;
     using ASS.Events.Handlers;
-    using ASS.Features.Collections;
+    using ASS.Features.Instances;
     using ASS.Features.Interfaces;
     using ASS.Features.MirrorUtils;
     using ASS.Features.MirrorUtils.Messages;
-    using ASS.Features.Settings;
-    using ASS.Features.Settings.Displays;
-
-    using NorthwoodLib.Pools;
-
-    #if EXILED
-    using Exiled.API.Features.Core.UserSettings;
-    #endif
+    using ASS.Features.Templates;
 
     using LabApi.Features.Console;
     using LabApi.Features.Wrappers;
 
     using Mirror;
 
+    using NorthwoodLib.Pools;
+
     using UserSettings.ServerSpecific;
 
     public static class ASSNetworking
     {
         internal static readonly HashSet<ReferenceHub> FixedPlayers = [];
+        internal static readonly Dictionary<IASSObject, int> ObjectsValue = new();
 
         private static readonly Dictionary<ReferenceHub, Action> QueuedUpdates = new();
 
         /// <summary>
-        /// Gets a dictionary assigning an <see cref="Array"/> of <see cref="ASSBase"/> to every player. Gets updated before settings are sent.
+        /// Gets a dictionary assigning an <see cref="Array"/> of <see cref="ASSTemplate"/> to every player. Gets updated before settings are sent.
         /// </summary>
-        public static Dictionary<Player, ASSBase[]> ReceivedSettings { get; } = new();
+        public static Dictionary<Player, ASSInstance[]> SentSettings { get; } = new();
 
-        public static List<IASSObject> Objects { get; } = [];
+        public static Dictionary<Player, ASSInstance[]> ReceivedSettings { get; } = new();
 
-        public static IEnumerable<ASSBase> Settings { get; } = Objects.SelectMany(obj => obj.GetAllSettings());
+        public static ReadOnlyDictionary<IASSObject, int> Objects { get; } = new(ObjectsValue);
 
         public static Dictionary<Player, int> Versions { get; } = new();
 
         /// <summary>
-        /// Gets a <see cref="List{T}"/> of <see cref="ASSBase"/> containing all settings that will be sent to clients when verified, before displaying by groups.
+        /// Gets a <see cref="List{T}"/> of <see cref="ASSTemplate"/> containing all settings that will be sent to clients when verified, before displaying by groups.
         /// </summary>
         /// <remarks>
         /// This is useful if you hide certain options behind other settings (like a scrollable tab for groups of settings) and you want to read all stored client values for all settings before going back to your tab based approach.
         /// </remarks>
-        public static List<ASSBase> InitializingSettings { get; } = [];
+        public static List<ASSTemplate> InitializingSettings { get; } = [];
 
         /// <summary>
-        /// Gets a <see cref="List{T}"/> of <see cref="ASSKeybind"/> containing all keybinds that will be visible below all other settings no matter what groups are visible.
+        /// Gets a <see cref="List{T}"/> of <see cref="KeybindTemplate"/> containing all keybinds that will be visible below all other settings no matter what groups are visible.
         /// </summary>
         /// <remarks>
-        /// Useful if you hide your keybinds behind other settings (say you bind keybinds when you set a <see cref="ASSDropdown"/> to "Keybinds") but you want to maintain functionality.
+        /// Useful if you hide your keybinds behind other settings (say you bind keybinds when you set a <see cref="DropdownTemplate"/> to "Keybinds") but you want to maintain functionality.
         /// </remarks>
-        public static List<ASSKeybind> PersistantKeybinds { get; } = [];
+        public static List<KeybindTemplate> PersistantKeybinds { get; } = [];
 
         /// <summary>
-        /// Gets a <see cref="Dictionary{TKey,TValue}"/> containing overrides for players, meaning if an entry for a given player exists here, SendToPlayer will only send settings from the groups in that entry.
+        /// Gets or sets the generator used to get the root settings of the hierarchy shown to a player.
         /// </summary>
-        /// <remarks>
-        /// Useful if you want to force only a certain group or 2 to be visible to a player (like a setting controlling what settings you can see, then the group of settings you're looking at).
-        /// </remarks>
-        public static Dictionary<Player, IASSObject[]> PlayerOverrides { get; } = new();
+        /// <remarks>tldr; for base ASS, just <see cref="Objects"/>, sorted. For ASS.Pages, gets the players selected page.</remarks>
+        public static Func<Player, IEnumerable<IASSObject>> TemplateRootGenerator { get; set; } = Main.StandardTemplateRootGenerator;
+
+        /// <summary>
+        /// Gets or sets the default behavior for sending base game settings for a player.
+        /// </summary>
+        /// <remarks>tldr; for base ASS, always true. For ASS.Pages, only true when the player isn't in a custom page.</remarks>
+        public static Func<Player, bool> SendBaseGameSettingsGenerator { get; set; } = Main.StandardSendBaseGameSettingsGenerator;
 
         public static bool TryGetSetting<T>(Player player, int id, [NotNullWhen(true)] out T? value)
-            where T : ASSBase
-        {
-            value = !ReceivedSettings.TryGetValue(player, out ASSBase[] settings) ? null : settings.FirstOrDefault(setting => setting.Id == id) as T;
-            return value is not null;
-        }
+            where T : ASSInstance
+            => (value = !SentSettings.TryGetValue(player, out ASSInstance[] settings) ? null : settings.FirstOrDefault(setting => setting.Id == id) as T) is not null;
+
+        public static bool TryGetSetting<T>(Player player, string[] path, [NotNullWhen(true)] out T? value)
+            where T : ASSInstance
+            => (value = !SentSettings.TryGetValue(player, out ASSInstance[] settings) ? null : settings.FirstOrDefault(setting => setting.Id == ASSExtensions.GenerateId(path)) as T) is not null;
 
         public static void SendToAll()
         {
             foreach (Player player in Player.ReadyList)
-            {
                 SendToPlayer(player);
-            }
         }
 
-        public static void SendToPlayer(Player player)
-        {
-            SendToPlayerFull(player);
-        }
+        public static void SendToPlayer(Player player) => SendToPlayerFull(player);
 
-        public static void SendToPlayerFull(Player player, bool includeBaseGameSettings = true, bool registerChange = true, bool forceLoad = false, bool ignoreResponses = false, ASSBase[]? responseOverride = null)
-        {
-            SendCustomToPlayer(player, GetRegisteredSorted(player).ToArray(), includeBaseGameSettings, registerChange, forceLoad, ignoreResponses, responseOverride);
-        }
+        public static void SendToPlayerFull(Player player, bool? includeBaseGameSettings = null, bool registerChange = true, bool forceLoad = false) => SendCustomToPlayer(player, TemplateRootGenerator.Invoke(player), includeBaseGameSettings, registerChange, forceLoad);
 
         // main stuff happening here is we're queuing the actual message if the target doesn't have their SSS tab open, and sending only the necessary settings (A "Loading..." Header and all keybinds) to minimize lag by only sending the queued message once they open up their SSS tab while maintaining seamless functionality
-        public static void SendCustomToPlayer(Player player, ASSBase[] settings, bool includeBaseGameSettings = true, bool registerChange = true, bool forceLoad = false, bool ignoreResponses = false, ASSBase[]? responseOverride = null)
+        public static void SendCustomToPlayer(Player player, IEnumerable<IASSObject> root, bool? includeBaseGameSettings = null, bool registerChange = true, bool forceLoad = false)
         {
             if (Joined.Locked.Contains(player) || !CheckInitialized(player))
                 return;
 
-            List<ASSBase> list = Copy(settings);
+            ServerSpecificSettingBase[] baseGame = includeBaseGameSettings.HasValue
+                ? includeBaseGameSettings.Value ? ServerSpecificSettingsSync.DefinedSettings ?? [] : []
+                : SendBaseGameSettingsGenerator(player) ? ServerSpecificSettingsSync.DefinedSettings ?? [] : [];
 
-            if (ignoreResponses)
-            {
-                foreach (ASSBase setting in list)
-                {
-                    setting.IgnoreNextResponse |= setting.ResponseMode is ServerSpecificSettingBase.UserResponseMode.AcquisitionAndChange && !(responseOverride?.Contains(setting) ?? false);
-                }
-            }
+            List<ASSInstance> builtSettings = ASSExtensions.BuildSettings(root, player);
 
             if (forceLoad || player.TabOpen())
             {
-                Logger.Debug($"Sending {settings.Length} settings to {player.Nickname} via {nameof(SendCustomToPlayer)}", Main.Debug);
-                ASSUtils.SendASSMessage(player.Connection, new ASSEntriesPack(list, includeBaseGameSettings ? ServerSpecificSettingsSync.DefinedSettings ?? [] : [], GetVersion(player)));
+                Logger.Debug($"Sending {builtSettings.Count} settings to {player.Nickname} via {nameof(SendCustomToPlayer)}", Main.Debug);
+                ASSUtils.SendASSMessage(player, new ASSEntriesPack(builtSettings, baseGame, GetVersion(player)));
             }
             else
             {
-                Logger.Debug($"Sending {settings.Length} (pre-minimizing) settings to {player.Nickname} via {nameof(SendCustomToPlayer)}", Main.Debug);
-                ASSUtils.SendASSMessage(player.Connection, MinimizedPack(list, includeBaseGameSettings ? ServerSpecificSettingsSync.DefinedSettings ?? [] : [], GetVersion(player, registerChange)));
+                Logger.Debug($"Sending {builtSettings.Count} (pre-minimizing) settings to {player.Nickname} via {nameof(SendCustomToPlayer)}", Main.Debug);
+                ASSUtils.SendASSMessage(player, MinimizedPack(player, builtSettings, baseGame, GetVersion(player, registerChange)));
                 QueuedUpdates[player.ReferenceHub] = () =>
                 {
-                    if (ignoreResponses)
-                    {
-                        foreach (ASSBase setting in list)
-                        {
-                            setting.IgnoreNextResponse = setting.ResponseMode is ServerSpecificSettingBase.UserResponseMode.AcquisitionAndChange && !(responseOverride?.Contains(setting) ?? false);
-                        }
-                    }
-
-                    Logger.Debug($"Sending {settings.Length} settings to {player.Nickname} via {nameof(SendCustomToPlayer)} after tab was opened", Main.Debug);
-                    ASSUtils.SendASSMessage(player.Connection, new ASSEntriesPack(list, includeBaseGameSettings ? ServerSpecificSettingsSync.DefinedSettings ?? [] : [], GetVersion(player)));
+                    Logger.Debug($"Sending {builtSettings.Count} settings to {player.Nickname} via {nameof(SendCustomToPlayer)} after tab was opened", Main.Debug);
+                    ASSUtils.SendASSMessage(player, new ASSEntriesPack(builtSettings, baseGame, GetVersion(player)));
                 };
             }
         }
@@ -140,49 +122,25 @@ namespace ASS.Features
             if (Joined.Locked.Contains(player) || !CheckInitialized(player))
                 return;
 
-            if (!ReceivedSettings.TryGetValue(player, out ASSBase[] value))
-                ReceivedSettings[player] = value = [];
+            if (!SentSettings.TryGetValue(player, out ASSInstance[] value))
+                SentSettings[player] = value = [];
 
             if (forceLoad || player.TabOpen())
-                ASSUtils.SendASSMessage(player.Connection, new ASSEntriesPack(ListPool<ASSBase>.Shared.Rent(value), settings, GetVersion(player)));
+                ASSUtils.SendASSMessage(player, new ASSEntriesPack(ListPool<ASSInstance>.Shared.Rent(value), settings, GetVersion(player)));
             else
             {
                 if (!QueuedUpdates.ContainsKey(player.ReferenceHub))
                 {
                     Logger.Debug($"Sending {settings.Length} settings (pre-minimizing) to {player.Nickname} via {nameof(SendSSSIncludingASS)}", Main.Debug);
-                    ASSUtils.SendASSMessage(player.Connection, MinimizedPack(value, settings, version ?? GetVersion(player)));
+                    ASSUtils.SendASSMessage(player, MinimizedPack(player, ListPool<ASSInstance>.Shared.Rent(value), settings, version ?? GetVersion(player)));
                 }
 
                 QueuedUpdates[player.ReferenceHub] = () =>
                 {
                     Logger.Debug($"Sending {settings.Length} settings to {player.Nickname} via {nameof(SendSSSIncludingASS)} after tab was opened", Main.Debug);
-                    ASSUtils.SendASSMessage(player.Connection, new ASSEntriesPack(ListPool<ASSBase>.Shared.Rent(value), settings, version ?? GetVersion(player)));
+                    ASSUtils.SendASSMessage(player, new ASSEntriesPack(ListPool<ASSInstance>.Shared.Rent(value), settings, version ?? GetVersion(player)));
                 };
             }
-        }
-
-        public static void RegisterObjects(IEnumerable<IASSObject> groups, IEnumerable<Player>? toUpdate = null)
-        {
-            groups = groups.Where(group => group != null);
-            Objects.AddRange(groups);
-
-            if (toUpdate is null)
-                return;
-
-            foreach (Player player in toUpdate)
-                SendToPlayer(player);
-        }
-
-        public static void UnregisterGroups(IEnumerable<ASSGroup> groups, IEnumerable<Player>? toUpdate = null)
-        {
-            groups = groups.Where(group => group != null);
-            Objects.RemoveAll(groups.Contains);
-
-            if (toUpdate is null)
-                return;
-
-            foreach (Player player in toUpdate)
-                SendToPlayer(player);
         }
 
         public static int GetVersion(Player player, bool newVersion = false)
@@ -202,27 +160,20 @@ namespace ASS.Features
             return ServerSpecificSettingsSync.Version;
         }
 
-        public static IEnumerable<Player> SettingHolders(this ASSBase setting) => ReceivedSettings
-            .Where(kvp => kvp.Value.Contains(setting))
-            .Select(kvp => kvp.Key);
-
-        #if EXILED
-        internal static Action<Player, ASSBase> Convert(this Action<Exiled.API.Features.Player, SettingBase> action) => (player, setting) => action(player, setting);
-        #endif
-
         /// <summary>
         /// Creates an <see cref="ASSEntriesPack"/> containing only a singular header and all keybinds from the provided settings.
         /// </summary>
+        /// <param name="viewer">The viewer.</param>
         /// <param name="assSettings">The ASS settings to search for keybinds.</param>
         /// <param name="baseGameSettings">The ServerSpecificSetting settings to search for keybinds.</param>
         /// <param name="version">What version to send this pack with.</param>
         /// <returns>A minimized <see cref="ASSEntriesPack"/>.</returns>
-        internal static ASSEntriesPack MinimizedPack(IEnumerable<ASSBase> assSettings, IEnumerable<ServerSpecificSettingBase> baseGameSettings, int version)
+        internal static ASSEntriesPack MinimizedPack(Player viewer, IEnumerable<ASSInstance> assSettings, IEnumerable<ServerSpecificSettingBase> baseGameSettings, int version)
         {
             return new ASSEntriesPack(
-                ListPool<ASSBase>.Shared.Rent(assSettings
-                    .Where(setting => setting.SSSType == typeof(SSKeybindSetting))
-                    .Prepend(new ASSHeader("Plz No Hash Collision".GetStableHashCode(), "Loading...", false, "ASS is currently loading all of your settings!"))),
+                ListPool<ASSInstance>.Shared.Rent(assSettings
+                    .Where(setting => setting.Template.SSSType == typeof(SSKeybindSetting))
+                    .Prepend(new HeaderInstance(viewer, "Plz No Hash Collision".GetStableHashCode(), HeaderTemplate.Create(string.Empty).WithLabel("Loading...").WithHint("ASS is currently loading all of your settings!")))),
                 baseGameSettings
                     .Where(setting => setting.GetType() == typeof(SSKeybindSetting))
                     .ToArray(),
@@ -235,22 +186,6 @@ namespace ASS.Features
             {
                 SendToPlayer(Player.Get(hub));
             }
-        }
-
-        internal static IEnumerable<ASSBase> GetRegisteredSorted(Player player)
-        {
-            IEnumerable<IASSObject> objects;
-
-            if (PlayerOverrides.TryGetValue(player, out IASSObject[] objArray))
-            {
-                objects = objArray;
-            }
-            else
-            {
-                objects = Objects;
-            }
-
-            return objects.OrderByDescending(obj => obj.Priority).SelectMany(obj => obj.GetViewableSettingsOrdered(player));
         }
 
         internal static void ProcessResponseMessage(NetworkConnectionToClient conn, SSSClientResponse message)
@@ -269,57 +204,49 @@ namespace ASS.Features
             if (!ReferenceHub.TryGetHub(conn, out ReferenceHub hub))
                 return;
 
-            Player p = Player.Get(hub);
+            Player player = Player.Get(hub);
 
-            ASSBase? setting = ReceivedSettings.TryGetValue(p, out ASSBase[] settings) ? settings.FirstOrDefault(setting => setting.Id == message.Id) : null;
-
-            if (setting is null)
-            {
+            if (!SentSettings.TryGetValue(player, out ASSInstance[]? settings))
                 return;
+
+            ASSInstance? instance = null;
+            for (int i = 0; i < settings.Length; i++)
+            {
+                if (settings[i].Id != message.Id)
+                    continue;
+
+                instance = settings[i];
+                break;
             }
 
+            if (instance is null)
+                return;
+
             if (Joined.Locked.Count > 0)
-                Joined.Locked.Remove(p);
+                CheckJoined(player, settings);
 
             Logger.Debug("Processing ASS setting response", Main.Debug);
 
-            setting.Deserialize(NetworkReaderPool.Get(message.Payload));
-
-            if (setting.IgnoreNextResponse)
-            {
-                setting.IgnoreNextResponse = false;
-                return;
-            }
+            instance.Deserialize(NetworkReaderPool.Get(message.Payload));
 
             Logger.Debug("Running events", Main.Debug);
 
-            SettingEvents.OnSettingTriggered(new SettingTriggeredEventArgs(p, setting));
-
-            switch (setting)
+            SettingEvents.OnSettingTriggered(new InstanceTriggeredEventArgs(player, instance));
+            switch (instance)
             {
-                case ASSKeybind keybind:
-                    SettingEvents.OnKeybindPressed(new KeybindPressedEventArgs(p, keybind));
+                case ButtonInstance button:
+                    button.OnPressed?.Invoke(player, button);
                     break;
-                case ASSDropdown dropdown:
-                    SettingEvents.OnDropdownTriggered(new DropdownTriggeredEventArgs(p, dropdown));
+                case DropdownInstance dropdown:
+                    dropdown.OnDropdownChanged?.Invoke(player, dropdown);
                     break;
-                case ASSTwoButtons twoButtons:
-                    SettingEvents.OnTwoButtonsPressed(new TwoButtonsPressedEventArgs(p, twoButtons));
+                case KeybindInstance keybind:
+                    keybind.OnChanged?.Invoke(player, keybind);
                     break;
-                case ASSSlider slider:
-                    SettingEvents.OnSliderMoved(new SliderMovedEventArgs(p, slider));
+                case SliderInstance slider:
+                    slider.OnChanged?.Invoke(player, slider);
                     break;
-                case ASSButton button:
-                    SettingEvents.OnButtonPressed(new ButtonPressedEventArgs(p, button));
-                    break;
-                case ASSTextInput textInput:
-                    SettingEvents.OnTextInputChanged(new TextInputChangedEventArgs(p, textInput));
-                    break;
-                case ASSDisplay:
-                    Logger.Warn($"Received setting from ASS display [{setting}]! Please verify you are handling your settings correctly.");
-                    break;
-                default:
-                    Logger.Warn($"Failed to cast setting [{setting}]");
+                case TextInputInstance textInput:
                     break;
             }
         }
@@ -337,20 +264,23 @@ namespace ASS.Features
                 update();
         }
 
-        private static List<ASSBase> Copy(ASSBase[] toCopy)
-        {
-            List<ASSBase> val = ListPool<ASSBase>.Shared.Rent(toCopy.Length);
+        private static bool CheckInitialized(Player player) => !(Main.Instance?.Config?.ForceJoinSyncPriority ?? true) || Joined.InitializedPlayers.Contains(player);
 
-            for (int i = 0; i < toCopy.Length; i++)
+        // fancy way of doing IEnumerable::All() but without LINQ.
+        private static void CheckJoined(Player p, ASSInstance[] instances)
+        {
+            bool remove = true;
+            for (int i = 0; i < instances.Length; i++)
             {
-                val.Add(toCopy[i].Copy());
-                val[i].IgnoreNextResponse = toCopy[i].IgnoreNextResponse;
-                val[i].IsInstance = true;
+                if (instances[i].InitialResponseReceived)
+                    continue;
+
+                remove = false;
+                break;
             }
 
-            return val;
+            if (remove)
+                Joined.Locked.Remove(p);
         }
-
-        private static bool CheckInitialized(Player player) => !(Main.Instance?.Config?.ForceJoinSyncPriority ?? true) || Joined.InitializedPlayers.Contains(player);
     }
 }
