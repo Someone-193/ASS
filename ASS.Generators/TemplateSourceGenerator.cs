@@ -98,6 +98,7 @@ public class TemplateSourceGenerator : IIncrementalGenerator
         sb.AppendLine("""
                       using System.Collections.Generic;
 
+                      using ASS.Features;
                       using ASS.Features.Instances;
                       using ASS.Features.Instances.Displays;
 
@@ -131,6 +132,20 @@ public class TemplateSourceGenerator : IIncrementalGenerator
 
                             public static {{model.ClassName}} Create(int id) => new(null, id);
 
+                            public {{model.ClassName}} InitializeOnJoin(bool initialize = true)
+                            {
+                                if (initialize)
+                                {
+                                    ASSNetworking.InitializingSettings.Add(this);
+                                }
+                                else
+                                {
+                                    ASSNetworking.InitializingSettings.Remove(this);
+                                }
+                            
+                                return this;
+                            }
+                        
                             public {{model.ClassName}} WithLabel(string label)
                             {
                                 Label = label;

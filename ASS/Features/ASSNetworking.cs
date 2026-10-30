@@ -36,8 +36,6 @@ namespace ASS.Features
         /// </summary>
         public static Dictionary<Player, ASSInstance[]> SentSettings { get; } = new();
 
-        public static Dictionary<Player, ASSInstance[]> ReceivedSettings { get; } = new();
-
         public static ReadOnlyDictionary<IASSObject, int> Objects { get; } = new(ObjectsValue);
 
         public static Dictionary<Player, int> Versions { get; } = new();
@@ -48,7 +46,7 @@ namespace ASS.Features
         /// <remarks>
         /// This is useful if you hide certain options behind other settings (like a scrollable tab for groups of settings) and you want to read all stored client values for all settings before going back to your tab based approach.
         /// </remarks>
-        public static List<ASSTemplate> InitializingSettings { get; } = [];
+        public static HashSet<ASSTemplate> InitializingSettings { get; } = [];
 
         /// <summary>
         /// Gets a <see cref="List{T}"/> of <see cref="KeybindTemplate"/> containing all keybinds that will be visible below all other settings no matter what groups are visible.
@@ -56,7 +54,7 @@ namespace ASS.Features
         /// <remarks>
         /// Useful if you hide your keybinds behind other settings (say you bind keybinds when you set a <see cref="DropdownTemplate"/> to "Keybinds") but you want to maintain functionality.
         /// </remarks>
-        public static List<KeybindTemplate> PersistantKeybinds { get; } = [];
+        public static HashSet<KeybindTemplate> PersistantKeybinds { get; } = [];
 
         /// <summary>
         /// Gets or sets the generator used to get the root settings of the hierarchy shown to a player.
