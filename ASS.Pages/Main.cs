@@ -13,6 +13,7 @@
     using LabApi.Features;
     using LabApi.Features.Wrappers;
     using LabApi.Loader.Features.Plugins;
+    using LabApi.Loader.Features.Plugins.Enums;
 
     public class Main : Plugin
     {
@@ -35,7 +36,9 @@
 
         public override string Author => "@Someone";
 
-        public override Version Version { get; } = new(1, 0, 0);
+        public override Version Version { get; } = new(4, 0, 0);
+
+        public override LoadPriority Priority => LoadPriority.High - 1;
 
         public override string Description => "Adds pages to ASS";
 

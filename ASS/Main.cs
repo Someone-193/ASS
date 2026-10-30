@@ -57,7 +57,7 @@
 
         public override string Author => "@Someone";
 
-        public override Version Version { get; } = new(2, 0, 0);
+        public override Version Version { get; } = new(4, 0, 0);
 
         public override LoadPriority Priority => LoadPriority.High;
 
