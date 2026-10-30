@@ -18,10 +18,12 @@ namespace ASS.Features
     public static class ASSExtensions
     {
         private static readonly Stack<IASSObject> PreviousObjectsStack = new();
-        private static readonly Stack<string> PathStack = new();
-        private static readonly List<string> PathStackInitializer = [];
+        private static readonly List<string> PathStack = [];
+        private static readonly List<IASSObject> PathStackInitializer = [];
         private static readonly SHA256 Hasher = SHA256.Create();
         private static readonly StringBuilder BuilderNonAlloc = new();
+
+        public static HashSet<IASSObject> IgnoredObjects { get; } = [];
 
         internal static HashSet<IASSObject> PreviousObjectsForParent { get; } = [];
 
@@ -75,13 +77,19 @@ namespace ASS.Features
 
                     while (parent is not null)
                     {
-                        PathStackInitializer.Add(parent.Key);
+                        PathStackInitializer.Add(parent);
                         parent = parent.Parent;
                     }
 
                     PathStackInitializer.Reverse();
-                    foreach (string key in PathStackInitializer)
-                        PathStack.Push(key);
+
+                    foreach (IASSObject path in PathStackInitializer)
+                    {
+                        if (IgnoredObjects.Contains(path))
+                            continue;
+
+                        PathStack.Add(path.Key);
+                    }
                 }
 
                 Process(obj);
@@ -99,6 +107,15 @@ namespace ASS.Features
                 {
                     int id = template.OverrideId ?? GenerateId(PathStack, template.Key);
 
+                    if (Main.Debug)
+                    {
+                        Logger.Debug("Generating ID from path:");
+                        foreach (string path in PathStack)
+                            Logger.Debug(path);
+
+                        Logger.Debug(template.Key);
+                    }
+
                     builtSettings.Add(template.CreateInstance(viewer, id));
                     return;
                 }
@@ -112,13 +129,18 @@ namespace ASS.Features
                 if (PreviousObjectsStack.Contains(obj))
                     throw new InvalidOperationException("ASS objects cannot reference themselves within their children.");
 
-                PathStack.Push(container.Key);
+                bool useStack = !IgnoredObjects.Contains(obj);
+                if (useStack)
+                    PathStack.Add(container.Key);
+
                 PreviousObjectsStack.Push(obj);
 
                 foreach (IASSObject child in container.GetChildren(viewer))
                     Process(child);
 
-                PathStack.Pop();
+                if (useStack)
+                    PathStack.RemoveAt(PathStack.Count - 1);
+
                 PreviousObjectsStack.Pop();
             }
         }

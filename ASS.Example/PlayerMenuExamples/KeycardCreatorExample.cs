@@ -201,14 +201,10 @@ namespace ASS.Example.PlayerMenuExamples
 
         private static void HandleTypeDropdown(Player player, DropdownInstance dropdown)
         {
-            if (!SelectedIndices.TryGetValue(player, out int index))
-            {
-                SelectedIndices[player] = dropdown.IndexSelected;
+            if (!SelectedIndices.TryGetValue(player, out int index) || index != dropdown.IndexSelected)
                 Menu.Update(player);
-            }
 
-            if (index != dropdown.IndexSelected)
-                Menu.Update(player);
+            SelectedIndices[player] = dropdown.IndexSelected;
         }
 
         private static void HandleButton(Player player, ButtonInstance button)
