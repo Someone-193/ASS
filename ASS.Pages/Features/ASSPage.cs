@@ -10,6 +10,8 @@ namespace ASS.Pages.Features
 
     using LabApi.Features.Wrappers;
 
+    using UserSettings.ServerSpecific;
+
     public abstract class ASSPage : IASSContainer
     {
         protected const string ControlKey = "ASS.Pages Page Controller";
@@ -23,6 +25,7 @@ namespace ASS.Pages.Features
         public static DropdownPage MainPageController { get; } = DropdownPage
             .Create("ASS.Pages.MainPage")
             .WithLabel("Pages")
+            .WithEntryType(SSDropdownSetting.DropdownEntryType.HybridLoop)
             .AddPage("Main Page", MainPage);
 
         public static Dictionary<Player, Stack<ASSPage>> SelectedPage { get; } = new();

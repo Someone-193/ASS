@@ -2,11 +2,10 @@ namespace ASS.Pages.Features
 {
     using System;
     using System.Collections.Generic;
-
+    using ASS.Features;
     using ASS.Features.Instances;
     using ASS.Features.Interfaces;
     using ASS.Features.Templates;
-
     using LabApi.Features.Wrappers;
 
     public class ButtonPage : ASSPage
@@ -62,10 +61,10 @@ namespace ASS.Pages.Features
             return this;
         }
 
-        public ButtonPage WithButtonText(string buttonText)
+        public ButtonPage WithButtonText(string openButtonText, string exitButtonText)
         {
-            OpenButton.WithButtonText(buttonText);
-            ExitButton.WithButtonText(buttonText);
+            OpenButton.WithButtonText(openButtonText);
+            ExitButton.WithButtonText(exitButtonText);
             return this;
         }
 
@@ -94,7 +93,11 @@ namespace ASS.Pages.Features
             if (Opened.Add(player))
             {
                 if (SelectedPage.TryGetValue(player, out Stack<ASSPage> stack))
+                {
                     stack.Push(this);
+
+                    ASSNetworking.SendToPlayer(player);
+                }
             }
         }
 
@@ -103,7 +106,11 @@ namespace ASS.Pages.Features
             if (Opened.Remove(player))
             {
                 if (SelectedPage.TryGetValue(player, out Stack<ASSPage> stack) && stack.TryPeek(out ASSPage? page) && page == this)
+                {
                     stack.Pop();
+
+                    ASSNetworking.SendToPlayer(player);
+                }
             }
         }
     }

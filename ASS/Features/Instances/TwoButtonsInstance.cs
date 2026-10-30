@@ -13,12 +13,13 @@ namespace ASS.Features.Instances
         public TwoButtonsInstance(Player viewer, int id, TwoButtonsTemplate template)
             : base(viewer, id, template)
         {
-            AutoSync = template.AutoSync;
             OnChanged = template.OnChanged;
 
             DefaultRightSelected = template.DefaultRightSelected;
             LeftOption = template.LeftOption;
             RightOption = template.RightOption;
+
+            AutoSync = template.AutoSync;
         }
 
         public InstanceHandler<TwoButtonsInstance>? OnChanged { get; set; }

@@ -13,12 +13,12 @@ namespace ASS.Features.Instances.Displays
         public DropdownDisplayInstance(Player viewer, int id, DropdownDisplayTemplate template)
             : base(viewer, id, template)
         {
-            AutoSync = template.AutoSync;
-
             IndexSelected = template.IndexSelected;
 
             Options = template.Options;
             EntryType = template.EntryType;
+
+            AutoSync = template.AutoSync;
         }
 
         public byte IndexSelected

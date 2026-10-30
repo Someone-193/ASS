@@ -14,7 +14,6 @@ namespace ASS.Features.Instances
         public SliderInstance(Player viewer, int id, SliderTemplate template)
             : base(viewer, id, template)
         {
-            AutoSync = template.AutoSync;
             OnChanged = template.OnChanged;
 
             DefaultValue = template.DefaultValue;
@@ -23,6 +22,8 @@ namespace ASS.Features.Instances
             IsInteger = template.IsInteger;
             ValueFormat = template.ValueFormat;
             DisplayFormat = template.DisplayFormat;
+
+            AutoSync = template.AutoSync;
         }
 
         public float Value => value;

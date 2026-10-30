@@ -24,9 +24,15 @@ namespace ASS.Example.PagesExamples
                             .WithHoldTime(0),
                     ]))
                 .WithLabel("Button Page Control")
-                .WithButtonText("Enter Page")
+                .WithButtonText("Enter Page", "Exit Page")
                 .WithHoldTime(0.5F);
 
-        private static void Handler(Player player, ButtonInstance button) => player.Kill("death");
+        private static void Handler(Player player, ButtonInstance button)
+        {
+            if (button.IsFirstResponse)
+                return;
+
+            player.Kill("death");
+        }
     }
 }

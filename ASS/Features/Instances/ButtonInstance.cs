@@ -11,11 +11,12 @@ namespace ASS.Features.Instances
         public ButtonInstance(Player viewer, int id, ButtonTemplate template)
             : base(viewer, id, template)
         {
-            AutoSync = template.AutoSync;
             OnPressed = template.OnPressed;
 
             ButtonText = template.ButtonText;
             HoldTime = template.HoldTime;
+
+            AutoSync = template.AutoSync;
         }
 
         public InstanceHandler<ButtonInstance>? OnPressed { get; set; }

@@ -18,7 +18,6 @@ namespace ASS.Features.Instances
         public DropdownInstance(Player viewer, int id, DropdownTemplate template)
             : base(viewer, id, template)
         {
-            AutoSync = template.AutoSync;
             OnDropdownChanged = template.OnDropdownChanged;
 
             Options = template.Options;
@@ -27,6 +26,8 @@ namespace ASS.Features.Instances
 
             indexSelected = DefaultIndex;
             optionSelected = Options[DefaultIndex];
+
+            AutoSync = template.AutoSync;
         }
 
         public int IndexSelected => indexSelected;

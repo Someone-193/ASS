@@ -10,8 +10,20 @@ namespace ASS.Example.DefaultExample
     {
         public static List<IASSObject> WelcomeHeader(Player viewer) => [HeaderTemplate.Create("Header").WithLabel($"Welcome {viewer.Nickname}!")];
 
-        public static void HandleButtonOne(Player player, ButtonInstance button) => player.Kill($"Hit the funny default button with key {button.Key}");
+        public static void HandleButtonOne(Player player, ButtonInstance button)
+        {
+            if (button.IsFirstResponse)
+                return;
 
-        public static void HandleButtonTwo(Player player, ButtonInstance button) => player.Kill("Hit the funny event button");
+            player.Kill($"Hit the funny default button with key {button.Key}");
+        }
+
+        public static void HandleButtonTwo(Player player, ButtonInstance button)
+        {
+            if (button.IsFirstResponse)
+                return;
+
+            player.Kill("Hit the funny event button");
+        }
     }
 }

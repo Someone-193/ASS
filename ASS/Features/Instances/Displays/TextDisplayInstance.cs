@@ -15,10 +15,10 @@ namespace ASS.Features.Instances.Displays
         public TextDisplayInstance(Player viewer, int id, TextDisplayTemplate template)
             : base(viewer, id, template)
         {
-            AutoSync = template.AutoSync;
-
             FoldoutMode = template.FoldoutMode;
             AlignmentOptions = template.AlignmentOptions;
+
+            AutoSync = template.AutoSync;
         }
 
         public SSTextArea.FoldoutMode FoldoutMode { get; set; }

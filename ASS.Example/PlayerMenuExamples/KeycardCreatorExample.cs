@@ -29,6 +29,8 @@ namespace ASS.Example.PlayerMenuExamples
 
         public static PlayerMenu Menu { get; } = PlayerMenu.Create(MenuKey, Generator);
 
+        private static Dictionary<Player, int> SelectedIndices { get; } = new();
+
         public static void OnJoined(PlayerJoinedEventArgs ev)
         {
             foreach (Player player in Menu.Children.Keys)
@@ -118,7 +120,7 @@ namespace ASS.Example.PlayerMenuExamples
                         .WithLabel("Rank Index")
                         .WithDefaultValue(0)
                         .WithMinValue(0)
-                        .WithMaxValue(100)
+                        .WithMaxValue(3)
                         .WithIsInteger();
                     break;
 
@@ -197,10 +199,23 @@ namespace ASS.Example.PlayerMenuExamples
                 .WithHoldTime(0.5F);
         }
 
-        private static void HandleTypeDropdown(Player player, DropdownInstance dropdown) => Menu.Update(player);
+        private static void HandleTypeDropdown(Player player, DropdownInstance dropdown)
+        {
+            if (!SelectedIndices.TryGetValue(player, out int index))
+            {
+                SelectedIndices[player] = dropdown.IndexSelected;
+                Menu.Update(player);
+            }
+
+            if (index != dropdown.IndexSelected)
+                Menu.Update(player);
+        }
 
         private static void HandleButton(Player player, ButtonInstance button)
         {
+            if (button.IsFirstResponse)
+                return;
+
             int index = 0;
             if (ASSNetworking.TryGetSetting(player, [MenuRoot, MenuKey, "Type Selector"], out DropdownInstance? typeDropdown))
                 index = typeDropdown.IndexSelected;

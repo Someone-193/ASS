@@ -227,6 +227,7 @@ namespace ASS.Features
 
             Logger.Debug("Processing ASS setting response", Main.Debug);
 
+            instance.TimesTriggered++;
             instance.Deserialize(NetworkReaderPool.Get(message.Payload));
 
             Logger.Debug("Running events", Main.Debug);
@@ -247,6 +248,10 @@ namespace ASS.Features
                     slider.OnChanged?.Invoke(player, slider);
                     break;
                 case TextInputInstance textInput:
+                    textInput.OnTextInputted?.Invoke(player, textInput);
+                    break;
+                case TwoButtonsInstance twoButtons:
+                    twoButtons.OnChanged?.Invoke(player, twoButtons);
                     break;
             }
         }

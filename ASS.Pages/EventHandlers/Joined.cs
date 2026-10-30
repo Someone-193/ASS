@@ -8,6 +8,6 @@ namespace ASS.Pages.EventHandlers
 
     internal static class Joined
     {
-        public static void OnJoined(PlayerJoinedEventArgs ev) => ASSPage.SelectedPage[ev.Player] = new Stack<ASSPage>([ASSPage.MainPageController]);
+        public static void OnJoined(PlayerJoinedEventArgs ev) => ASSPage.SelectedPage[ev.Player] = new Stack<ASSPage>();
     }
 }

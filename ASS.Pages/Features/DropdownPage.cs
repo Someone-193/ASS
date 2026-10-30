@@ -19,11 +19,11 @@ namespace ASS.Pages.Features
             Dropdown = DropdownTemplate.Create(ControlKey).WithHandler(Handler);
         }
 
-        private DropdownTemplate Dropdown { get; }
+        public DropdownTemplate Dropdown { get; }
 
-        private Dictionary<string, IASSObject> Children { get; } = new();
+        public Dictionary<string, IASSObject> Children { get; } = new();
 
-        private Dictionary<Player, string> Selected { get; } = new();
+        public Dictionary<Player, string> Selected { get; } = new();
 
         private string Default => Dropdown.Options[Dropdown.DefaultIndex];
 
@@ -102,25 +102,45 @@ namespace ASS.Pages.Features
         public override IEnumerable<IASSObject> GetChildren(Player viewer)
         {
             if (Children.Count is 0)
+            {
+                Logger.Debug($"No children found under {Key}", Main.Debug);
                 yield break;
+            }
 
+            Logger.Debug("Yielding dropdown", Main.Debug);
             yield return Dropdown;
 
-            if (!Selected.TryGetValue(viewer, out string? selected)
-                || !Children.TryGetValue(selected, out IASSObject? child))
-                yield break;
+            if (!Selected.TryGetValue(viewer, out string? selected) || !Children.TryGetValue(selected, out IASSObject? child))
+            {
+                if (Children.TryGetValue(Default, out IASSObject? defaultChild))
+                {
+                    Logger.Debug("Yielding default child.", Main.Debug);
+                    yield return defaultChild;
+                    yield break;
+                }
 
+                Logger.Debug("Breaking, no selection found.", Main.Debug);
+                yield break;
+            }
+
+            Logger.Debug("Yielding child", Main.Debug);
             yield return child;
         }
 
         private void Handler(Player player, DropdownInstance dropdown)
         {
+            Selected[player] = dropdown.OptionSelected;
+
             if (dropdown.OptionSelected == Default)
             {
                 if (Opened.Remove(player))
                 {
                     if (SelectedPage.TryGetValue(player, out Stack<ASSPage> stack) && stack.TryPeek(out ASSPage? page) && page == this)
+                    {
                         stack.Pop();
+
+                        ASSNetworking.SendToPlayer(player);
+                    }
                 }
             }
             else
@@ -128,11 +148,13 @@ namespace ASS.Pages.Features
                 if (Opened.Add(player))
                 {
                     if (SelectedPage.TryGetValue(player, out Stack<ASSPage> stack))
+                    {
                         stack.Push(this);
+
+                        ASSNetworking.SendToPlayer(player);
+                    }
                 }
             }
-
-            Selected[player] = dropdown.OptionSelected;
         }
     }
 }

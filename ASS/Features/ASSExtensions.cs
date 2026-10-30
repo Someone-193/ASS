@@ -56,14 +56,18 @@ namespace ASS.Features
         // internal because it returns a pooled list.
         internal static List<ASSInstance> BuildSettings(IEnumerable<IASSObject> root, Player viewer)
         {
+            Logger.Debug("Building Settings", Main.Debug);
+
             PreviousObjectsStack.Clear();
 
             List<ASSInstance> builtSettings = ListPool<ASSInstance>.Shared.Rent();
             foreach (IASSObject obj in root)
             {
-                // properly initialize PathStack, regardless of wherever the provided object is from.
+                // properly initialize Path Stack, regardless of wherever the provided object is from.
                 if (obj.Parent is not null)
                 {
+                    Logger.Debug("Initializing Path Stack", Main.Debug);
+
                     // we use a list for easy reversing + less heap allocation over time.
                     PathStackInitializer.Clear();
 
@@ -90,8 +94,20 @@ namespace ASS.Features
             // a DFS on visible settings.
             void Process(IASSObject obj)
             {
-                if (obj is not IASSContainer container)
+                Logger.Debug($"Processing {obj}", Main.Debug);
+                if (obj is ASSTemplate template)
+                {
+                    int id = template.OverrideId ?? GenerateId(PathStack, template.Key);
+
+                    builtSettings.Add(template.CreateInstance(viewer, id));
                     return;
+                }
+
+                if (obj is not IASSContainer container)
+                {
+                    Logger.Warn($"Unknown ASS object {obj}!");
+                    return;
+                }
 
                 if (PreviousObjectsStack.Contains(obj))
                     throw new InvalidOperationException("ASS objects cannot reference themselves within their children.");
@@ -100,25 +116,7 @@ namespace ASS.Features
                 PreviousObjectsStack.Push(obj);
 
                 foreach (IASSObject child in container.GetChildren(viewer))
-                {
-                    if (child is ASSTemplate template)
-                    {
-                        int id;
-                        if (template.OverrideId.HasValue)
-                            id = template.OverrideId.Value;
-                        else if (template.Key is not null)
-                            id = GenerateId(PathStack, template.Key);
-                        else
-                        {
-                            Logger.Error("Failed to send settings.\nAll visible ASS Templates must have a usable ID when sending settings!");
-                            continue;
-                        }
-
-                        builtSettings.Add(template.CreateInstance(viewer, id));
-                    }
-                    else
-                        Process(child);
-                }
+                    Process(child);
 
                 PathStack.Pop();
                 PreviousObjectsStack.Pop();

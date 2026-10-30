@@ -15,12 +15,13 @@ namespace ASS.Features.Instances
         public TextInputInstance(Player viewer, int id, TextInputTemplate template)
             : base(viewer, id, template)
         {
-            AutoSync = template.AutoSync;
             OnTextInputted = template.OnTextInputted;
 
             DefaultText = template.DefaultText;
             Placeholder = template.Placeholder;
             CharacterLimit = template.CharacterLimit;
+
+            AutoSync = template.AutoSync;
         }
 
         public InstanceHandler<TextInputInstance>? OnTextInputted { get; set; }

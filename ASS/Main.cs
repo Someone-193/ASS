@@ -59,7 +59,7 @@
 
         public override Version Version { get; } = new(4, 0, 0);
 
-        public override LoadPriority Priority => LoadPriority.High;
+        public override LoadPriority Priority => LoadPriority.High - 1;
 
         public override string Description => "Reworks SSS with the goal of improving player specific settings";
 

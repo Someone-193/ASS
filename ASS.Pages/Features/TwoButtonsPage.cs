@@ -2,9 +2,12 @@ namespace ASS.Pages.Features
 {
     using System;
     using System.Collections.Generic;
+
+    using ASS.Features;
     using ASS.Features.Instances;
     using ASS.Features.Interfaces;
     using ASS.Features.Templates;
+
     using LabApi.Features.Wrappers;
 
     public class TwoButtonsPage : ASSPage
@@ -97,7 +100,11 @@ namespace ASS.Pages.Features
                 if (Opened.Add(player))
                 {
                     if (SelectedPage.TryGetValue(player, out Stack<ASSPage> stack))
+                    {
                         stack.Push(this);
+
+                        ASSNetworking.SendToPlayer(player);
+                    }
                 }
             }
             else
@@ -105,7 +112,11 @@ namespace ASS.Pages.Features
                 if (Opened.Remove(player))
                 {
                     if (SelectedPage.TryGetValue(player, out Stack<ASSPage> stack) && stack.TryPeek(out ASSPage? page) && page == this)
+                    {
                         stack.Pop();
+
+                        ASSNetworking.SendToPlayer(player);
+                    }
                 }
             }
         }

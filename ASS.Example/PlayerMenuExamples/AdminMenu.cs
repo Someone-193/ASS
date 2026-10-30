@@ -45,6 +45,9 @@ namespace ASS.Example.PlayerMenuExamples
 
         private static void Pressed(Player player, ButtonInstance button)
         {
+            if (button.IsFirstResponse)
+                return;
+
             if (!Valid(player))
                 return;
 

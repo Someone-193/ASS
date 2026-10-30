@@ -11,12 +11,12 @@ namespace ASS.Features.Instances.Displays
         public TwoButtonsDisplayInstance(Player viewer, int id, TwoButtonsDisplayTemplate template)
             : base(viewer, id, template)
         {
-            AutoSync = template.AutoSync;
-
             RightSelected = template.RightSelected;
 
             LeftOption = template.LeftOption;
             RightOption = template.RightOption;
+
+            AutoSync = template.AutoSync;
         }
 
         public bool LeftSelected
