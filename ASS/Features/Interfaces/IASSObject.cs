@@ -7,7 +7,7 @@ namespace ASS.Features.Interfaces
         public string Key { get; }
 
         // parent can only go from: null -> null, obj -> null, null -> obj. You can't switch the parent of an object.
-        public IASSContainer? Parent { get; internal set; }
+        public IASSContainer? Parent { get; protected set; }
 
         public bool TrySetParent(IASSContainer? parent)
         {
