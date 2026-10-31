@@ -263,7 +263,7 @@ namespace ASS.Pages.Features
 
             internal abstract IASSObject? GetChild(Player viewer);
 
-            internal class ConditionChild : DropdownChild
+            public class ConditionChild : DropdownChild
             {
                 internal ConditionChild(IASSObject child, Predicate<Player> condition)
                 {
@@ -271,27 +271,27 @@ namespace ASS.Pages.Features
                     Condition = condition;
                 }
 
-                internal IASSObject Child { get; }
+                public IASSObject Child { get; }
 
-                internal Predicate<Player> Condition { get; }
+                public Predicate<Player> Condition { get; }
 
                 internal override IASSObject? GetChild(Player viewer) => Condition(viewer) ? Child : null;
             }
 
-            internal class GeneratorChild : DropdownChild
+            public class GeneratorChild : DropdownChild
             {
                 internal GeneratorChild(Func<Player, IASSObject> generator) => Generator = generator;
 
-                internal Func<Player, IASSObject> Generator { get; }
+                public Func<Player, IASSObject> Generator { get; }
 
                 internal override IASSObject GetChild(Player viewer) => Generator(viewer);
             }
 
-            internal class StandardChild : DropdownChild
+            public class StandardChild : DropdownChild
             {
                 internal StandardChild(IASSObject child) => Child = child;
 
-                internal IASSObject Child { get; }
+                public IASSObject Child { get; }
 
                 internal override IASSObject GetChild(Player viewer) => Child;
             }
