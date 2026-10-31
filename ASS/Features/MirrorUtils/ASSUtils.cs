@@ -24,10 +24,7 @@ namespace ASS.Features.MirrorUtils
     {
         private static ArraySegment<byte> cache;
 
-        public static bool TabOpen(this Player player)
-        {
-            return ServerSpecificSettingsSync.IsTabOpenForUser(player.ReferenceHub);
-        }
+        public static bool TabOpen(this Player player) => ServerSpecificSettingsSync.IsTabOpenForUser(player.ReferenceHub);
 
         public static void SendASSMessage<T>(Player player, T message, int channelId = 0)
             where T : struct, NetworkMessage

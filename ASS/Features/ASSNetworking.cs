@@ -79,7 +79,7 @@ namespace ASS.Features
 
         public static void SetDirty(Player player)
         {
-            if (ServerSpecificSettingsSync.IsTabOpenForUser(player.ReferenceHub))
+            if (player.TabOpen())
             {
                 SendToPlayerFull(player, null, false, true);
                 return;
