@@ -9,7 +9,9 @@ namespace ASS.Features.Interfaces
         // parent can only go from: null -> null, obj -> null, null -> obj. You can't switch the parent of an object.
         public IASSContainer? Parent { get; protected set; }
 
-        public bool TrySetParent(IASSContainer? parent)
+        public bool DisplayInHierarchy { get; }
+
+        public bool TrySetParent(IASSContainer? parent, bool overwrite = true)
         {
             if (Parent is null || parent is null)
             {
@@ -17,7 +19,7 @@ namespace ASS.Features.Interfaces
                 return true;
             }
 
-            if (Parent is not null)
+            if (Parent is not null && overwrite)
             {
                 Logger.Error($"Invalid Operation: Something tried to set the parent of {ToString()} to {parent} despite {ToString()} already having parent {Parent}");
                 return false;

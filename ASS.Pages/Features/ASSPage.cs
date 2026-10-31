@@ -23,16 +23,17 @@ namespace ASS.Pages.Features
             .WithChildren(ASSNetworking.Objects.OrderByDescending(kvp => kvp.Value).Select(kvp => kvp.Key));
 
         public static DropdownPage MainPageController { get; } = DropdownPage
-            .Create("ASS.Pages.MainPage")
+            .Create("ASS.Pages.MainPage", "Main Page", MainPage)
             .WithLabel("Pages")
-            .WithEntryType(SSDropdownSetting.DropdownEntryType.HybridLoop)
-            .AddPage("Main Page", MainPage);
+            .WithEntryType(SSDropdownSetting.DropdownEntryType.HybridLoop);
 
         public static Dictionary<Player, Stack<ASSPage>> SelectedPage { get; } = new();
 
         public string Key { get; }
 
         public IASSContainer? Parent { get; set; }
+
+        public bool DisplayInHierarchy { get; set; } = true;
 
         protected HashSet<Player> Opened { get; } = [];
 

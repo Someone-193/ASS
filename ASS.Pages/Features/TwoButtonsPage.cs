@@ -26,6 +26,8 @@ namespace ASS.Pages.Features
 
         public TwoButtonsTemplate TwoButtons { get; }
 
+        public Predicate<Player>? Condition { get; set; }
+
         public bool RightIsTarget { get; set; }
 
         public static TwoButtonsPage Create(string key, IASSObject child)
@@ -36,6 +38,12 @@ namespace ASS.Pages.Features
             TwoButtonsPage page = new(key, child);
 
             return page;
+        }
+
+        public TwoButtonsPage WithCondition(Predicate<Player> condition)
+        {
+            Condition = condition;
+            return this;
         }
 
         public TwoButtonsPage WithLabel(string label)
@@ -82,6 +90,9 @@ namespace ASS.Pages.Features
 
         public override IEnumerable<IASSObject> GetChildren(Player viewer)
         {
+            if (Condition is not null && !Condition(viewer))
+                yield break;
+
             if (Opened.Contains(viewer))
             {
                 yield return TwoButtons;

@@ -26,6 +26,8 @@ namespace ASS.Pages.Features
 
         public IASSObject Child { get; }
 
+        public Predicate<Player>? Condition { get; set; }
+
         public ButtonTemplate OpenButton { get; }
 
         public ButtonTemplate ExitButton { get; }
@@ -38,6 +40,12 @@ namespace ASS.Pages.Features
             ButtonPage page = new(key, child);
 
             return page;
+        }
+
+        public ButtonPage WithCondition(Predicate<Player> condition)
+        {
+            Condition = condition;
+            return this;
         }
 
         public ButtonPage WithLabel(string label)
@@ -77,6 +85,9 @@ namespace ASS.Pages.Features
 
         public override IEnumerable<IASSObject> GetChildren(Player viewer)
         {
+            if (Condition is not null && !Condition(viewer))
+                yield break;
+
             if (Opened.Contains(viewer))
             {
                 yield return ExitButton;

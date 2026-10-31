@@ -32,6 +32,8 @@ namespace ASS.Features.Templates
 
         public IASSContainer? Parent { get; set; }
 
+        public bool DisplayInHierarchy => true;
+
         /// <summary>
         /// Gets the <see cref="ServerSpecificSettingBase.UserResponseMode"/> of the setting. Acquisition implies a response when the setting is received and Change implies a response whenever the setting is triggered.
         /// </summary>

@@ -85,7 +85,7 @@ namespace ASS.Features
 
                     foreach (IASSObject path in PathStackInitializer)
                     {
-                        if (IgnoredObjects.Contains(path))
+                        if (!path.DisplayInHierarchy || IgnoredObjects.Contains(path))
                             continue;
 
                         PathStack.Add(path.Key);
@@ -129,7 +129,7 @@ namespace ASS.Features
                 if (PreviousObjectsStack.Contains(obj))
                     throw new InvalidOperationException("ASS objects cannot reference themselves within their children.");
 
-                bool useStack = !IgnoredObjects.Contains(obj);
+                bool useStack = obj.DisplayInHierarchy && !IgnoredObjects.Contains(obj);
                 if (useStack)
                     PathStack.Add(container.Key);
 

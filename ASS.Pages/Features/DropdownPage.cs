@@ -4,6 +4,7 @@ namespace ASS.Pages.Features
     using System.Collections.Generic;
     using System.Linq;
     using ASS.Features;
+    using ASS.Features.Containers;
     using ASS.Features.Instances;
     using ASS.Features.Interfaces;
     using ASS.Features.Templates;
@@ -11,87 +12,132 @@ namespace ASS.Pages.Features
     using LabApi.Features.Wrappers;
     using UserSettings.ServerSpecific;
 
+    // this is a really freaking complicated class due to the functionality it needs.
     public class DropdownPage : ASSPage
     {
-        private DropdownPage(string key)
+        private DropdownPage(string key, string defaultPage, IASSObject defaultChild)
             : base(key)
         {
-            Dropdown = DropdownTemplate.Create(ControlKey).WithHandler(Handler);
+            Default = defaultPage;
+
+            Children[defaultPage] = DropdownChild.Create(defaultChild);
+            GeneratedDropdown = PlayerMenu.Create(key, Generator);
         }
 
-        public DropdownTemplate Dropdown { get; }
+        public PlayerMenu GeneratedDropdown { get; }
 
-        public Dictionary<string, IASSObject> Children { get; } = new();
+        public Dictionary<string, DropdownChild> Children { get; } = new();
 
         public Dictionary<Player, string> Selected { get; } = new();
 
-        private string Default => Dropdown.Options[Dropdown.DefaultIndex];
+        private string Default { get; }
 
-        public static DropdownPage Create(string key) => new(key);
+        private string Label { get; set; } = string.Empty;
+
+        private string Hint { get; set; } = string.Empty;
+
+        private byte CollectionId { get; set; }
+
+        private SSDropdownSetting.DropdownEntryType EntryType { get; set; }
+
+        public static DropdownPage Create(string key, string defaultPage, IASSObject defaultChild) => new(key, defaultPage, defaultChild);
 
         public DropdownPage WithLabel(string label)
         {
-            Dropdown.WithLabel(label);
+            SetForeachDropdown(i => i.Label = label);
             return this;
         }
 
         public DropdownPage WithHint(string hint)
         {
-            Dropdown.WithHint(hint);
+            SetForeachDropdown(i => i.Hint = hint);
             return this;
         }
 
         public DropdownPage WithCollectionId(byte collectionId)
         {
-            Dropdown.WithCollectionId(collectionId);
-            return this;
-        }
-
-        public DropdownPage WithDefaultIndex(byte defaultIndex)
-        {
-            Dropdown.WithDefaultIndex(defaultIndex);
+            SetForeachDropdown(i => i.CollectionId = collectionId);
             return this;
         }
 
         public DropdownPage WithEntryType(SSDropdownSetting.DropdownEntryType entryType)
         {
-            Dropdown.WithEntryType(entryType);
+            SetForeachDropdown(i => i.EntryType = entryType);
             return this;
         }
 
-        public DropdownPage AddPage(string name, IASSObject child)
-        {
-            if (child.Key is ControlKey)
-                throw new ArgumentException("You know what you did.");
+        public DropdownPage AddPage(string name, IASSObject child) => AddPage(name, DropdownChild.Create(child));
 
+        public DropdownPage AddPage(string name, DropdownChild child)
+        {
             if (Children.ContainsKey(name))
             {
                 Logger.Error($"Duplicate page name for {Key}! {name}");
                 return this;
             }
 
-            if (child.Parent is not null)
-                throw new InvalidOperationException("An object cannot be the child of two containers!");
+            if (child is DropdownChild.ConditionChild conditionChild)
+            {
+                if (conditionChild.Child.Key is ControlKey)
+                    throw new ArgumentException("You know what you did.");
+                if (conditionChild.Child.Parent is not null)
+                    throw new InvalidOperationException("An object cannot be the child of two containers!");
+                if (!conditionChild.Child.TrySetParent(this))
+                    return this;
 
-            if (!child.TrySetParent(this))
-                return this;
+                foreach (Player viewer in GeneratedDropdown.Children.Keys)
+                {
+                    if (!conditionChild.Condition(viewer))
+                        continue;
+
+                    GeneratedDropdown.Update(viewer);
+                    Selected.Remove(viewer);
+                }
+            }
+            else if (child is DropdownChild.StandardChild standardChild)
+            {
+                if (standardChild.Child.Key is ControlKey)
+                    throw new ArgumentException("You know what you did.");
+                if (standardChild.Child.Parent is not null)
+                    throw new InvalidOperationException("An object cannot be the child of two containers!");
+                if (!standardChild.Child.TrySetParent(this))
+                    return this;
+
+                GeneratedDropdown.UpdateAll();
+                Selected.Clear();
+            }
+            else
+            {
+                GeneratedDropdown.UpdateAll();
+                Selected.Clear();
+            }
 
             Children[name] = child;
 
-            Dropdown.Options = Children.Keys.ToArray();
-            foreach (Player viewer in Selected.Keys)
-                ASSNetworking.SendToPlayer(viewer);
-
-            Selected.Clear();
             return this;
         }
 
         public DropdownPage RemovePage(string name)
         {
-            Children.Remove(name);
-            Dropdown.Options = Children.Keys.ToArray();
-            foreach (Player viewer in Selected.Keys)
-                ASSNetworking.SendToPlayer(viewer);
+            if (!Children.Remove(name, out DropdownChild child))
+                return this;
+
+            if (child is DropdownChild.ConditionChild conditionChild)
+            {
+                foreach (Player viewer in GeneratedDropdown.Children.Keys)
+                {
+                    if (!conditionChild.Condition(viewer))
+                        continue;
+
+                    GeneratedDropdown.Update(viewer);
+                    Selected.Remove(viewer);
+                }
+            }
+            else
+            {
+                GeneratedDropdown.UpdateAll();
+                Selected.Clear();
+            }
 
             Selected.Clear();
             return this;
@@ -108,14 +154,24 @@ namespace ASS.Pages.Features
             }
 
             Logger.Debug("Yielding dropdown", Main.Debug);
-            yield return Dropdown;
+            yield return GeneratedDropdown;
 
-            if (!Selected.TryGetValue(viewer, out string? selected) || !Children.TryGetValue(selected, out IASSObject? child))
+            IASSObject? obj;
+            if (!Selected.TryGetValue(viewer, out string? selected) || !Children.TryGetValue(selected, out DropdownChild child))
             {
-                if (Children.TryGetValue(Default, out IASSObject? defaultChild))
+                if (Children.TryGetValue(Default, out DropdownChild defaultChild))
                 {
                     Logger.Debug("Yielding default child.", Main.Debug);
-                    yield return defaultChild;
+                    obj = defaultChild.GetChild(viewer);
+
+                    if (obj is null)
+                    {
+                        Logger.Error("Invalid page selected!");
+                        yield break;
+                    }
+
+                    obj.TrySetParent(this, false);
+                    yield return obj;
                     yield break;
                 }
 
@@ -124,7 +180,47 @@ namespace ASS.Pages.Features
             }
 
             Logger.Debug("Yielding child", Main.Debug);
-            yield return child;
+            obj = child.GetChild(viewer);
+
+            if (obj is null)
+            {
+                Logger.Error("Invalid page selected!");
+                yield break;
+            }
+
+            obj.TrySetParent(this, false);
+            yield return obj;
+        }
+
+        private void SetForeachDropdown(Action<DropdownInstance> action)
+        {
+            foreach (List<IASSObject> child in GeneratedDropdown.Children.Values)
+            {
+                foreach (DropdownInstance instance in ((DropdownTemplate)child[0]).Instances.Values)
+                {
+                    action(instance);
+                }
+            }
+        }
+
+        private IEnumerable<IASSObject> Generator(Player viewer)
+        {
+            yield return DropdownTemplate
+                .Create("Dropdown Page Dropdown")
+                .WithHandler(Handler)
+                .WithOptions(
+                    Children.Where(kvp =>
+                        {
+                            if (kvp.Value is DropdownChild.ConditionChild conditionChild)
+                                return conditionChild.Condition(viewer);
+                            return true;
+                        })
+                        .Select(kvp => kvp.Key)
+                        .ToArray())
+                .WithLabel(Label)
+                .WithCollectionId(CollectionId)
+                .WithHint(Hint)
+                .WithEntryType(EntryType);
         }
 
         private void Handler(Player player, DropdownInstance dropdown)
@@ -154,6 +250,50 @@ namespace ASS.Pages.Features
                         ASSNetworking.SendToPlayer(player);
                     }
                 }
+            }
+        }
+
+        public abstract class DropdownChild
+        {
+            public static DropdownChild Create(Func<Player, IASSObject> generator) => new GeneratorChild(generator);
+
+            public static DropdownChild Create(IASSObject child, Predicate<Player> condition) => new ConditionChild(child, condition);
+
+            public static DropdownChild Create(IASSObject child) => new StandardChild(child);
+
+            internal abstract IASSObject? GetChild(Player viewer);
+
+            internal class ConditionChild : DropdownChild
+            {
+                internal ConditionChild(IASSObject child, Predicate<Player> condition)
+                {
+                    Child = child;
+                    Condition = condition;
+                }
+
+                internal IASSObject Child { get; }
+
+                internal Predicate<Player> Condition { get; }
+
+                internal override IASSObject? GetChild(Player viewer) => Condition(viewer) ? Child : null;
+            }
+
+            internal class GeneratorChild : DropdownChild
+            {
+                internal GeneratorChild(Func<Player, IASSObject> generator) => Generator = generator;
+
+                internal Func<Player, IASSObject> Generator { get; }
+
+                internal override IASSObject GetChild(Player viewer) => Generator(viewer);
+            }
+
+            internal class StandardChild : DropdownChild
+            {
+                internal StandardChild(IASSObject child) => Child = child;
+
+                internal IASSObject Child { get; }
+
+                internal override IASSObject GetChild(Player viewer) => Child;
             }
         }
     }

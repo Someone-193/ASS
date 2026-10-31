@@ -22,6 +22,8 @@ namespace ASS.Features.Containers
 
         public IASSContainer? Parent { get; set; }
 
+        public bool DisplayInHierarchy { get; set; } = true;
+
         public static ASSGroup Create(string key) => new(key);
 
         public ASSGroup AddChild(IASSObject child)
