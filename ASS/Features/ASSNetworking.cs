@@ -77,7 +77,16 @@ namespace ASS.Features
             where T : ASSInstance
             => (value = !SentSettings.TryGetValue(player, out ASSInstance[] settings) ? null : settings.FirstOrDefault(setting => setting.Id == ASSExtensions.GenerateId(path)) as T) is not null;
 
-        public static void SetDirty(Player player) => DirtyPlayers.Add(player.ReferenceHub);
+        public static void SetDirty(Player player)
+        {
+            if (ServerSpecificSettingsSync.IsTabOpenForUser(player.ReferenceHub))
+            {
+                SendToPlayerFull(player, null, false, true);
+                return;
+            }
+
+            DirtyPlayers.Add(player.ReferenceHub);
+        }
 
         public static void SendToAll()
         {
@@ -263,7 +272,7 @@ namespace ASS.Features
             {
                 Player p = Player.Get(hub);
 
-                SendToPlayerFull(p, true, false, true);
+                SendToPlayerFull(p, null, false, true);
             }
 
             if (report.TabOpen && QueuedUpdates.Remove(hub, out Action update))

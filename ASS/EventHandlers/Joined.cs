@@ -37,7 +37,7 @@ namespace ASS.EventHandlers
                 else
                 {
                     // if none exist, just send settings
-                    ASSNetworking.SendToPlayerFull(ev.Player, true, false, true);
+                    ASSNetworking.SendToPlayerFull(ev.Player, null, false, true);
                 }
             });
         }
@@ -56,7 +56,7 @@ namespace ASS.EventHandlers
                 if (Locked.Contains(player) && ticks <= 60 * 8)
                     continue;
 
-                ASSNetworking.SendToPlayerFull(player, true, false, true);
+                ASSNetworking.SendToPlayerFull(player, null, false, true);
                 break;
             }
         }
