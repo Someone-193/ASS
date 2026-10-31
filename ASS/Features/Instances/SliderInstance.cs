@@ -6,6 +6,8 @@ namespace ASS.Features.Instances
 
     using Mirror;
 
+    using UnityEngine;
+
     public class SliderInstance : ASSInstance
     {
         private float value;
@@ -28,7 +30,7 @@ namespace ASS.Features.Instances
 
         public float Value => value;
 
-        public int IntValue => (int)value;
+        public int IntValue => Mathf.RoundToInt(value);
 
         public bool Dragging => dragging;
 
