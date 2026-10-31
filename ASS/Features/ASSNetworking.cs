@@ -188,7 +188,7 @@ namespace ASS.Features
 
         internal static void ProcessResponseMessage(NetworkConnectionToClient conn, SSSClientResponse message)
         {
-            Logger.Debug("Received SSS client response", Main.Debug);
+            Logger.Debug($"Received SSS client response from {message.Id}", Main.Debug);
 
             try
             {

@@ -45,7 +45,8 @@ namespace ASS.Example.PlayerMenuExamples
 
         private static void Pressed(Player player, ButtonInstance button)
         {
-            if (button.IsFirstResponse)
+            // technically redundant as buttons do not have an initial response.
+            if (button.IsInitialResponse)
                 return;
 
             if (!Valid(player))

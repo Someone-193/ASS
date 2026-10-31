@@ -29,7 +29,8 @@ namespace ASS.Example.PagesExamples
 
         private static void Handler(Player player, ButtonInstance button)
         {
-            if (button.IsFirstResponse)
+            // technically redundant as buttons do not have an initial response.
+            if (button.IsInitialResponse)
                 return;
 
             player.Kill("death");

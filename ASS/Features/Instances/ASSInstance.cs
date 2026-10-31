@@ -58,7 +58,7 @@ namespace ASS.Features.Instances
 
         public ASSTemplate Template { get; }
 
-        public bool IsFirstResponse => TimesTriggered == (ResponseMode is ServerSpecificSettingBase.UserResponseMode.AcquisitionAndChange ? 1 : 0);
+        public bool IsInitialResponse => ResponseMode is ServerSpecificSettingBase.UserResponseMode.AcquisitionAndChange && TimesTriggered is 1;
 
         public bool InitialResponseReceived => ResponseMode is not ServerSpecificSettingBase.UserResponseMode.AcquisitionAndChange || TimesTriggered >= 1;
 

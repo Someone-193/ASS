@@ -12,7 +12,8 @@ namespace ASS.Example.DefaultExample
 
         public static void HandleButtonOne(Player player, ButtonInstance button)
         {
-            if (button.IsFirstResponse)
+            // technically redundant as buttons do not have an initial response.
+            if (button.IsInitialResponse)
                 return;
 
             player.Kill($"Hit the funny default button with key {button.Key}");
@@ -20,7 +21,8 @@ namespace ASS.Example.DefaultExample
 
         public static void HandleButtonTwo(Player player, ButtonInstance button)
         {
-            if (button.IsFirstResponse)
+            // technically redundant as buttons do not have an initial response.
+            if (button.IsInitialResponse)
                 return;
 
             player.Kill("Hit the funny event button");
