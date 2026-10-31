@@ -22,6 +22,8 @@ namespace ASS.Features.Containers
 
         public Predicate<Player>? Condition { get; set; }
 
+        public bool DisplayToAll { get; set; }
+
         public GroupUpdateHandler Generator { get; set; }
 
         public Dictionary<Player, List<IASSObject>> Children { get; } = [];
@@ -108,6 +110,12 @@ namespace ASS.Features.Containers
             return this;
         }
 
+        public PlayerMenu WithDisplayToAll(bool displayToAll = true)
+        {
+            DisplayToAll = displayToAll;
+            return this;
+        }
+
         public PlayerMenu Register(int priority, IEnumerable<Player>? toUpdate = null)
         {
             ASSManagement.RegisterObject(this, priority, toUpdate);
@@ -125,7 +133,16 @@ namespace ASS.Features.Containers
             if (Condition is not null && !Condition(viewer))
                 return [];
 
-            return Children.TryGetValue(viewer, out List<IASSObject> templates) ? templates : [];
+            if (DisplayToAll)
+            {
+                return Children.TryGetValue(viewer, out List<IASSObject> templates)
+                    ? templates
+                    : Children[viewer] = Generator(viewer).ToList();
+            }
+            else
+            {
+                return Children.TryGetValue(viewer, out List<IASSObject> templates) ? templates : [];
+            }
         }
     }
 }

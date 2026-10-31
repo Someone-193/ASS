@@ -13,5 +13,8 @@ namespace ASS
                      "which can resolve conflicts. If set to False, objects like the PlayerMenu might make a players settings not" +
                      "appear visible when they first join.")]
         public bool ForceJoinSyncPriority { get; set; } = true;
+
+        [Description("If true, when a method calls SendToPlayer in some form very quickly in succession for a long time. ASS will log a stacktrace for you to review.")]
+        public bool LogSuspiciousLoops { get; set; } = true;
     }
 }

@@ -23,8 +23,6 @@ namespace ASS.Features
         private static readonly SHA256 Hasher = SHA256.Create();
         private static readonly StringBuilder BuilderNonAlloc = new();
 
-        public static HashSet<IASSObject> IgnoredObjects { get; } = [];
-
         internal static HashSet<IASSObject> PreviousObjectsForParent { get; } = [];
 
         public static int GenerateId(params string[] path)
@@ -85,7 +83,7 @@ namespace ASS.Features
 
                     foreach (IASSObject path in PathStackInitializer)
                     {
-                        if (!path.DisplayInHierarchy || IgnoredObjects.Contains(path))
+                        if (!path.DisplayInHierarchy)
                             continue;
 
                         PathStack.Add(path.Key);
@@ -129,7 +127,7 @@ namespace ASS.Features
                 if (PreviousObjectsStack.Contains(obj))
                     throw new InvalidOperationException("ASS objects cannot reference themselves within their children.");
 
-                bool useStack = obj.DisplayInHierarchy && !IgnoredObjects.Contains(obj);
+                bool useStack = obj.DisplayInHierarchy;
                 if (useStack)
                     PathStack.Add(container.Key);
 

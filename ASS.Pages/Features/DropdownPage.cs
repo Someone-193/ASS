@@ -3,17 +3,21 @@ namespace ASS.Pages.Features
     using System;
     using System.Collections.Generic;
     using System.Linq;
+
     using ASS.Features;
-    using ASS.Features.Containers;
     using ASS.Features.Instances;
     using ASS.Features.Interfaces;
     using ASS.Features.Templates;
+
+    using LabApi.Events.Arguments.PlayerEvents;
+    using LabApi.Events.Handlers;
     using LabApi.Features.Console;
     using LabApi.Features.Wrappers;
+
     using UserSettings.ServerSpecific;
 
     // this is a really freaking complicated class due to the functionality it needs.
-    public class DropdownPage : ASSPage
+    public class DropdownPage : ASSPage, IDisposable
     {
         private DropdownPage(string key, string defaultPage, IASSObject defaultChild)
             : base(key)
@@ -21,10 +25,11 @@ namespace ASS.Pages.Features
             Default = defaultPage;
 
             Children[defaultPage] = DropdownChild.Create(defaultChild);
-            GeneratedDropdown = PlayerMenu.Create(key, Generator);
+
+            PlayerEvents.Left += OnLeft;
         }
 
-        public PlayerMenu GeneratedDropdown { get; }
+        public Dictionary<Player, DropdownTemplate> GeneratedDropdowns { get; } = new();
 
         public Dictionary<string, DropdownChild> Children { get; } = new();
 
@@ -44,24 +49,28 @@ namespace ASS.Pages.Features
 
         public DropdownPage WithLabel(string label)
         {
+            Label = label;
             SetForeachDropdown(i => i.Label = label);
             return this;
         }
 
         public DropdownPage WithHint(string hint)
         {
+            Hint = hint;
             SetForeachDropdown(i => i.Hint = hint);
             return this;
         }
 
         public DropdownPage WithCollectionId(byte collectionId)
         {
+            CollectionId = collectionId;
             SetForeachDropdown(i => i.CollectionId = collectionId);
             return this;
         }
 
         public DropdownPage WithEntryType(SSDropdownSetting.DropdownEntryType entryType)
         {
+            EntryType = entryType;
             SetForeachDropdown(i => i.EntryType = entryType);
             return this;
         }
@@ -85,12 +94,14 @@ namespace ASS.Pages.Features
                 if (!conditionChild.Child.TrySetParent(this))
                     return this;
 
-                foreach (Player viewer in GeneratedDropdown.Children.Keys)
+                Children[name] = child;
+
+                foreach (Player viewer in GeneratedDropdowns.Keys)
                 {
                     if (!conditionChild.Condition(viewer))
                         continue;
 
-                    GeneratedDropdown.Update(viewer);
+                    ASSNetworking.SendToPlayer(viewer);
                     Selected.Remove(viewer);
                 }
             }
@@ -101,18 +112,23 @@ namespace ASS.Pages.Features
                 if (standardChild.Child.Parent is not null)
                     throw new InvalidOperationException("An object cannot be the child of two containers!");
                 if (!standardChild.Child.TrySetParent(this))
+                {
+                    Logger.Warn($"Failed to set parent of {standardChild.Child}");
                     return this;
+                }
 
-                GeneratedDropdown.UpdateAll();
+                Children[name] = child;
+
+                ASSNetworking.SendToAll();
                 Selected.Clear();
             }
             else
             {
-                GeneratedDropdown.UpdateAll();
+                Children[name] = child;
+
+                ASSNetworking.SendToAll();
                 Selected.Clear();
             }
-
-            Children[name] = child;
 
             return this;
         }
@@ -124,22 +140,21 @@ namespace ASS.Pages.Features
 
             if (child is DropdownChild.ConditionChild conditionChild)
             {
-                foreach (Player viewer in GeneratedDropdown.Children.Keys)
+                foreach (Player viewer in GeneratedDropdowns.Keys)
                 {
                     if (!conditionChild.Condition(viewer))
                         continue;
 
-                    GeneratedDropdown.Update(viewer);
+                    ASSNetworking.SendToPlayer(viewer);
                     Selected.Remove(viewer);
                 }
             }
             else
             {
-                GeneratedDropdown.UpdateAll();
+                ASSNetworking.SendToAll();
                 Selected.Clear();
             }
 
-            Selected.Clear();
             return this;
         }
 
@@ -154,7 +169,7 @@ namespace ASS.Pages.Features
             }
 
             Logger.Debug("Yielding dropdown", Main.Debug);
-            yield return GeneratedDropdown;
+            yield return GeneratedDropdowns[viewer] = Generator(viewer);
 
             IASSObject? obj;
             if (!Selected.TryGetValue(viewer, out string? selected) || !Children.TryGetValue(selected, out DropdownChild child))
@@ -192,27 +207,37 @@ namespace ASS.Pages.Features
             yield return obj;
         }
 
+        public void Dispose() => PlayerEvents.Left -= OnLeft;
+
         private void SetForeachDropdown(Action<DropdownInstance> action)
         {
-            foreach (List<IASSObject> child in GeneratedDropdown.Children.Values)
+            foreach (DropdownTemplate dropdown in GeneratedDropdowns.Values)
             {
-                foreach (DropdownInstance instance in ((DropdownTemplate)child[0]).Instances.Values)
+                foreach (DropdownInstance instance in dropdown.Instances.Values)
                 {
                     action(instance);
                 }
             }
         }
 
-        private IEnumerable<IASSObject> Generator(Player viewer)
+        private DropdownTemplate Generator(Player viewer)
         {
-            yield return DropdownTemplate
+            Logger.Debug($"Building Dropdown for {viewer.Nickname}...", Main.Debug);
+            return DropdownTemplate
                 .Create("Dropdown Page Dropdown")
                 .WithHandler(Handler)
                 .WithOptions(
                     Children.Where(kvp =>
                         {
+                            Logger.Debug($"Can use {kvp.Value}?", Main.Debug);
                             if (kvp.Value is DropdownChild.ConditionChild conditionChild)
-                                return conditionChild.Condition(viewer);
+                            {
+                                bool result = conditionChild.Condition(viewer);
+                                Logger.Debug(result, Main.Debug);
+                                return result;
+                            }
+
+                            Logger.Debug(true, Main.Debug);
                             return true;
                         })
                         .Select(kvp => kvp.Key)
@@ -225,6 +250,14 @@ namespace ASS.Pages.Features
 
         private void Handler(Player player, DropdownInstance dropdown)
         {
+            Logger.Debug($"{player.Nickname} selected page {dropdown.OptionSelected}", Main.Debug);
+
+            bool change;
+            if (Selected.TryGetValue(player, out string value))
+                change = value != dropdown.OptionSelected;
+            else
+                change = true;
+
             Selected[player] = dropdown.OptionSelected;
 
             if (dropdown.OptionSelected == Default)
@@ -250,7 +283,15 @@ namespace ASS.Pages.Features
                         ASSNetworking.SendToPlayer(player);
                     }
                 }
+                else if (change)
+                    ASSNetworking.SendToPlayer(player);
             }
+        }
+
+        private void OnLeft(PlayerLeftEventArgs ev)
+        {
+            GeneratedDropdowns.Remove(ev.Player);
+            Selected.Remove(ev.Player);
         }
 
         public abstract class DropdownChild

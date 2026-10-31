@@ -39,8 +39,8 @@ namespace ASS.Pages.Features
 
         public abstract IEnumerable<IASSObject> GetChildren(Player viewer);
 
-        internal static void OnObjectRegistered(ObjectRegisteredEventArgs ev) => MainPage.AddChild(ev.Object);
+        internal static void OnObjectRegistered(ObjectRegisteredEventArgs ev) => MainPage.ClearChildren().WithChildren(ASSNetworking.Objects.OrderByDescending(kvp => kvp.Value).Select(kvp => kvp.Key));
 
-        internal static void OnObjectUnregistered(ObjectUnregisteredEventArgs ev) => MainPage.RemoveChild(ev.Object);
+        internal static void OnObjectUnregistered(ObjectUnregisteredEventArgs ev) => MainPage.ClearChildren().WithChildren(ASSNetworking.Objects.OrderByDescending(kvp => kvp.Value).Select(kvp => kvp.Key));
     }
 }

@@ -6,6 +6,7 @@ namespace ASS.Features
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
 
+    using ASS.DebugUtils;
     using ASS.EventHandlers;
     using ASS.Events.EventArgs;
     using ASS.Events.Handlers;
@@ -107,6 +108,9 @@ namespace ASS.Features
         {
             if (Joined.Locked.Contains(player) || !CheckInitialized(player))
                 return;
+
+            if (Main.Instance?.Config.LogSuspiciousLoops ?? false)
+                SpamDetector.SendToPlayerTracker.Record();
 
             ServerSpecificSettingBase[] baseGame = includeBaseGameSettings.HasValue
                 ? includeBaseGameSettings.Value ? ServerSpecificSettingsSync.DefinedSettings ?? [] : []
@@ -234,13 +238,13 @@ namespace ASS.Features
             if (instance is null)
                 return;
 
-            if (Joined.Locked.Count > 0)
-                CheckJoined(player, settings);
-
             Logger.Debug("Processing ASS setting response", Main.Debug);
 
             instance.TimesTriggered++;
             instance.Deserialize(NetworkReaderPool.Get(message.Payload));
+
+            if (Joined.Locked.Count > 0)
+                CheckJoined(player, settings);
 
             Logger.Debug("Running events", Main.Debug);
 

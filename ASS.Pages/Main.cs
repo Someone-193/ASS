@@ -90,8 +90,8 @@
                 ASSNetworking.SendBaseGameSettingsGenerator = PagesBaseSettingsGenerator;
             }
 
-            ASSExtensions.IgnoredObjects.Add(ASSPage.MainPageController);
-            ASSExtensions.IgnoredObjects.Add(ASSPage.MainPage);
+            ASSPage.MainPageController.DisplayInHierarchy = false;
+            ASSPage.MainPage.DisplayInHierarchy = false;
 
             PlayerEvents.Joined += Joined.OnJoined;
             PlayerEvents.Left += Left.OnLeft;
@@ -102,9 +102,6 @@
 
         public override void Disable()
         {
-            ASSExtensions.IgnoredObjects.Remove(ASSPage.MainPageController);
-            ASSExtensions.IgnoredObjects.Remove(ASSPage.MainPage);
-
             PlayerEvents.Joined -= Joined.OnJoined;
             PlayerEvents.Left -= Left.OnLeft;
 
