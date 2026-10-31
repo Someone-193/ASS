@@ -27,6 +27,7 @@ namespace ASS.Features
     public static class ASSNetworking
     {
         internal static readonly HashSet<ReferenceHub> FixedPlayers = [];
+        internal static readonly HashSet<ReferenceHub> DirtyPlayers = [];
         internal static readonly Dictionary<IASSObject, int> ObjectsValue = new();
 
         private static readonly Dictionary<ReferenceHub, Action> QueuedUpdates = new();
@@ -75,6 +76,8 @@ namespace ASS.Features
         public static bool TryGetSetting<T>(Player player, string[] path, [NotNullWhen(true)] out T? value)
             where T : ASSInstance
             => (value = !SentSettings.TryGetValue(player, out ASSInstance[] settings) ? null : settings.FirstOrDefault(setting => setting.Id == ASSExtensions.GenerateId(path)) as T) is not null;
+
+        public static void SetDirty(Player player) => DirtyPlayers.Add(player.ReferenceHub);
 
         public static void SendToAll()
         {
@@ -256,7 +259,7 @@ namespace ASS.Features
 
         internal static void OnStatusReceived(ReferenceHub hub, SSSUserStatusReport report)
         {
-            if (report.TabOpen && FixedPlayers.Add(hub))
+            if (report.TabOpen && (DirtyPlayers.Remove(hub) || FixedPlayers.Add(hub)))
             {
                 Player p = Player.Get(hub);
 
