@@ -1,19 +1,11 @@
 namespace ASS
 {
-    using System.ComponentModel;
+    extern alias oldSystem;
 
-    #if EXILED
-    using Exiled.API.Interfaces;
+    using oldSystem::System.ComponentModel;
 
-    public class Config : IConfig
-    #elif LABAPI
     public class Config
-    #endif
     {
-        #if EXILED
-        public bool IsEnabled { get; set; } = true;
-        #endif
-
         public bool Debug { get; set; }
 
         [Description("With most SSS code, you often run into having multiple plugins try to send a player settings multiplie time" +

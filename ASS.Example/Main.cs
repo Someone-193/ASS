@@ -2,86 +2,82 @@
 {
     using System;
 
-    using ASS.Events.Handlers;
     using ASS.Example.DefaultExample;
-    using ASS.Example.EventExample;
+    using ASS.Example.PagesExamples;
     using ASS.Example.PlayerMenuExamples;
+    using ASS.Features.Containers;
+    using ASS.Features.Templates;
+    using ASS.Pages.Features;
 
     using LabApi.Events.Handlers;
-
     using LabApi.Features;
     using LabApi.Loader.Features.Plugins;
 
-    #if EXILED
-    public class Main : Exiled.API.Features.Plugin<Config>
-    #elif LABAPI
     public class Main : Plugin
-    #endif
     {
+        private static ASSGroup group = null!;
+
         public override string Name => "ASS.Example";
 
         public override string Author => "@Someone";
 
-        public override Version Version { get; } = new(2, 0, 0);
+        public override Version Version { get; } = new(4, 0, 0);
 
-        #if EXILED
-        public override string Prefix => "ASS_Example";
-        #elif LABAPI
         public override string Description => "A showcase of ASS";
 
         public override Version RequiredApiVersion { get; } = new(LabApiProperties.CompiledVersion);
-        #endif
 
-        #if EXILED
-        public override void OnEnabled()
+        public override void Enable()
         {
-            Enabled();
-            base.OnEnabled();
-        }
-
-        public override void OnDisabled()
-        {
-            Disabled();
-            base.OnDisabled();
-        }
-        #elif LABAPI
-        public override void Enable() => Enabled();
-
-        public override void Disable() => Disabled();
-        #endif
-
-        private void Enabled()
-        {
-            SettingEvents.SettingTriggered += SettingTriggered.OnSettingTriggered;
-            SettingEvents.ButtonPressed += ButtonPressed.OnButtonPressed;
-
-            PlayerEvents.Joined += WelcomeSetting.OnJoined;
-            PlayerEvents.Left += WelcomeSetting.OnLeft;
-
             PlayerEvents.Joined += KeycardCreatorExample.OnJoined;
             PlayerEvents.Left += KeycardCreatorExample.OnLeft;
-            SettingEvents.SettingTriggered += KeycardCreatorExample.OnSettingTriggered;
 
             PlayerEvents.GroupChanged += AdminMenu.OnChangedGroup;
             PlayerEvents.Left += AdminMenu.OnLeft;
-            SettingEvents.SettingTriggered += AdminMenu.OnSettingTriggered;
+
+            group = ASSGroup
+                .Create("ASS.Example")
+                .WithChildren([
+                    PlayerMenu.Create("Welcome Setting", Settings.WelcomeHeader),
+                    ButtonTemplate
+                        .Create("Button 1")
+                        .WithHandler(Settings.HandleButtonOne)
+                        .WithLabel("Test 1"),
+                    ButtonTemplate
+                        .Create("Button 2")
+                        .WithHandler(Settings.HandleButtonTwo)
+                        .WithLabel("Test 2"),
+                    AdminMenu.Menu,
+                    KeycardCreatorExample.Menu,
+                    PageExample.Page,
+                ])
+                .Register(0);
+
+            ASSPage.MainPageController.AddPage("Example Primary Page", ASSGroup
+                    .Create("ASS.Example Primary Group Example")
+                    .WithChildren([
+                        HeaderTemplate
+                            .Create("Header")
+                            .WithLabel("Page Example"),
+                        SliderTemplate
+                            .Create("Slider")
+                            .WithHandler((p, s) => p.Health = s.Value)
+                            .WithMinValue(0)
+                            .WithMaxValue(100)
+                            .WithDefaultValue(100)
+                            .WithLabel("Health Controller")
+                    ]));
         }
 
-        private void Disabled()
+        public override void Disable()
         {
-            SettingEvents.SettingTriggered -= SettingTriggered.OnSettingTriggered;
-            SettingEvents.ButtonPressed -= ButtonPressed.OnButtonPressed;
-
-            PlayerEvents.Joined -= WelcomeSetting.OnJoined;
-            PlayerEvents.Left -= WelcomeSetting.OnLeft;
-
             PlayerEvents.Joined -= KeycardCreatorExample.OnJoined;
             PlayerEvents.Left -= KeycardCreatorExample.OnLeft;
-            SettingEvents.SettingTriggered -= KeycardCreatorExample.OnSettingTriggered;
 
             PlayerEvents.GroupChanged -= AdminMenu.OnChangedGroup;
             PlayerEvents.Left -= AdminMenu.OnLeft;
-            SettingEvents.SettingTriggered -= AdminMenu.OnSettingTriggered;
+
+            group.Unregister();
         }
     }
 }

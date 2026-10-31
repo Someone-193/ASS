@@ -2,38 +2,36 @@ namespace ASS.Features.MirrorUtils.Messages
 {
     using System.Collections.Generic;
 
-    using ASS.Features.Settings;
+    using ASS.Features.Instances;
 
     using Mirror;
-
-    using NorthwoodLib.Pools;
 
     using UserSettings.ServerSpecific;
 
     // make sure all callers of ctor use rented lists.
-    public readonly struct ASSEntriesPack(List<ASSBase> settings, ServerSpecificSettingBase[]? baseSettings, int version) : NetworkMessage
+    public readonly struct ASSEntriesPack(List<ASSInstance> instances, ServerSpecificSettingBase[]? baseSettings, int version) : NetworkMessage
     {
-        public readonly List<ASSBase> Settings = settings;
+        public readonly List<ASSInstance> Instances = instances;
         public readonly ServerSpecificSettingBase[]? BaseSettings = baseSettings;
         public readonly int Version = version;
 
         public void Serialize(NetworkWriter writer)
         {
             writer.WriteInt(Version);
-            if (Settings.Count is 0 && BaseSettings is null)
+            if (Instances.Count is 0 && BaseSettings is null)
             {
                 writer.WriteByte(0);
             }
             else
             {
-                writer.WriteByte((byte)(Settings.Count + (BaseSettings?.Length ?? 0)));
-                foreach (ASSBase setting in Settings)
+                writer.WriteByte((byte)(Instances.Count + (BaseSettings?.Length ?? 0)));
+                foreach (ASSInstance instance in Instances)
                 {
-                    writer.WriteByte(ServerSpecificSettingsSync.GetCodeFromType(setting.SSSType));
-                    setting.Serialize(writer);
-                }
+                    instance.TimesTriggered = 0;
 
-                ListPool<ASSBase>.Shared.Return(Settings);
+                    writer.WriteByte(ServerSpecificSettingsSync.GetCodeFromType(instance.Template.SSSType));
+                    instance.Serialize(writer);
+                }
 
                 if (BaseSettings is not null)
                 {

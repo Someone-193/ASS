@@ -2,52 +2,34 @@ namespace ASS.Events.Handlers
 {
     using ASS.Events.EventArgs;
 
-    using LabApi.Events;
-
     public static class SettingEvents
     {
         /// <summary>
-        /// Called whenever a setting is sent to a client.
+        /// Gets or sets an event called whenever a setting is sent to a client.
         /// </summary>
         /// <remarks>
         /// Can be called multiple times (for keybinds) by one SendToPlayer call because of ASS's minimization logic.
         /// <br/>
         /// Useful for ignoring responses from particular settings manually.
         /// </remarks>
-        public static event LabEventHandler<SendingSettingsEventArgs>? SendingSettings;
+        public static ASSEvent<SendingInstancesEventArgs> SendingSettings { get; set; } = new();
 
-        public static event LabEventHandler<UpdatingSettingEventArgs>? UpdatingSetting;
+        public static ASSEvent<UpdatingInstanceEventArgs> UpdatingSetting { get; set; } = new();
 
-        public static event LabEventHandler<SettingTriggeredEventArgs>? SettingTriggered = ev => ev.Setting.OnChanged?.Invoke(ev.Player, ev.Setting);
+        public static ASSEvent<InstanceTriggeredEventArgs> SettingTriggered { get; set; } = new();
 
-        public static event LabEventHandler<KeybindPressedEventArgs>? KeybindPressed;
+        public static ASSEvent<ObjectRegisteredEventArgs> ObjectRegistered { get; set; } = new();
 
-        public static event LabEventHandler<DropdownTriggeredEventArgs>? DropdownTriggered;
+        public static ASSEvent<ObjectUnregisteredEventArgs> ObjectUnregistered { get; set; } = new();
 
-        public static event LabEventHandler<TwoButtonsPressedEventArgs>? TwoButtonsPressed;
+        public static void OnSendingSettings(SendingInstancesEventArgs ev) => SendingSettings.Invoke(ev);
 
-        public static event LabEventHandler<SliderMovedEventArgs>? SliderMoved;
+        public static void OnUpdatingSetting(UpdatingInstanceEventArgs ev) => UpdatingSetting.Invoke(ev);
 
-        public static event LabEventHandler<ButtonPressedEventArgs>? ButtonPressed;
+        public static void OnSettingTriggered(InstanceTriggeredEventArgs ev) => SettingTriggered.Invoke(ev);
 
-        public static event LabEventHandler<TextInputChangedEventArgs>? TextInputChanged;
+        public static void OnObjectRegistered(ObjectRegisteredEventArgs ev) => ObjectRegistered.Invoke(ev);
 
-        public static void OnSendingSettings(SendingSettingsEventArgs ev) => SendingSettings?.InvokeEvent(ev);
-
-        public static void OnUpdatingSetting(UpdatingSettingEventArgs ev) => UpdatingSetting?.InvokeEvent(ev);
-
-        public static void OnSettingTriggered(SettingTriggeredEventArgs ev) => SettingTriggered?.InvokeEvent(ev);
-
-        public static void OnKeybindPressed(KeybindPressedEventArgs ev) => KeybindPressed?.InvokeEvent(ev);
-
-        public static void OnDropdownTriggered(DropdownTriggeredEventArgs ev) => DropdownTriggered?.InvokeEvent(ev);
-
-        public static void OnTwoButtonsPressed(TwoButtonsPressedEventArgs ev) => TwoButtonsPressed?.Invoke(ev);
-
-        public static void OnSliderMoved(SliderMovedEventArgs ev) => SliderMoved?.Invoke(ev);
-
-        public static void OnButtonPressed(ButtonPressedEventArgs ev) => ButtonPressed?.Invoke(ev);
-
-        public static void OnTextInputChanged(TextInputChangedEventArgs ev) => TextInputChanged?.Invoke(ev);
+        public static void OnObjectUnregistered(ObjectUnregisteredEventArgs ev) => ObjectUnregistered.Invoke(ev);
     }
 }

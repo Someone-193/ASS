@@ -1,6 +1,6 @@
 Add private fields to all settings with received values and make remove the private set accessor so the synced values look get-only to devs? [Done]
 
-Make abstract classes for each inheritor to enable "setting blueprints" that can be easily instanced with pre-determined behavior?
+Make abstract classes for each inheritor to enable "setting blueprints" that can be easily instanced with pre-determined behavior? [Done]
 
 Add XML documentation (too lazy)
 
@@ -8,7 +8,7 @@ Add OnChanged to mimic Exiled implementation [Done]
 
 Add implicit casts from both Exiled settings and base game settings to ASS settings [Done]
 
-use #if to make all ASS methods use Exiled players in the Exiled version instead of LabAPI players (too lazy)
+use #if to make all ASS methods use Exiled players in the Exiled version instead of LabAPI players (scrapped)
 
 Add Update methods for all ASS settings and make setters use them with the AutoSync bool (or whatever I called it lol) [Done]
 
@@ -16,7 +16,7 @@ Add Display variants of all applicable settings [Done]
 
 Setting classes like SecretAPI
 
-Per-Plugin settings, while maintaining access to a global ID or something
+Per-Plugin settings, while maintaining access to a global ID or something [Done]
 
 More examples
 

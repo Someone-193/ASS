@@ -7,8 +7,9 @@ namespace ASS.Features.MirrorUtils
 
     using ASS.Events.EventArgs;
     using ASS.Events.Handlers;
+    using ASS.Features.Instances;
     using ASS.Features.MirrorUtils.Messages;
-    using ASS.Features.Settings;
+    using ASS.Features.Templates;
 
     using LabApi.Features.Console;
     using LabApi.Features.Wrappers;
@@ -23,21 +24,13 @@ namespace ASS.Features.MirrorUtils
     {
         private static ArraySegment<byte> cache;
 
-        public static bool TabOpen(this Player player)
-        {
-            return ServerSpecificSettingsSync.IsTabOpenForUser(player.ReferenceHub);
-        }
+        public static bool TabOpen(this Player player) => ServerSpecificSettingsSync.IsTabOpenForUser(player.ReferenceHub);
 
-        public static void SendASSMessage<T>(NetworkConnection connection, T message, int channelId = 0) 
+        public static void SendASSMessage<T>(Player player, T message, int channelId = 0)
             where T : struct, NetworkMessage
         {
-            Player? player = Player.Get(connection.identity);
-            if (player is null)
-            {
-                // can happen when players disconnect.
-                Logger.Debug("Failed to find player from NetworkConnection in ASSUtils.SendASSMessage<T>();", Main.Debug);
+            if (player.IsDestroyed)
                 return;
-            }
 
             using NetworkWriterPooled writer = NetworkWriterPool.Get();
 
@@ -45,42 +38,62 @@ namespace ASS.Features.MirrorUtils
             {
                 case ASSEntriesPack pack:
                     // Add PersistantKeybinds without overlapping keybinds.
-                    HashSet<int> existing = HashSetPool<int>.Shared.Rent(pack.Settings.Select(setting => setting.Id));
+                    HashSet<int> existing = HashSetPool<int>.Shared.Rent(pack.Instances.Select(setting => setting.Id));
 
                     bool flag = false;
-                    foreach (ASSKeybind keybind in ASSNetworking.PersistantKeybinds)
+                    foreach (KeybindTemplate keybind in ASSNetworking.PersistantKeybinds)
                     {
-                        if (!existing.Add(keybind.Id))
+                        int id;
+                        if (keybind.OverrideId.HasValue)
+                            id = keybind.OverrideId.Value;
+                        else if (keybind.Key is not null)
+                            id = ASSExtensions.GenerateId(keybind.Key);
+                        else
+                        {
+                            Logger.Error("Failed to send PersistantKeybinds.\nAll visible ASS Templates must have a usable ID when sending settings!");
+                            continue;
+                        }
+
+                        if (!existing.Add(id))
                             continue;
 
                         if (!flag)
                         {
-                            pack.Settings.Add(new ASSHeader("Plz No Hash Collision 2: Electric Boogaloo".GetStableHashCode(), "Keybinds", false, "These are here so you can always use your keybinds, even if typically hidden"));
+                            pack.Instances.Add(new HeaderInstance(player, "Plz No Hash Collision 2: Electric Boogaloo".GetStableHashCode(), HeaderTemplate.Create(string.Empty).WithLabel("Keybinds").WithHint("These are here so you can always use your keybinds, even if typically hidden")));
                             flag = true;
                         }
 
-                        pack.Settings.Add(keybind);
+                        pack.Instances.Add(keybind.CreateInstance(player, id));
                     }
 
                     HashSetPool<int>.Shared.Return(existing);
 
                     // Call SendingSettings event
-                    SendingSettingsEventArgs ev1 = new(player, pack.Settings);
+                    SendingInstancesEventArgs ev1 = new(player, pack.Instances);
                     SettingEvents.OnSendingSettings(ev1);
                     if (!ev1.IsAllowed)
                     {
-                        ListPool<ASSBase>.Shared.Return(pack.Settings);
+                        ListPool<ASSInstance>.Shared.Return(pack.Instances);
                         return;
                     }
 
+                    // remove old instances from their templates.
+                    if (ASSNetworking.SentSettings.TryGetValue(player, out ASSInstance[]? oldInstances))
+                    {
+                        for (int i = 0; i < oldInstances.Length; i++)
+                        {
+                            oldInstances[i].Template.RemoveInstance(player);
+                        }
+                    }
+
                     // Save settings being sent
-                    ASSNetworking.ReceivedSettings[player] = pack.Settings.ToArray();
+                    ASSNetworking.SentSettings[player] = pack.Instances.ToArray();
 
                     // Debugging
                     if (Main.Debug)
                     {
                         Logger.Debug("Sending Settings:");
-                        foreach (ASSBase setting in pack.Settings)
+                        foreach (ASSInstance setting in pack.Instances)
                         {
                             Logger.Debug(setting);
                         }
@@ -91,10 +104,10 @@ namespace ASS.Features.MirrorUtils
                     pack.Serialize(writer);
                     break;
                 case ASSUpdateMessage update:
-                    if (!ASSNetworking.ReceivedSettings.TryGetValue(player, out ASSBase[] settings))
+                    if (!ASSNetworking.SentSettings.TryGetValue(player, out ASSInstance[] settings))
                         return;
 
-                    ASSBase? toUpdate;
+                    ASSInstance? toUpdate;
                     try
                     {
                         toUpdate = settings.Single(setting => setting.Id == update.Id);
@@ -103,13 +116,13 @@ namespace ASS.Features.MirrorUtils
                     {
                         StackTrace trace = new();
 
-                        Logger.Error("A method tried to update an ASS setting despite not existing in ASSNetworking.ReceivedSettings!");
+                        Logger.Error("A method tried to update an ASS setting despite not existing in ASSNetworking.SentSettings!");
                         Logger.Error("Stack Trace:");
                         Logger.Error(trace);
                         return;
                     }
 
-                    UpdatingSettingEventArgs ev2 = new(player, toUpdate);
+                    UpdatingInstanceEventArgs ev2 = new(player, toUpdate);
                     SettingEvents.OnUpdatingSetting(ev2);
                     if (!ev2.IsAllowed)
                         return;
@@ -122,11 +135,11 @@ namespace ASS.Features.MirrorUtils
             int num = NetworkMessages.MaxMessageSize(channelId);
             if (writer.Position > num)
             {
-                Logger.Error($"NetworkConnection.Send: message of type {(object)typeof(T)} with a size of {(object)writer.Position} bytes is larger than the max allowed message size in one batch: {(object)num}.\nThe message was dropped, please make it smaller.");
+                Logger.Error($"NetworkConnection.Send: message of type {typeof(T)} with a size of {writer.Position} bytes is larger than the max allowed message size in one batch: {num}.\nThe message was dropped, please make it smaller.");
             }
             else
             {
-                connection.Send(writer.ToArraySegment(), channelId);
+                player.Connection.Send(writer.ToArraySegment(), channelId);
             }
         }
 
@@ -139,9 +152,6 @@ namespace ASS.Features.MirrorUtils
         public static void SendASSMessageToPlayersConditionally<T>(T message, Predicate<Player> predicate, int channelId = 0)
             where T : struct, NetworkMessage
         {
-            if (!NetworkServer.active)
-                throw new InvalidOperationException("Can not use SendToHubsConditionally because NetworkServer is not active!");
-
             using NetworkWriterPooled writer = NetworkWriterPool.Get();
 
             bool flag = false;
@@ -166,6 +176,36 @@ namespace ASS.Features.MirrorUtils
                 }
 
                 hub.connectionToClient.Send(cache, channelId);
+            }
+        }
+
+        public static void SendASSMessageToPlayers<T>(T message, IEnumerable<Player> players, int channelId = 0)
+            where T : struct, NetworkMessage
+        {
+            using NetworkWriterPooled writer = NetworkWriterPool.Get();
+
+            bool flag = false;
+            foreach (Player player in players)
+            {
+                if (!flag)
+                {
+                    switch (message)
+                    {
+                        case ASSEntriesPack pack:
+                            writer.WriteUShort(NetworkMessageId<SSSEntriesPack>.Id);
+                            pack.Serialize(writer);
+                            break;
+                        case ASSUpdateMessage update:
+                            writer.WriteUShort(NetworkMessageId<SSSUpdateMessage>.Id);
+                            update.Serialize(writer);
+                            break;
+                    }
+
+                    cache = writer.ToArraySegment();
+                    flag = true;
+                }
+
+                player.Connection.Send(cache, channelId);
             }
         }
     }
