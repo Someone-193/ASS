@@ -77,6 +77,10 @@ namespace ASS.Features
             where T : ASSInstance
             => (value = !SentSettings.TryGetValue(player, out ASSInstance[] settings) ? null : settings.FirstOrDefault(setting => setting.Id == ASSExtensions.GenerateId(path)) as T) is not null;
 
+        /// <summary>
+        /// A helper method that updates a players settings once they open their SSS tab. This method is the ideal way to send a player new settings. Though if keybinds are involved, the standard <see cref="SendToPlayer"/> should be used.
+        /// </summary>
+        /// <param name="player">The player to send settings, once they open up their SSS tab.</param>
         public static void SetDirty(Player player)
         {
             if (player.TabOpen())
@@ -119,6 +123,7 @@ namespace ASS.Features
             {
                 Logger.Debug($"Sending {builtSettings.Count} (pre-minimizing) settings to {player.Nickname} via {nameof(SendCustomToPlayer)}", Main.Debug);
                 ASSUtils.SendASSMessage(player, MinimizedPack(player, builtSettings, baseGame, GetVersion(player, registerChange)));
+
                 QueuedUpdates[player.ReferenceHub] = () =>
                 {
                     Logger.Debug($"Sending {builtSettings.Count} settings to {player.Nickname} via {nameof(SendCustomToPlayer)} after tab was opened", Main.Debug);
@@ -139,11 +144,8 @@ namespace ASS.Features
                 ASSUtils.SendASSMessage(player, new ASSEntriesPack(ListPool<ASSInstance>.Shared.Rent(value), settings, GetVersion(player)));
             else
             {
-                if (!QueuedUpdates.ContainsKey(player.ReferenceHub))
-                {
-                    Logger.Debug($"Sending {settings.Length} settings (pre-minimizing) to {player.Nickname} via {nameof(SendSSSIncludingASS)}", Main.Debug);
-                    ASSUtils.SendASSMessage(player, MinimizedPack(player, ListPool<ASSInstance>.Shared.Rent(value), settings, version ?? GetVersion(player)));
-                }
+                Logger.Debug($"Sending {settings.Length} settings (pre-minimizing) to {player.Nickname} via {nameof(SendSSSIncludingASS)}", Main.Debug);
+                ASSUtils.SendASSMessage(player, MinimizedPack(player, ListPool<ASSInstance>.Shared.Rent(value), settings, version ?? GetVersion(player)));
 
                 QueuedUpdates[player.ReferenceHub] = () =>
                 {
@@ -268,15 +270,17 @@ namespace ASS.Features
 
         internal static void OnStatusReceived(ReferenceHub hub, SSSUserStatusReport report)
         {
-            if (report.TabOpen && (DirtyPlayers.Remove(hub) || FixedPlayers.Add(hub)))
-            {
-                Player p = Player.Get(hub);
+            if (!report.TabOpen)
+                return;
 
-                SendToPlayerFull(p, null, false, true);
+            if (QueuedUpdates.Remove(hub, out Action update))
+            {
+                update();
+                return;
             }
 
-            if (report.TabOpen && QueuedUpdates.Remove(hub, out Action update))
-                update();
+            if (DirtyPlayers.Remove(hub) || FixedPlayers.Add(hub))
+                SendToPlayerFull(Player.Get(hub), null, false, true);
         }
 
         private static bool CheckInitialized(Player player) => !(Main.Instance?.Config?.ForceJoinSyncPriority ?? true) || Joined.InitializedPlayers.Contains(player);
