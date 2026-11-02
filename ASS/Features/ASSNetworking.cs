@@ -249,26 +249,33 @@ namespace ASS.Features
             Logger.Debug("Running events", Main.Debug);
 
             SettingEvents.OnSettingTriggered(new InstanceTriggeredEventArgs(player, instance));
-            switch (instance)
+            try
             {
-                case ButtonInstance button:
-                    button.OnPressed?.Invoke(player, button);
-                    break;
-                case DropdownInstance dropdown:
-                    dropdown.OnDropdownChanged?.Invoke(player, dropdown);
-                    break;
-                case KeybindInstance keybind:
-                    keybind.OnChanged?.Invoke(player, keybind);
-                    break;
-                case SliderInstance slider:
-                    slider.OnChanged?.Invoke(player, slider);
-                    break;
-                case TextInputInstance textInput:
-                    textInput.OnTextInputted?.Invoke(player, textInput);
-                    break;
-                case TwoButtonsInstance twoButtons:
-                    twoButtons.OnChanged?.Invoke(player, twoButtons);
-                    break;
+                switch (instance)
+                {
+                    case ButtonInstance button:
+                        button.OnPressed?.Invoke(player, button);
+                        break;
+                    case DropdownInstance dropdown:
+                        dropdown.OnDropdownChanged?.Invoke(player, dropdown);
+                        break;
+                    case KeybindInstance keybind:
+                        keybind.OnChanged?.Invoke(player, keybind);
+                        break;
+                    case SliderInstance slider:
+                        slider.OnChanged?.Invoke(player, slider);
+                        break;
+                    case TextInputInstance textInput:
+                        textInput.OnTextInputted?.Invoke(player, textInput);
+                        break;
+                    case TwoButtonsInstance twoButtons:
+                        twoButtons.OnChanged?.Invoke(player, twoButtons);
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"Handler for setting {instance} caused an exception!\n{ex}");
             }
         }
 

@@ -10,13 +10,11 @@ namespace ASS.Features.Containers
 
     public class PlayerMenu : IASSContainer
     {
-        private PlayerMenu(string key, GroupUpdateHandler generator)
+        private PlayerMenu(string key, ASSGenerator generator)
         {
             Key = key;
             Generator = generator;
         }
-
-        public delegate IEnumerable<IASSObject> GroupUpdateHandler(Player player);
 
         public string Key { get; }
 
@@ -24,7 +22,7 @@ namespace ASS.Features.Containers
 
         public bool DisplayToAll { get; set; }
 
-        public GroupUpdateHandler Generator { get; set; }
+        public ASSGenerator Generator { get; set; }
 
         public Dictionary<Player, List<IASSObject>> Children { get; } = [];
 
@@ -32,7 +30,7 @@ namespace ASS.Features.Containers
 
         public bool DisplayInHierarchy { get; set; } = true;
 
-        public static PlayerMenu Create(string key, GroupUpdateHandler generator) => new(key, generator);
+        public static PlayerMenu Create(string key, ASSGenerator generator) => new(key, generator);
 
         public bool TryAdd(Player viewer, bool updatePlayer = true, bool registerChange = true)
         {
@@ -52,7 +50,7 @@ namespace ASS.Features.Containers
         }
 
         /// <summary>
-        /// Updates a <see cref="PlayerMenu"/> by using the menus <see cref="GroupUpdateHandler"/> to acquire new values.
+        /// Updates a <see cref="PlayerMenu"/> by using the menus <see cref="ASSGenerator"/> to acquire new values.
         /// </summary>
         /// <param name="viewer">The viewer to update.</param>
         /// <param name="updatePlayer">Whether to send the player the new settings.</param>
