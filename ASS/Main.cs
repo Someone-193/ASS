@@ -17,6 +17,8 @@
     using LabApi.Loader.Features.Plugins;
     using LabApi.Loader.Features.Plugins.Enums;
 
+    using MEC;
+
     using Mirror;
 
     using UserSettings.ServerSpecific;
@@ -25,6 +27,7 @@
     {
         private static readonly Action HandlerAction = () => NetworkServer.ReplaceHandler<SSSClientResponse>(ASSNetworking.ProcessResponseMessage);
         private static DateTime lastDependencyCheckMessage = DateTime.MinValue;
+        private static CoroutineHandle responseTrackerPump;
 
         private static Harmony harmony = null!;
 
@@ -82,6 +85,8 @@
             PlayerEvents.Left += Left.OnLeft;
 
             ServerSpecificSettingsSync.DefinedSettings ??= [];
+
+            responseTrackerPump = Timing.CallPeriodically(float.MaxValue, 0.5F, static () => ResponseTracker.Flush(DateTime.UtcNow));
         }
 
         public override void Disable()
@@ -94,6 +99,8 @@
 
             PlayerEvents.Joined -= Joined.OnJoined;
             PlayerEvents.Left -= Left.OnLeft;
+
+            Timing.KillCoroutines(responseTrackerPump);
         }
     }
 }

@@ -43,16 +43,8 @@ namespace ASS.Features.MirrorUtils
                     bool flag = false;
                     foreach (KeybindTemplate keybind in ASSNetworking.PersistantKeybinds)
                     {
-                        int id;
-                        if (keybind.OverrideId.HasValue)
-                            id = keybind.OverrideId.Value;
-                        else if (keybind.Key is not null)
-                            id = ASSExtensions.GenerateId(keybind.Key);
-                        else
-                        {
-                            Logger.Error("Failed to send PersistantKeybinds.\nAll visible ASS Templates must have a usable ID when sending settings!");
-                            continue;
-                        }
+                        // TODO: keybind needs to generate ID properly like Build.
+                        int id = keybind.OverrideId ?? ASSExtensions.GenerateId(keybind.Key);
 
                         if (!existing.Add(id))
                             continue;

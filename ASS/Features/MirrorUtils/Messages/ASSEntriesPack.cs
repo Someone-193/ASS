@@ -27,8 +27,6 @@ namespace ASS.Features.MirrorUtils.Messages
                 writer.WriteByte((byte)(Instances.Count + (BaseSettings?.Length ?? 0)));
                 foreach (ASSInstance instance in Instances)
                 {
-                    instance.TimesTriggered = 0;
-
                     writer.WriteByte(ServerSpecificSettingsSync.GetCodeFromType(instance.Template.SSSType));
                     instance.Serialize(writer);
                 }

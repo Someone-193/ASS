@@ -76,21 +76,21 @@ namespace ASS.Features.Containers
 
         public void UpdateAll(bool updatePlayer = true, bool registerChange = true)
         {
-            foreach (KeyValuePair<Player, List<IASSObject>> kvp in Children)
+            foreach ((Player player, List<IASSObject> children) in Children)
             {
-                kvp.Value.Clear();
+                children.Clear();
 
-                foreach (IASSObject child in Generator(kvp.Key))
+                foreach (IASSObject child in Generator(player))
                 {
                     if (child.Parent is not null)
                         throw new InvalidOperationException("An object cannot be the child of two containers!");
 
                     if (child.TrySetParent(this))
-                        kvp.Value.Add(child);
+                        children.Add(child);
                 }
 
                 if (updatePlayer)
-                    ASSNetworking.SendToPlayerFull(kvp.Key, registerChange: registerChange);
+                    ASSNetworking.SendToPlayerFull(player, registerChange: registerChange);
             }
         }
 

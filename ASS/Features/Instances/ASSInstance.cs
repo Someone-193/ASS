@@ -87,6 +87,11 @@ namespace ASS.Features.Instances
 
         internal virtual void Serialize(NetworkWriter writer)
         {
+            TimesTriggered = 0;
+
+            if (ResponseMode is ServerSpecificSettingBase.UserResponseMode.AcquisitionAndChange)
+                ResponseTracker.Expect(Viewer, Id, DateTime.UtcNow);
+
             writer.WriteInt(Id);
             writer.WriteString(Label);
             writer.WriteString(Hint);

@@ -222,20 +222,30 @@ namespace ASS.Features
 
             Player player = Player.Get(hub);
 
+            // Response playback is handled in ResponseTracker.
+            ResponseTracker.OnResponse(player, message);
+        }
+
+        internal static void HandleResponse(Player player, SSSClientResponse message)
+        {
             if (!SentSettings.TryGetValue(player, out ASSInstance[]? settings))
                 return;
 
-            ASSInstance? instance = null;
+            bool found = false;
+            ASSInstance instance = null!;
             for (int i = 0; i < settings.Length; i++)
             {
-                if (settings[i].Id != message.Id)
+                instance = settings[i];
+                if (instance.Id != message.Id)
+                    continue;
+                if (instance.Template.SSSType != message.SettingType)
                     continue;
 
-                instance = settings[i];
+                found = true;
                 break;
             }
 
-            if (instance is null)
+            if (!found)
                 return;
 
             Logger.Debug("Processing ASS setting response", Main.Debug);

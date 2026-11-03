@@ -10,6 +10,7 @@ namespace ASS.EventHandlers
         {
             ASSNetworking.FixedPlayers.Remove(ev.Player.ReferenceHub);
             ASSNetworking.SentSettings.Remove(ev.Player);
+            ResponseTracker.Remove(ev.Player);
         }
     }
 }
