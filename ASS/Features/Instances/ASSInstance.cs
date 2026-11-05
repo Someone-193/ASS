@@ -2,6 +2,7 @@ namespace ASS.Features.Instances
 {
     using System;
 
+    using ASS.Features.Helpers;
     using ASS.Features.MirrorUtils.Messages;
     using ASS.Features.Templates;
 

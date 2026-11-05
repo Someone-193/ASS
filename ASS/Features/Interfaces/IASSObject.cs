@@ -1,5 +1,7 @@
 namespace ASS.Features.Interfaces
 {
+    using ASS.Features.Helpers;
+
     using LabApi.Features.Console;
 
     public interface IASSObject

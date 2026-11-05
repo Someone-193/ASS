@@ -6,6 +6,7 @@
 
     using ASS.EventHandlers;
     using ASS.Features;
+    using ASS.Features.Helpers;
     using ASS.Features.Interfaces;
 
     using HarmonyLib;

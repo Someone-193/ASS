@@ -10,6 +10,7 @@ namespace ASS.Features
     using ASS.EventHandlers;
     using ASS.Events.EventArgs;
     using ASS.Events.Handlers;
+    using ASS.Features.Helpers;
     using ASS.Features.Instances;
     using ASS.Features.Interfaces;
     using ASS.Features.MirrorUtils;

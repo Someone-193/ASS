@@ -7,6 +7,7 @@ namespace ASS.Features.MirrorUtils
 
     using ASS.Events.EventArgs;
     using ASS.Events.Handlers;
+    using ASS.Features.Helpers;
     using ASS.Features.Instances;
     using ASS.Features.MirrorUtils.Messages;
     using ASS.Features.Templates;

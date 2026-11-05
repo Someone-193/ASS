@@ -1,4 +1,4 @@
-namespace ASS.Features
+namespace ASS.Features.Helpers
 {
     using System;
     using System.Collections.Generic;
