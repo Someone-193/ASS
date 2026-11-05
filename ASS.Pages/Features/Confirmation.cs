@@ -2,6 +2,7 @@ namespace ASS.Pages.Features
 {
     using System;
     using System.Collections.Generic;
+    using ASS.Features;
     using ASS.Features.Interfaces;
     using ASS.Features.Templates;
     using LabApi.Features.Wrappers;
@@ -73,9 +74,15 @@ namespace ASS.Pages.Features
             return this;
         }
 
-        public Confirmation Show(Player viewer)
+        public Confirmation Show(Player viewer, bool force = false)
         {
             Confirmations[viewer] = this;
+
+            if (force)
+                ASSNetworking.SendToPlayerFull(viewer, forceLoad: true);
+            else
+                ASSNetworking.SetDirty(viewer);
+
             return this;
         }
 
