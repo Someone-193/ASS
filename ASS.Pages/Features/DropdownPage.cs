@@ -75,6 +75,10 @@ namespace ASS.Pages.Features
             return this;
         }
 
+        public DropdownPage AddPage(string name, Func<Player, IASSObject> generator) => AddPage(name, DropdownChild.Create(generator));
+
+        public DropdownPage AddPage(string name, IASSObject child, Predicate<Player> condition) => AddPage(name, DropdownChild.Create(child, condition));
+
         public DropdownPage AddPage(string name, IASSObject child) => AddPage(name, DropdownChild.Create(child));
 
         public DropdownPage AddPage(string name, DropdownChild child)

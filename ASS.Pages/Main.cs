@@ -27,6 +27,12 @@
         {
             Logger.Debug($"Finding settings for {viewer.Nickname}", Debug);
 
+            if (Confirmation.Confirmations.TryGetValue(viewer, out Confirmation? confirmation))
+            {
+                Logger.Debug($"{viewer.Nickname} has a confirmation.", Debug);
+                return confirmation.Templates();
+            }
+
             if (!ASSPage.SelectedPage.TryGetValue(viewer, out Stack<ASSPage>? stack))
             {
                 Logger.Debug($"{viewer.Nickname} has no selected page.", Debug);

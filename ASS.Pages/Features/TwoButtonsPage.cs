@@ -108,28 +108,27 @@ namespace ASS.Pages.Features
         {
             if ((twoButtons.RightSelected && RightIsTarget) || (twoButtons.LeftSelected && !RightIsTarget))
             {
-                if (Opened.Add(player))
-                {
-                    if (SelectedPage.TryGetValue(player, out Stack<ASSPage> stack))
-                    {
-                        stack.Push(this);
+                if (!Opened.Add(player))
+                    return;
+                if (!SelectedPage.TryGetValue(player, out Stack<ASSPage> stack))
+                    return;
 
-                        ASSNetworking.SendToPlayer(player);
-                    }
-                }
+                stack.Push(this);
             }
             else
             {
-                if (Opened.Remove(player))
-                {
-                    if (SelectedPage.TryGetValue(player, out Stack<ASSPage> stack) && stack.TryPeek(out ASSPage? page) && page == this)
-                    {
-                        stack.Pop();
-
-                        ASSNetworking.SendToPlayer(player);
-                    }
-                }
+                if (!Opened.Remove(player))
+                    return;
+                if (!SelectedPage.TryGetValue(player, out Stack<ASSPage> stack))
+                    return;
+                if (!stack.TryPeek(out ASSPage? page))
+                    return;
+                if (page != this)
+                    return;
+                stack.Pop();
             }
+
+            ASSNetworking.SendToPlayer(player);
         }
     }
 }
