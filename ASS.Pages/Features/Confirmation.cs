@@ -25,12 +25,12 @@ namespace ASS.Pages.Features
 
             confirmButton.WithHandler((player, _) =>
             {
-                Confirm?.Invoke();
+                Confirm?.Invoke(player);
                 Confirmations.Remove(player);
             });
             cancelButton.WithHandler((player, _) =>
             {
-                Cancel?.Invoke();
+                Cancel?.Invoke(player);
                 Confirmations.Remove(player);
             });
 
@@ -47,9 +47,9 @@ namespace ASS.Pages.Features
             }
         }
 
-        public Action? Confirm { get; set; }
+        public Action<Player>? Confirm { get; set; }
 
-        public Action? Cancel { get; set; }
+        public Action<Player>? Cancel { get; set; }
 
         internal static Dictionary<Player, Confirmation> Confirmations { get; } = new();
 
@@ -61,13 +61,13 @@ namespace ASS.Pages.Features
             return this;
         }
 
-        public Confirmation OnConfirm(Action confirm)
+        public Confirmation OnConfirm(Action<Player> confirm)
         {
             Confirm = confirm;
             return this;
         }
 
-        public Confirmation OnCancel(Action cancel)
+        public Confirmation OnCancel(Action<Player> cancel)
         {
             Cancel = cancel;
             return this;
