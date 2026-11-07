@@ -7,6 +7,7 @@ namespace ASS.Features.Containers
     using ASS.Features.Helpers;
     using ASS.Features.Interfaces;
 
+    using LabApi.Features.Console;
     using LabApi.Features.Wrappers;
 
     public class PlayerMenu : IASSContainer
@@ -129,8 +130,19 @@ namespace ASS.Features.Containers
 
         public IEnumerable<IASSObject> GetChildren(Player viewer)
         {
-            if (Condition is not null && !Condition(viewer))
-                return [];
+            if (Condition is not null)
+            {
+                try
+                {
+                    if (!Condition(viewer))
+                        return [];
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error(ex);
+                    return [];
+                }
+            }
 
             if (DisplayToAll)
             {

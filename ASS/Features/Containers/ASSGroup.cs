@@ -7,6 +7,7 @@ namespace ASS.Features.Containers
     using ASS.Features.Helpers;
     using ASS.Features.Interfaces;
 
+    using LabApi.Features.Console;
     using LabApi.Features.Wrappers;
 
     public class ASSGroup : IASSContainer
@@ -85,6 +86,23 @@ namespace ASS.Features.Containers
             return this;
         }
 
-        public IEnumerable<IASSObject> GetChildren(Player viewer) => Condition is null || Condition(viewer) ? children : [];
+        public IEnumerable<IASSObject> GetChildren(Player viewer)
+        {
+            if (Condition is null)
+                return children;
+
+            try
+            {
+                if (Condition(viewer))
+                    return children;
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex);
+                return [];
+            }
+
+            return [];
+        }
     }
 }

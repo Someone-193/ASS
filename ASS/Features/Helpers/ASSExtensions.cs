@@ -133,7 +133,18 @@ namespace ASS.Features.Helpers
 
                 PreviousObjectsStack.Push(obj);
 
-                foreach (IASSObject child in container.GetChildren(viewer))
+                IEnumerable<IASSObject> enumerable;
+                try
+                {
+                    enumerable = container.GetChildren(viewer);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error(ex);
+                    return;
+                }
+
+                foreach (IASSObject child in enumerable)
                     Process(child);
 
                 if (useStack)
