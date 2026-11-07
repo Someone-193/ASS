@@ -12,7 +12,7 @@ namespace ASS.Features.Containers
 
     public class PlayerMenu : IASSContainer
     {
-        private PlayerMenu(string key, ASSGenerator generator)
+        private PlayerMenu(string key, ASSGenerator<PlayerMenu> generator)
         {
             Key = key;
             Generator = generator;
@@ -24,7 +24,7 @@ namespace ASS.Features.Containers
 
         public bool DisplayToAll { get; set; }
 
-        public ASSGenerator Generator { get; set; }
+        public ASSGenerator<PlayerMenu> Generator { get; set; }
 
         public Dictionary<Player, List<IASSObject>> Children { get; } = [];
 
@@ -32,7 +32,7 @@ namespace ASS.Features.Containers
 
         public bool DisplayInHierarchy { get; set; } = true;
 
-        public static PlayerMenu Create(string key, ASSGenerator generator) => new(key, generator);
+        public static PlayerMenu Create(string key, ASSGenerator<PlayerMenu> generator) => new(key, generator);
 
         public bool TryAdd(Player viewer, bool updatePlayer = true, bool registerChange = true)
         {
@@ -45,7 +45,7 @@ namespace ASS.Features.Containers
 
         public void Add(Player viewer, bool updatePlayer = true, bool registerChange = true)
         {
-            Children.Add(viewer, Generator(viewer).ToList());
+            Children.Add(viewer, Generator(this, viewer).ToList());
 
             if (updatePlayer)
                 ASSNetworking.SendToPlayerFull(viewer, registerChange: registerChange);
@@ -63,7 +63,7 @@ namespace ASS.Features.Containers
                 return;
 
             children.Clear();
-            foreach (IASSObject child in Generator(viewer))
+            foreach (IASSObject child in Generator(this, viewer))
             {
                 if (child.Parent is not null)
                     throw new InvalidOperationException("An object cannot be the child of two containers!");
@@ -82,7 +82,7 @@ namespace ASS.Features.Containers
             {
                 children.Clear();
 
-                foreach (IASSObject child in Generator(player))
+                foreach (IASSObject child in Generator(this, player))
                 {
                     if (child.Parent is not null)
                         throw new InvalidOperationException("An object cannot be the child of two containers!");
@@ -148,7 +148,7 @@ namespace ASS.Features.Containers
             {
                 return Children.TryGetValue(viewer, out List<IASSObject> templates)
                     ? templates
-                    : Children[viewer] = Generator(viewer).ToList();
+                    : Children[viewer] = Generator(this, viewer).ToList();
             }
             else
             {

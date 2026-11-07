@@ -32,7 +32,7 @@ namespace ASS.Example.PlayerMenuExamples
 
         public static void OnLeft(PlayerLeftEventArgs ev) => Menu.Remove(ev.Player, false);
 
-        private static IEnumerable<IASSObject> Generator(Player p)
+        private static IEnumerable<IASSObject> Generator(PlayerMenu menu, Player p)
         {
             yield return ButtonTemplate
                 .Create("Toggle")

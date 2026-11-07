@@ -48,7 +48,7 @@ namespace ASS.Example.PlayerMenuExamples
         }
 
         // you can always return a list, but this is technically more efficient, also still just as readable tbh
-        private static IEnumerable<IASSObject> Generator(Player owner)
+        private static IEnumerable<IASSObject> Generator(PlayerMenu menu, Player owner)
         {
             int index = 0;
             if (ASSNetworking.TryGetSetting(owner, [MenuRoot, MenuKey, "Type Selector"], out DropdownInstance? dropdown))

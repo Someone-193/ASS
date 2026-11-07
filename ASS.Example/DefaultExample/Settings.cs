@@ -1,14 +1,17 @@
 namespace ASS.Example.DefaultExample
 {
     using System.Collections.Generic;
+
+    using ASS.Features.Containers;
     using ASS.Features.Instances;
     using ASS.Features.Interfaces;
     using ASS.Features.Templates;
+
     using LabApi.Features.Wrappers;
 
     public static class Settings
     {
-        public static List<IASSObject> WelcomeHeader(Player viewer) => [HeaderTemplate.Create("Header").WithLabel($"Welcome {viewer.Nickname}!")];
+        public static List<IASSObject> WelcomeHeader(PlayerMenu menu, Player viewer) => [HeaderTemplate.Create("Header").WithLabel($"Welcome {viewer.Nickname}!")];
 
         public static void HandleButtonOne(Player player, ButtonInstance button)
         {

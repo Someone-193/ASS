@@ -4,11 +4,11 @@ namespace ASS.Features.Containers
     using ASS.Features.Interfaces;
     using LabApi.Features.Wrappers;
 
-    public delegate IEnumerable<IASSObject> ASSGenerator(Player player);
+    public delegate IEnumerable<IASSObject> ASSGenerator<in T>(T source, Player player);
 
     public class TemplateGenerator : IASSContainer
     {
-        private TemplateGenerator(string key, ASSGenerator generator)
+        private TemplateGenerator(string key, ASSGenerator<TemplateGenerator> generator)
         {
             Key = key;
             Generator = generator;
@@ -20,10 +20,10 @@ namespace ASS.Features.Containers
 
         public bool DisplayInHierarchy { get; set; } = true;
 
-        public ASSGenerator Generator { get; set; }
+        public ASSGenerator<TemplateGenerator> Generator { get; set; }
 
-        public static TemplateGenerator Create(string key, ASSGenerator generator) => new(key, generator);
+        public static TemplateGenerator Create(string key, ASSGenerator<TemplateGenerator> generator) => new(key, generator);
 
-        public IEnumerable<IASSObject> GetChildren(Player viewer) => Generator(viewer);
+        public IEnumerable<IASSObject> GetChildren(Player viewer) => Generator(this, viewer);
     }
 }
