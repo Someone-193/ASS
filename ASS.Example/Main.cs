@@ -65,7 +65,7 @@
                             .WithMinValue(0)
                             .WithMaxValue(100)
                             .WithDefaultValue(100)
-                            .WithLabel("Health Controller")
+                            .WithLabel("Health Controller"),
                     ]));
         }
 

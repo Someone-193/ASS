@@ -9,19 +9,6 @@
     // This is based off Exiled's Event{T}.
     public class ASSEvent<T>
     {
-        private record Registration
-        {
-            public Registration(ASSEventHandler<T> handler, int priority)
-            {
-                Handler = handler;
-                Priority = priority;
-            }
-
-            public ASSEventHandler<T> Handler { get; init; }
-
-            public int Priority { get; init; }
-        }
-
         private static readonly IComparer<Registration> Comparer = Comparer<Registration>.Create((x, y) => y.Priority - x.Priority);
 
         private readonly List<Registration> delegates = [];
@@ -77,5 +64,7 @@
             if (index != -1)
                 delegates.RemoveAt(index);
         }
+
+        private record Registration(ASSEventHandler<T> Handler, int Priority);
     }
 }
