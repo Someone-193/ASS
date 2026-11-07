@@ -19,6 +19,7 @@
     public class Main : Plugin<Config>
     {
         private static DateTime lastDependencyCheckMessage = DateTime.MinValue;
+        private static bool enabled;
 
         // for other developers to use if necessary.
         public static bool RegisterPagesGenerator { get; set; } = true;
@@ -86,9 +87,16 @@
 
         public override Version RequiredApiVersion { get; } = new(LabApiProperties.CompiledVersion);
 
-        public override void Enable()
+        public static void EnsureInit()
         {
-            Instance = this;
+            if (enabled)
+                return;
+
+            if (Instance is null)
+            {
+                Instance = new Main();
+                Instance.LoadConfigs();
+            }
 
             if (RegisterPagesGenerator)
             {
@@ -104,15 +112,28 @@
 
             SettingEvents.ObjectRegistered += ASSPage.OnObjectRegistered;
             SettingEvents.ObjectUnregistered += ASSPage.OnObjectUnregistered;
+
+            enabled = true;
         }
 
-        public override void Disable()
+        public static void DisablePlugin()
         {
             PlayerEvents.Joined -= Joined.OnJoined;
             PlayerEvents.Left -= Left.OnLeft;
 
             SettingEvents.ObjectRegistered -= ASSPage.OnObjectRegistered;
             SettingEvents.ObjectUnregistered -= ASSPage.OnObjectUnregistered;
+
+            enabled = false;
         }
+
+        public override void Enable()
+        {
+            Instance = this;
+
+            EnsureInit();
+        }
+
+        public override void Disable() => DisablePlugin();
     }
 }

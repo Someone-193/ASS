@@ -32,6 +32,8 @@
 
         private static Harmony harmony = null!;
 
+        private static bool enabled;
+
         public static bool Debug
         {
             get
@@ -69,9 +71,16 @@
 
         public override Version RequiredApiVersion { get; } = new(LabApiProperties.CompiledVersion);
 
-        public override void Enable()
+        public static void EnsureInit()
         {
-            Instance = this;
+            if (enabled)
+                return;
+
+            if (Instance is null)
+            {
+                Instance = new Main();
+                Instance.LoadConfigs();
+            }
 
             ServerSpecificSettingsSync.SendOnJoinFilter = _ => false;
 
@@ -88,10 +97,15 @@
             ServerSpecificSettingsSync.DefinedSettings ??= [];
 
             responseTrackerPump = Timing.CallPeriodically(float.MaxValue, 0.5F, static () => ResponseTracker.Flush(DateTime.UtcNow));
+
+            enabled = true;
         }
 
-        public override void Disable()
+        public static void DisablePlugin()
         {
+            if (!enabled)
+                return;
+
             harmony.UnpatchAll(harmony.Id);
 
             ServerSpecificSettingsSync.ServerOnStatusReceived -= ASSNetworking.OnStatusReceived;
@@ -102,6 +116,17 @@
             PlayerEvents.Left -= Left.OnLeft;
 
             Timing.KillCoroutines(responseTrackerPump);
+
+            enabled = false;
         }
+
+        public override void Enable()
+        {
+            Instance = this;
+
+            EnsureInit();
+        }
+
+        public override void Disable() => DisablePlugin();
     }
 }
