@@ -246,7 +246,7 @@ namespace ASS.Collections.Features
                 {
                     children.Add(SetEditor
                         .Create(type.Name)
-                        .WithSet(currentValue as IEnumerable, set => setValue.Invoke(Target, set)));
+                        .WithSet(currentValue as IEnumerable, array => setValue.Invoke(Target, array)));
 
                     return;
                 }

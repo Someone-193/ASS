@@ -7,12 +7,17 @@ namespace ASS.Collections.Features.Helpers
     public static class SetEditorHelper
     {
         private static readonly Dictionary<Type, MethodInfo> Resizers = new();
+        private static readonly Dictionary<Type, MethodInfo> Empties = new();
+
         private static readonly Dictionary<Type, MethodInfo> Adders = new();
         private static readonly Dictionary<Type, MethodInfo> Removers = new();
+        private static readonly Dictionary<Type, MethodInfo> Clearers = new();
+
         private static readonly Dictionary<Type, MethodInfo> RemoveAts = new();
         private static readonly Dictionary<Type, MethodInfo> SetItems = new();
 
         private static readonly MethodInfo ResizeMethod = typeof(Array).GetMethod("Resize", BindingFlags.Public | BindingFlags.Static)!;
+        private static readonly MethodInfo EmptyMethod = typeof(Array).GetMethod("Empty", BindingFlags.Public | BindingFlags.Static)!;
 
         public static MethodInfo GetResizer(Type type)
         {
@@ -20,6 +25,14 @@ namespace ASS.Collections.Features.Helpers
                 return method;
 
             return Resizers[type] = ResizeMethod.MakeGenericMethod(type);
+        }
+
+        public static MethodInfo GetEmpty(Type type)
+        {
+            if (Empties.TryGetValue(type, out MethodInfo? method))
+                return method;
+
+            return Empties[type] = EmptyMethod.MakeGenericMethod(type);
         }
 
         public static MethodInfo GetICollectionAdder(Type type)
@@ -36,6 +49,14 @@ namespace ASS.Collections.Features.Helpers
                 return method;
 
             return Removers[type] = typeof(ICollection<>).MakeGenericType(type).GetMethod("Remove", BindingFlags.Public | BindingFlags.Instance)!;
+        }
+
+        public static MethodInfo GetICollectionClear(Type type)
+        {
+            if (Clearers.TryGetValue(type, out MethodInfo? method))
+                return method;
+
+            return Clearers[type] = typeof(ICollection<>).MakeGenericType(type).GetMethod("Clear", BindingFlags.Public | BindingFlags.Instance)!;
         }
 
         public static MethodInfo GetListRemoveAt(Type type)

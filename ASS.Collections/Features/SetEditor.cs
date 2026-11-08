@@ -8,11 +8,13 @@ namespace ASS.Collections.Features
     using ASS.Collections.Features.Helpers;
     using ASS.Collections.Features.Pages;
 
+    using ASS.Features;
     using ASS.Features.Instances;
     using ASS.Features.Interfaces;
     using ASS.Features.Templates;
 
     using LabApi.Features.Wrappers;
+
     using Logger = LabApi.Features.Console.Logger;
 
     /// <summary>
@@ -36,8 +38,7 @@ namespace ASS.Collections.Features
         private Type? type;
         private Type? targetType;
         private Func<string, BindingHelper.ParserResponse>? parser;
-        private IEnumerable? setRef;
-        private Action<IEnumerable>? onChanged;
+        private Action<Array>? onResize;
 
         private SetEditor(string key)
         {
@@ -57,7 +58,49 @@ namespace ASS.Collections.Features
 
         public string Key { get; }
 
-        public ref IEnumerable? Set => ref setRef;
+        public IEnumerable? Set
+        {
+            get;
+            set
+            {
+                field = value;
+
+                if (value is null)
+                {
+                    type = null;
+                    targetType = null;
+                    parser = null;
+                    return;
+                }
+
+                type = value.GetType();
+
+                if (type.IsArray)
+                {
+                    setType = SetType.Array;
+                    return;
+                }
+
+                if (!type.IsConstructedGenericType)
+                    throw new InvalidOperationException("SetEditors can only be used on HashSets, Lists, and Arrays!");
+
+                Type definition = type.GetGenericTypeDefinition();
+                if (definition == typeof(HashSet<>))
+                    setType = SetType.HashSet;
+                else if (definition == typeof(List<>))
+                    setType = SetType.List;
+                else
+                    throw new InvalidOperationException("SetEditors can only be used on HashSets, Lists, and Arrays!");
+
+                targetType = type.GenericTypeArguments[0];
+
+                if (!BindingHelper.GlobalParsers.TryGetValue(targetType, out parser))
+                {
+                    parser = null;
+                    Logger.Warn($"Cannot create SetEditor for type {targetType.FullName}, there is no parser available!");
+                }
+            }
+        }
 
         public float HoldTime { get; set; }
 
@@ -67,58 +110,17 @@ namespace ASS.Collections.Features
 
         public static SetEditor Create(string key) => new(key);
 
-        public SetEditor WithSet(ref IEnumerable? set)
-        {
-            setRef = set;
-
-            if (set is null)
-            {
-                type = null;
-                targetType = null;
-                parser = null;
-                return this;
-            }
-
-            type = set.GetType();
-
-            if (type.IsArray)
-            {
-                setType = SetType.Array;
-                return this;
-            }
-
-            if (!type.IsConstructedGenericType)
-                throw new InvalidOperationException("SetEditors can only be used on HashSets, Lists, and Arrays!");
-
-            Type definition = type.GetGenericTypeDefinition();
-            if (definition == typeof(HashSet<>))
-                setType = SetType.HashSet;
-            else if (definition == typeof(List<>))
-                setType = SetType.List;
-            else
-                throw new InvalidOperationException("SetEditors can only be used on HashSets, Lists, and Arrays!");
-
-            targetType = type.GenericTypeArguments[0];
-
-            if (!BindingHelper.GlobalParsers.TryGetValue(targetType, out parser))
-            {
-                parser = null;
-                Logger.Warn($"Cannot create SetEditor for type {targetType.FullName}, there is no parser available!");
-            }
-
-            return this;
-        }
-
         /// <summary>
-        /// A seperate way to use a SetEditor. Changes in the set provided will not be reflected to users. However, changes from the set can be tracked on the outside via onChanged.
+        /// The standard way to use a <see cref="SetEditor"/>. <see cref="Array"/>'s need special attention.
         /// </summary>
         /// <param name="set">The set to modify.</param>
-        /// <param name="onChanged">An action triggered whenever the underlying set is changed.</param>
+        /// <param name="onResize">An action triggered whenever Set is an array, and a resize occurs.</param>
         /// <returns>The current instance.</returns>
-        public SetEditor WithSet(IEnumerable? set, Action<IEnumerable> onChanged)
+        /// <remarks>If you are using an Array, set onResize to reset the original set.</remarks>
+        public SetEditor WithSet(IEnumerable? set, Action<Array>? onResize = null)
         {
-            WithSet(ref set);
-            this.onChanged = onChanged;
+            Set = set;
+            this.onResize = onResize;
 
             return this;
         }
@@ -156,6 +158,28 @@ namespace ASS.Collections.Features
                     selections[player] = (obj, dropdown.IndexSelected);
                 });
 
+            yield return ButtonTemplate
+                .Create("Clear Button")
+                .WithLabel("Clear")
+                .WithHandler((player, button) =>
+                {
+                    switch (setType)
+                    {
+                        case SetType.HashSet:
+                        case SetType.List:
+                            SetEditorHelper.GetICollectionClear(targetType).Invoke(Set, null);
+                            break;
+                        case SetType.Array:
+                            Array array = (Array)SetEditorHelper.GetEmpty(targetType).Invoke(null, null);
+                            Set = array;
+
+                            onResize?.Invoke(array);
+                            break;
+                    }
+
+                    ASSNetworking.SetDirty(player);
+                });
+
             yield return buttonPage;
         }
 
@@ -173,9 +197,18 @@ namespace ASS.Collections.Features
 
             bool isNew = pair.Index == list.Count;
 
-            yield return HeaderTemplate
-                .Create("Header")
-                .WithLabel($"Modify {pair.Selected?.ToString() ?? NullKeyword} ({BindingHelper.ProperTypeName(targetType)})");
+            if (isNew)
+            {
+                yield return HeaderTemplate
+                    .Create("Header")
+                    .WithLabel($"Create new {BindingHelper.ProperTypeName(targetType)}");
+            }
+            else
+            {
+                yield return HeaderTemplate
+                    .Create("Header")
+                    .WithLabel($"Modify {pair.Selected?.ToString() ?? NullKeyword} ({BindingHelper.ProperTypeName(targetType)})");
+            }
 
             switch (setType)
             {
@@ -203,7 +236,6 @@ namespace ASS.Collections.Features
 
                                 SetEditorHelper.GetICollectionAdder(targetType).Invoke(Set, [response.Value]);
 
-                                onChanged?.Invoke(Set);
                                 buttonPage.Exit(player);
                             })
                             .WithHoldTime(HoldTime);
@@ -217,7 +249,6 @@ namespace ASS.Collections.Features
                             {
                                 SetEditorHelper.GetICollectionRemover(targetType).Invoke(Set, [pair.Selected]);
 
-                                onChanged?.Invoke(Set);
                                 buttonPage.Exit(player);
                             })
                             .WithHoldTime(HoldTime);
@@ -251,16 +282,16 @@ namespace ASS.Collections.Features
                                 {
                                     object[] args = [Set, array.Length + 1];
                                     SetEditorHelper.GetResizer(targetType).Invoke(null, args);
-                                    setRef = array = (Array)args[0];
+                                    Set = array = (Array)args[0];
 
                                     array.SetValue(response.Value, pair.Index);
+                                    onResize?.Invoke(array);
                                 }
                                 else
                                 {
                                     SetEditorHelper.GetICollectionAdder(targetType).Invoke(Set, [response.Value]);
                                 }
 
-                                onChanged?.Invoke(Set);
                                 buttonPage.Exit(player);
                             })
                             .WithHoldTime(HoldTime);
@@ -285,7 +316,6 @@ namespace ASS.Collections.Features
                                 else
                                     SetEditorHelper.GetListSetItem(targetType).Invoke(Set, [pair.Index, response.Value]);
 
-                                onChanged?.Invoke(Set);
                                 buttonPage.Exit(player);
                             });
 
@@ -305,14 +335,15 @@ namespace ASS.Collections.Features
 
                                     object[] args = [Set, array.Length - 1];
                                     SetEditorHelper.GetResizer(targetType).Invoke(null, args);
-                                    setRef = (Array)args[0];
+                                    Set = array = (Array)args[0];
+
+                                    onResize?.Invoke(array);
                                 }
                                 else
                                 {
                                     SetEditorHelper.GetListRemoveAt(targetType).Invoke(Set, [pair.Index]);
                                 }
 
-                                onChanged?.Invoke(Set);
                                 buttonPage.Exit(player);
                             })
                             .WithHoldTime(HoldTime);
