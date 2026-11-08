@@ -1,4 +1,4 @@
-namespace ASS.Features.Helpers
+namespace ASS.Collections.Features.Helpers
 {
     extern alias oldSystem;
 
@@ -7,14 +7,10 @@ namespace ASS.Features.Helpers
     using System.Numerics;
     using System.Reflection;
 
-    using ASS.Features.Containers;
-
     using HarmonyLib;
 
-    using oldSystem::System.Net;
-
     /// <summary>
-    /// Helper class for <see cref="Binding"/> and <see cref="Builder"/>.
+    /// Helper class for <see cref="Builder"/> and <see cref="Binding"/>.
     /// </summary>
     public static class BindingHelper
     {
@@ -77,7 +73,7 @@ namespace ASS.Features.Helpers
                 [typeof(TimeSpan)] = str => StandardTryParseResponse<TimeSpan>(str, TimeSpan.TryParse),
 
                 // identifiers
-                [typeof(IPAddress)] = str => StandardTryParseResponse<IPAddress>(str, IPAddress.TryParse),
+                [typeof(oldSystem::System.Net.IPAddress)] = str => StandardTryParseResponse<oldSystem::System.Net.IPAddress>(str, oldSystem::System.Net.IPAddress.TryParse),
                 [typeof(Guid)] = str => StandardTryParseResponse<Guid>(str, Guid.TryParse),
                 [typeof(Version)] = str => StandardTryParseResponse<Version>(str, Version.TryParse),
 

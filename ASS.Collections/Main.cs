@@ -5,6 +5,7 @@
 
     using ASS.Collections.EventHandlers;
     using ASS.Collections.Features;
+    using ASS.Collections.Features.Assml;
     using ASS.Collections.Features.Pages;
     using ASS.Events.Handlers;
     using ASS.Features;
@@ -113,6 +114,8 @@
 
             SettingEvents.ObjectRegistered += ASSPage.OnObjectRegistered;
             SettingEvents.ObjectUnregistered += ASSPage.OnObjectUnregistered;
+
+            AssmlUtils.Register();
 
             enabled = true;
         }

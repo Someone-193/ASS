@@ -12,11 +12,11 @@ namespace ASS.Collections.Features.Pages
 
     public class ButtonPage : ASSPage
     {
-        private ButtonPage(string key, IASSObject child)
+        private readonly List<IASSObject> children = [];
+
+        private ButtonPage(string key)
             : base(key)
         {
-            Child = child;
-
             OpenButton = ButtonTemplate
                 .Create(ControlKey)
                 .WithHandler(Open);
@@ -26,22 +26,65 @@ namespace ASS.Collections.Features.Pages
                 .WithHandler(Exit);
         }
 
-        public IASSObject Child { get; }
-
         public Predicate<Player>? Condition { get; set; }
 
         public ButtonTemplate OpenButton { get; }
 
         public ButtonTemplate ExitButton { get; }
 
-        public static ButtonPage Create(string key, IASSObject child)
+        public static ButtonPage Create(string key)
         {
+            ButtonPage page = new(key);
+
+            return page;
+        }
+
+        public ButtonPage AddChild(IASSObject child)
+        {
+            if (children.Contains(child) || !child.TrySetParent(this))
+                return this;
+
             if (child.Key is ControlKey)
                 throw new ArgumentException("You know what you did.");
 
-            ButtonPage page = new(key, child);
+            children.Add(child);
+            return this;
+        }
 
-            return page;
+        public ButtonPage RemoveChild(IASSObject child)
+        {
+            if (children.Remove(child))
+                child.TrySetParent(null);
+
+            return this;
+        }
+
+        public ButtonPage ClearChildren()
+        {
+            foreach (IASSObject child in children)
+                child.TrySetParent(null);
+
+            children.Clear();
+            return this;
+        }
+
+        public ButtonPage WithChildren(IEnumerable<IASSObject> newChildren)
+        {
+            foreach (IASSObject child in newChildren)
+            {
+                if (child.Parent is not null)
+                    throw new InvalidOperationException("An object cannot be the child of two containers!");
+
+                if (!child.TrySetParent(this))
+                    continue;
+
+                if (child.Key is ControlKey)
+                    throw new ArgumentException("You know what you did.");
+
+                children.Add(child);
+            }
+
+            return this;
         }
 
         public ButtonPage WithCondition(Predicate<Player> condition)
@@ -93,7 +136,9 @@ namespace ASS.Collections.Features.Pages
             if (Opened.Contains(viewer))
             {
                 yield return ExitButton;
-                yield return Child;
+
+                foreach (IASSObject child in children)
+                    yield return child;
             }
             else
             {

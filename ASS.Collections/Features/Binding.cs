@@ -6,7 +6,7 @@ namespace ASS.Collections.Features
     using System.Collections.Generic;
     using System.Reflection;
 
-    using ASS.Features.Helpers;
+    using ASS.Collections.Features.Helpers;
     using ASS.Features.Interfaces;
     using ASS.Features.Templates;
 

@@ -42,6 +42,8 @@ namespace ASS.ASSML
 
         public override Version RequiredApiVersion { get; } = new(LabApiProperties.CompiledVersion);
 
+        public override LoadPriority Priority => LoadPriority.High - 1;
+
         public static void EnsureInit()
         {
             if (enabled)

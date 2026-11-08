@@ -11,19 +11,22 @@ namespace ASS.Example.PagesExamples
     {
         public static ButtonPage Page { get; } =
             ButtonPage
-                .Create("ASS.Example Button Page", ASSGroup
-                    .Create("Button Page Child")
-                    .WithChildren([
-                        HeaderTemplate
-                            .Create("Header")
-                            .WithLabel("Button Page Header"),
-                        ButtonTemplate
-                            .Create("Kill Button")
-                            .WithHandler(Handler)
-                            .WithLabel("Kill Button")
-                            .WithButtonText("Death")
-                            .WithHoldTime(0),
-                    ]))
+                .Create("ASS.Example Button Page")
+                .WithChildren([
+                    ASSGroup
+                        .Create("Button Page Child")
+                        .WithChildren([
+                            HeaderTemplate
+                                .Create("Header")
+                                .WithLabel("Button Page Header"),
+                            ButtonTemplate
+                                .Create("Kill Button")
+                                .WithHandler(Handler)
+                                .WithLabel("Kill Button")
+                                .WithButtonText("Death")
+                                .WithHoldTime(0),
+                        ]),
+                ])
                 .WithLabel("Button Page Control")
                 .WithButtonText("Enter Page", "Exit Page")
                 .WithHoldTime(0.5F);

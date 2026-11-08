@@ -65,7 +65,12 @@
 
         public override Version Version { get; } = new(4, 0, 0);
 
-        public override LoadPriority Priority => LoadPriority.High - 1;
+        // Order of assembly loading:
+        // ASS
+        // ASS.ASSML
+        // ASS.Collections
+        // ASS.Example
+        public override LoadPriority Priority => LoadPriority.High - 2;
 
         public override string Description => "Reworks SSS with the goal of improving player specific settings";
 

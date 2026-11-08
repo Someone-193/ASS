@@ -5,8 +5,8 @@ namespace ASS.Collections.Features
     using System.Collections.Generic;
     using System.Linq;
 
+    using ASS.Collections.Features.Helpers;
     using ASS.Collections.Features.Pages;
-    using ASS.Features.Helpers;
     using ASS.Features.Interfaces;
     using ASS.Features.Templates;
 
@@ -120,7 +120,10 @@ namespace ASS.Collections.Features
                 .WithHandler((player, dropdown) => selections[player] = (list[dropdown.IndexSelected], dropdown.IndexSelected));
 
             yield return ButtonPage
-                .Create("ASS.Collections SetEditor Modify Button", smartGenerator)
+                .Create("ASS.Collections SetEditor Modify Button")
+                .WithChildren([
+                    smartGenerator,
+                ])
                 .WithLabel("Modify");
         }
 
