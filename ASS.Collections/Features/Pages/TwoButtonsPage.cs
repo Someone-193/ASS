@@ -136,7 +136,9 @@ namespace ASS.Collections.Features.Pages
             if (Opened.Contains(viewer))
             {
                 yield return TwoButtons;
-                yield return Child;
+
+                foreach (IASSObject child in children)
+                    yield return child;
             }
             else
             {
