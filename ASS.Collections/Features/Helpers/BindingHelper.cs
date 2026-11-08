@@ -4,6 +4,7 @@ namespace ASS.Collections.Features.Helpers
 
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Numerics;
     using System.Reflection;
 
@@ -44,7 +45,39 @@ namespace ASS.Collections.Features.Helpers
 
         public static Dictionary<Type, Func<string, ParserResponse>> GlobalParsers { get; } = DefaultParsers();
 
-        public static string ProperTypeName(Type type) => Aliases.TryGetValue(type, out string? alias) ? alias : type.Name;
+        public static string ProperTypeName(Type type)
+        {
+            if (Aliases.TryGetValue(type, out string? alias))
+                return alias;
+
+            if (type.IsArray)
+            {
+                Type elementType = type.GetElementType()!;
+                return $"{ProperTypeName(elementType)}[]";
+            }
+
+            if (type.IsConstructedGenericType)
+            {
+                string name = type.Name.Split('`')[0];
+                string args = string.Join(", ", type.GenericTypeArguments.Select(ProperTypeName));
+                return $"{name}<{args}>";
+            }
+
+            return type.Name;
+        }
+
+        public static bool IsSet(this Type type)
+        {
+            if (type.IsArray)
+                return true;
+
+            if (!type.IsConstructedGenericType)
+                return false;
+
+            Type definition = type.GetGenericTypeDefinition();
+
+            return definition == typeof(List<>) || definition == typeof(HashSet<>);
+        }
 
         // IF ONLY WE HAD .NET 10
         public static Dictionary<Type, Func<string, ParserResponse>> DefaultParsers() => new()

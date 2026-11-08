@@ -45,7 +45,7 @@ namespace ASS.Collections.Features.Assml
             if (registered || RegisterMethod is null || ParseMethod is null || KeyExtension is null)
                 return;
 
-            RegisterMethod.Invoke("ButtonPage", [(Func<XElement, object?, IASSObject>)ParseButtonPage]);
+            RegisterMethod.Invoke(null, ["ButtonPage", (Func<XElement, object?, IASSObject>)ParseButtonPage]);
 
             registered = true;
         }

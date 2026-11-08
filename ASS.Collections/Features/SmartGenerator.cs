@@ -21,9 +21,9 @@ namespace ASS.Collections.Features
     public class SmartGenerator : IASSContainer
     {
         private readonly Dictionary<Player, IASSObject[]> caches = new();
-        private readonly Dictionary<Player, object> states = new();
+        private readonly Dictionary<Player, object?> states = new();
 
-        private SmartGenerator(string key, ASSGenerator<SmartGenerator> generator, Func<Player, object, bool> validator)
+        private SmartGenerator(string key, ASSGenerator<SmartGenerator> generator, Func<Player, object?, bool> validator)
         {
             Key = key;
             Generator = generator;
@@ -38,9 +38,9 @@ namespace ASS.Collections.Features
 
         public ASSGenerator<SmartGenerator> Generator { get; set; }
 
-        public Func<Player, object, bool> Validator { get; set; }
+        public Func<Player, object?, bool> Validator { get; set; }
 
-        public static SmartGenerator Create(string key, ASSGenerator<SmartGenerator> generator, Func<Player, object, bool> validator) => new(key, generator, validator);
+        public static SmartGenerator Create(string key, ASSGenerator<SmartGenerator> generator, Func<Player, object?, bool> validator) => new(key, generator, validator);
 
         /// <summary>
         /// A method to set an internal state of this <see cref="SmartGenerator"/>. Lets you track useful variables to then check in your validator.
@@ -51,11 +51,13 @@ namespace ASS.Collections.Features
 
         public void Invalidate(Player player) => states.Remove(player);
 
+        public void InvalidateAll() => states.Clear();
+
         public IEnumerable<IASSObject> GetChildren(Player viewer)
         {
             if (caches.TryGetValue(viewer, out IASSObject[] cache))
             {
-                if (states.TryGetValue(viewer, out object state))
+                if (states.TryGetValue(viewer, out object? state))
                 {
                     if (Validator(viewer, state))
                         return cache;

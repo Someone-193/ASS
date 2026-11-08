@@ -7,26 +7,33 @@ namespace ASS.Collections.Features
 
     using ASS.Collections.Features.Helpers;
     using ASS.Collections.Features.Pages;
+
+    using ASS.Features.Instances;
     using ASS.Features.Interfaces;
     using ASS.Features.Templates;
 
     using LabApi.Features.Wrappers;
-
     using Logger = LabApi.Features.Console.Logger;
 
     /// <summary>
     /// A generalized editor for <see cref="HashSet{T}"/>s, <see cref="List{T}"/>s, and <see cref="Array"/>s.
     /// </summary>
+    /// <remarks>Manual modifications to <see cref="Set"/> should update viewers of this container.</remarks>
     public class SetEditor : IASSContainer
     {
-        private readonly Dictionary<Player, (object, int)> selections = new();
+        private const string NullKeyword = "<color=#6C95EB>null</color>";
 
-        private readonly List<object> list = [];
+        private readonly Dictionary<Player, (object?, int)> selections = new();
+
+        private readonly List<object?> list = [];
 
         private readonly SmartGenerator smartGenerator;
 
         private SetType setType;
         private Type? targetType;
+        private Func<string, BindingHelper.ParserResponse>? parser;
+        private IEnumerable? setRef;
+        private Action<IEnumerable>? onChanged;
 
         private SetEditor(string key)
         {
@@ -44,37 +51,7 @@ namespace ASS.Collections.Features
 
         public string Key { get; }
 
-        public IEnumerable? Set
-        {
-            get;
-            set
-            {
-                field = value;
-                if (value is not null)
-                {
-                    Type type = value.GetType();
-
-                    if (type.IsArray)
-                    {
-                        setType = SetType.Array;
-                        return;
-                    }
-
-                    if (!type.IsConstructedGenericType)
-                        throw new InvalidOperationException("SetEditors can only be used on HashSets, Lists, and Arrays!");
-
-                    Type definition = type.GetGenericTypeDefinition();
-                    if (definition == typeof(HashSet<>))
-                        setType = SetType.HashSet;
-                    else if (definition == typeof(List<>))
-                        setType = SetType.List;
-                    else
-                        throw new InvalidOperationException("SetEditors can only be used on HashSets, Lists, and Arrays!");
-
-                    targetType = type.GenericTypeArguments[0];
-                }
-            }
-        }
+        public ref IEnumerable? Set => ref setRef;
 
         public float HoldTime { get; set; }
 
@@ -84,9 +61,58 @@ namespace ASS.Collections.Features
 
         public static SetEditor Create(string key) => new(key);
 
-        public SetEditor WithSet(IEnumerable set)
+        public SetEditor WithSet(ref IEnumerable? set)
         {
-            Set = set;
+            setRef = set;
+
+            if (set is null)
+            {
+                targetType = null;
+                parser = null;
+                return this;
+            }
+
+            Type type = set.GetType();
+
+            if (type.IsArray)
+            {
+                setType = SetType.Array;
+                return this;
+            }
+
+            if (!type.IsConstructedGenericType)
+                throw new InvalidOperationException("SetEditors can only be used on HashSets, Lists, and Arrays!");
+
+            Type definition = type.GetGenericTypeDefinition();
+            if (definition == typeof(HashSet<>))
+                setType = SetType.HashSet;
+            else if (definition == typeof(List<>))
+                setType = SetType.List;
+            else
+                throw new InvalidOperationException("SetEditors can only be used on HashSets, Lists, and Arrays!");
+
+            targetType = type.GenericTypeArguments[0];
+
+            if (!BindingHelper.GlobalParsers.TryGetValue(targetType, out parser))
+            {
+                parser = null;
+                Logger.Warn($"Cannot create SetEditor for type {targetType.FullName}, there is no parser available!");
+            }
+
+            return this;
+        }
+
+        /// <summary>
+        /// A seperate way to use a SetEditor. Changes in the set provided will not be reflected to users. However, changes from the set can be tracked on the outside via onChanged.
+        /// </summary>
+        /// <param name="set">The set to modify.</param>
+        /// <param name="onChanged">An action triggered whenever the underlying set is changed.</param>
+        /// <returns>The current instance.</returns>
+        public SetEditor WithSet(IEnumerable? set, Action<IEnumerable> onChanged)
+        {
+            WithSet(ref set);
+            this.onChanged = onChanged;
+
             return this;
         }
 
@@ -98,53 +124,193 @@ namespace ASS.Collections.Features
 
         public IEnumerable<IASSObject> GetChildren(Player viewer)
         {
-            if (targetType is null || Set is null)
+            if (targetType is null || Set is null || parser is null)
                 yield break;
 
-            if (!BindingHelper.GlobalParsers.TryGetValue(targetType, out Func<string, BindingHelper.ParserResponse>? parser))
-            {
-                Logger.Warn($"Cannot create SetEditor for type {targetType.FullName}, there is no parser available!");
-                yield break;
-            }
+            list.Clear();
+            smartGenerator.InvalidateAll();
 
-            foreach (object obj in Set)
+            foreach (object? obj in Set)
                 list.Add(obj);
 
             yield return DropdownTemplate
-                .Create("ASS.Collections SetEditor Options Dropdown")
+                .Create("Options Dropdown")
                 .WithLabel("Current Values")
                 .WithOptions(list
-                    .Select(obj => obj.ToString())
+                    .Select(obj => obj?.ToString() ?? NullKeyword)
                     .Append($"Create New {BindingHelper.ProperTypeName(targetType)}")
                     .ToArray())
-                .WithHandler((player, dropdown) => selections[player] = (list[dropdown.IndexSelected], dropdown.IndexSelected));
+                .WithHandler((player, dropdown) =>
+                {
+                    object? obj = dropdown.IndexSelected == dropdown.Options.Length - 1
+                        ? null
+                        : list[dropdown.IndexSelected];
+
+                    selections[player] = (obj, dropdown.IndexSelected);
+                });
 
             yield return ButtonPage
-                .Create("ASS.Collections SetEditor Modify Button")
-                .WithChildren([
-                    smartGenerator,
-                ])
+                .Create("Modify Button")
+                .WithChildren(smartGenerator)
                 .WithLabel("Modify");
         }
 
-        private bool Validator(Player player, object state) => selections.TryGetValue(player, out (object Selected, int Index) pair) && Equals(pair.Selected, state);
+        private bool Validator(Player player, object? state) => selections.TryGetValue(player, out (object? Selected, int Index) pair) && Equals(pair.Index, state);
 
-        private IEnumerable<IASSObject> Generator(SmartGenerator generator, Player player)
+        private IEnumerable<IASSObject> Generator(SmartGenerator generator, Player p)
         {
+            if (Set is null || targetType is null || parser is null)
+                yield break;
+
+            if (!selections.TryGetValue(p, out (object? Selected, int Index) pair))
+                yield break;
+
+            generator.SetState(p, pair.Index);
+
+            bool isNew = pair.Index == list.Count;
+
+            yield return HeaderTemplate
+                .Create("Header")
+                .WithLabel($"Modify {pair.Selected?.ToString() ?? NullKeyword} ({BindingHelper.ProperTypeName(targetType)})");
+
             switch (setType)
             {
                 case SetType.HashSet:
+                    if (isNew)
+                    {
+                        TextInputTemplate textInput = TextInputTemplate
+                            .Create("Creator Text Input")
+                            .WithLabel($"Create New {BindingHelper.ProperTypeName(targetType)}");
+
+                        yield return textInput;
+
+                        yield return ButtonTemplate
+                            .Create("Creator Button")
+                            .WithLabel("Create")
+                            .WithHandler((player, button) =>
+                            {
+                                if (!textInput.Instances.TryGetValue(player, out TextInputInstance? input))
+                                    return;
+
+                                BindingHelper.ParserResponse response = parser(input.InputtedText);
+
+                                if (response.IsError)
+                                    return;
+
+                                SetEditorHelper.GetICollectionAdder(targetType).Invoke(Set, [response.Value]);
+                                onChanged?.Invoke(Set);
+                            })
+                            .WithHoldTime(HoldTime);
+                    }
+                    else
+                    {
+                        yield return ButtonTemplate
+                            .Create("Remover Button")
+                            .WithLabel($"Remove {pair.Selected?.ToString() ?? NullKeyword} ({BindingHelper.ProperTypeName(targetType)})")
+                            .WithHandler((player, button) =>
+                            {
+                                SetEditorHelper.GetICollectionRemover(targetType).Invoke(Set, [pair.Selected]);
+                                onChanged?.Invoke(Set);
+                            })
+                            .WithHoldTime(HoldTime);
+                    }
+
                     break;
                 case SetType.List:
-                    break;
                 case SetType.Array:
+                    if (isNew)
+                    {
+                        TextInputTemplate textInput = TextInputTemplate
+                            .Create("Creator Text Input")
+                            .WithLabel($"Create New {BindingHelper.ProperTypeName(targetType)}");
+
+                        yield return textInput;
+
+                        yield return ButtonTemplate
+                            .Create("Creator Button")
+                            .WithLabel("Create")
+                            .WithHandler((player, button) =>
+                            {
+                                if (!textInput.Instances.TryGetValue(player, out TextInputInstance? input))
+                                    return;
+
+                                BindingHelper.ParserResponse response = parser(input.InputtedText);
+
+                                if (response.IsError)
+                                    return;
+
+                                if (Set is Array array)
+                                {
+                                    object[] args = [Set, array.Length + 1];
+                                    SetEditorHelper.GetResizer(targetType).Invoke(null, args);
+                                    setRef = array = (Array)args[0];
+
+                                    array.SetValue(response.Value, pair.Index);
+                                }
+                                else
+                                {
+                                    SetEditorHelper.GetICollectionAdder(targetType).Invoke(Set, [response.Value]);
+                                }
+
+                                onChanged?.Invoke(Set);
+                            })
+                            .WithHoldTime(HoldTime);
+                    }
+                    else
+                    {
+                        yield return TextInputTemplate
+                            .Create("Modifier Text Input")
+                            .WithLabel($"Modify {pair.Selected?.ToString() ?? NullKeyword} ({BindingHelper.ProperTypeName(targetType)})")
+                            .WithHandler((player, input) =>
+                            {
+                                if (input.IsInitialResponse)
+                                    return;
+
+                                BindingHelper.ParserResponse response = parser(input.InputtedText);
+
+                                if (response.IsError)
+                                    return;
+
+                                if (Set is Array array)
+                                    array.SetValue(response.Value, pair.Index);
+                                else
+                                    SetEditorHelper.GetListSetItem(targetType).Invoke(Set, [pair.Index, response.Value]);
+
+                                onChanged?.Invoke(Set);
+                            });
+
+                        yield return ButtonTemplate
+                            .Create("Remover Button")
+                            .WithLabel($"Remove {pair.Selected?.ToString() ?? NullKeyword} ({BindingHelper.ProperTypeName(targetType)})")
+                            .WithHandler((player, button) =>
+                            {
+                                if (Set is Array array)
+                                {
+                                    // [1, 2, 3, 4] RemoveAt(1)
+                                    // sourceIdx = [2] (3);
+                                    // destIdx = [1] (2);
+                                    // len = arrLen [4] - destIdx [1] - 1 = 2;
+                                    // -> [1, 3, 4].
+                                    Array.Copy(array, pair.Index + 1, array, pair.Index, array.Length - pair.Index - 1);
+
+                                    object[] args = [Set, array.Length - 1];
+                                    SetEditorHelper.GetResizer(targetType).Invoke(null, args);
+                                    setRef = (Array)args[0];
+                                }
+                                else
+                                {
+                                    SetEditorHelper.GetListRemoveAt(targetType).Invoke(Set, [pair.Index]);
+                                }
+
+                                onChanged?.Invoke(Set);
+                            })
+                            .WithHoldTime(HoldTime);
+                    }
+
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
-
-            // create some stuff based off setType and selections[player]. Make sure to account for Index for ordered sets.
-            throw new NotImplementedException();
         }
     }
 }

@@ -3,6 +3,7 @@ namespace ASS.Collections.Features
     extern alias oldSystem;
 
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.Reflection;
 
@@ -20,7 +21,7 @@ namespace ASS.Collections.Features
     public class Binding : IASSContainer
     {
         private readonly Dictionary<string, MemberInfo> members = new();
-        private readonly List<ASSTemplate> templates = [];
+        private readonly List<IASSObject> children = [];
 
         private Binding(string key)
         {
@@ -109,6 +110,8 @@ namespace ASS.Collections.Features
             }
         }
 
+        public bool HandleSets { get; set; }
+
         public bool IgnoreDefaultResponses { get; set; } = true;
 
         public bool SuppressLogs { get; set; } = true;
@@ -151,6 +154,12 @@ namespace ASS.Collections.Features
             return this;
         }
 
+        public Binding WithHandleSets(bool handleSets = true)
+        {
+            HandleSets = handleSets;
+            return this;
+        }
+
         public Binding WithBlacklist(params string[] blacklist)
         {
             for (int i = 0; i < blacklist.Length; i++)
@@ -176,8 +185,8 @@ namespace ASS.Collections.Features
         public IEnumerable<IASSObject> GetChildren(Player viewer)
         {
             // re-use old templates unless rebuilt in RebuildMembers.
-            if (templates.Count > 0)
-                return templates;
+            if (children.Count > 0)
+                return children;
 
             if (Target is null)
                 return [];
@@ -187,13 +196,17 @@ namespace ASS.Collections.Features
                 switch (member)
                 {
                     case FieldInfo field:
+                    {
                         Action<object, object?> setMethod = field.IsInitOnly
                             ? BindingHelper.CreateRefSetter(field)
                             : field.SetValue;
 
-                        AddTextInput(field, field.FieldType, setMethod, field.GetValue(Target));
+                        AddEditor(field, field.FieldType, setMethod, field.GetValue(Target));
                         break;
+                    }
+
                     case PropertyInfo property:
+                    {
                         if (!property.CanWrite)
                             break;
 
@@ -201,31 +214,43 @@ namespace ASS.Collections.Features
                         if (property.CanRead)
                             value = property.GetMethod.Invoke(Target, null);
 
-                        AddTextInput(property, property.PropertyType, property.SetValue, value);
+                        AddEditor(property, property.PropertyType, property.SetValue, value);
                         break;
+                    }
+
                     case MethodInfo method:
                         AddMethod(method);
                         break;
                 }
             }
 
-            return templates;
+            return children;
 
             void AddMethod(MethodInfo method)
             {
                 if (Target is null)
                     return;
 
-                templates.Add(ButtonTemplate
+                children.Add(ButtonTemplate
                     .Create(method.Name)
                     .WithHandler((player, input) => method.Invoke(Target, null))
                     .WithLabel($"{method.Name}()"));
             }
 
-            void AddTextInput(MemberInfo member, Type type, Action<object, object?> setValue, object? currentValue)
+            void AddEditor(MemberInfo member, Type type, Action<object, object?> setValue, object? currentValue)
             {
                 if (Target is null)
                     return;
+
+                if (type.IsSet())
+                {
+                    if (currentValue is IEnumerable enumerable)
+                    {
+                        children.Add(SetEditor
+                            .Create(type.Name)
+                            .WithSet(currentValue as IEnumerable, set => setValue.Invoke(Target, set)));
+                    }
+                }
 
                 if (!Parsers.TryGetValue(type, out Func<string, BindingHelper.ParserResponse> parser) && !BindingHelper.GlobalParsers.TryGetValue(type, out parser))
                 {
@@ -243,7 +268,7 @@ namespace ASS.Collections.Features
                 }
 
                 string text = currentValue?.ToString() ?? "null";
-                templates.Add(TextInputTemplate
+                children.Add(TextInputTemplate
                     .Create(member.Name)
                     .WithDefaultText(text)
                     .WithPlaceholder(text)
@@ -269,7 +294,7 @@ namespace ASS.Collections.Features
         private void RebuildMembers()
         {
             members.Clear();
-            templates.Clear();
+            children.Clear();
 
             if (Target is null)
                 return;
