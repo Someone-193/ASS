@@ -244,12 +244,11 @@ namespace ASS.Collections.Features
 
                 if (type.IsSet())
                 {
-                    if (currentValue is IEnumerable enumerable)
-                    {
-                        children.Add(SetEditor
-                            .Create(type.Name)
-                            .WithSet(currentValue as IEnumerable, set => setValue.Invoke(Target, set)));
-                    }
+                    children.Add(SetEditor
+                        .Create(type.Name)
+                        .WithSet(currentValue as IEnumerable, set => setValue.Invoke(Target, set)));
+
+                    return;
                 }
 
                 if (!Parsers.TryGetValue(type, out Func<string, BindingHelper.ParserResponse> parser) && !BindingHelper.GlobalParsers.TryGetValue(type, out parser))

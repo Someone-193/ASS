@@ -12,6 +12,10 @@ namespace ASS.Collections.Features.Pages
 
     using UserSettings.ServerSpecific;
 
+    /// <summary>
+    /// A representation of a page. You can inherit this and use it as you please.
+    /// </summary>
+    /// <remarks>ALWAYS TRACK INSTANCES OF PAGES. DO NOT CREATE PAGES IN SOMETHING LIKE A <see cref="TemplateGenerator"/> (though you can cache and return them)!</remarks>
     public abstract class ASSPage : IASSContainer
     {
         protected const string ControlKey = "ASS.Collections Page Controller";

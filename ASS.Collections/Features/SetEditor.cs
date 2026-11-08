@@ -28,8 +28,12 @@ namespace ASS.Collections.Features
         private readonly List<object?> list = [];
 
         private readonly SmartGenerator smartGenerator;
+        private readonly ButtonPage buttonPage = ButtonPage
+            .Create("Modify Button")
+            .WithButtonText("Modify", "Exit");
 
         private SetType setType;
+        private Type? type;
         private Type? targetType;
         private Func<string, BindingHelper.ParserResponse>? parser;
         private IEnumerable? setRef;
@@ -40,6 +44,8 @@ namespace ASS.Collections.Features
             Key = key;
 
             smartGenerator = SmartGenerator.Create("ASS.Collections SetEditor Sub-Menu SmartGenerator", Generator, Validator);
+
+            buttonPage.WithChildren(smartGenerator);
         }
 
         private enum SetType
@@ -67,12 +73,13 @@ namespace ASS.Collections.Features
 
             if (set is null)
             {
+                type = null;
                 targetType = null;
                 parser = null;
                 return this;
             }
 
-            Type type = set.GetType();
+            type = set.GetType();
 
             if (type.IsArray)
             {
@@ -124,7 +131,7 @@ namespace ASS.Collections.Features
 
         public IEnumerable<IASSObject> GetChildren(Player viewer)
         {
-            if (targetType is null || Set is null || parser is null)
+            if (type is null || targetType is null || Set is null || parser is null)
                 yield break;
 
             list.Clear();
@@ -135,7 +142,7 @@ namespace ASS.Collections.Features
 
             yield return DropdownTemplate
                 .Create("Options Dropdown")
-                .WithLabel("Current Values")
+                .WithLabel($"Current Values ({BindingHelper.ProperTypeName(type)})")
                 .WithOptions(list
                     .Select(obj => obj?.ToString() ?? NullKeyword)
                     .Append($"Create New {BindingHelper.ProperTypeName(targetType)}")
@@ -149,17 +156,14 @@ namespace ASS.Collections.Features
                     selections[player] = (obj, dropdown.IndexSelected);
                 });
 
-            yield return ButtonPage
-                .Create("Modify Button")
-                .WithChildren(smartGenerator)
-                .WithLabel("Modify");
+            yield return buttonPage;
         }
 
         private bool Validator(Player player, object? state) => selections.TryGetValue(player, out (object? Selected, int Index) pair) && Equals(pair.Index, state);
 
         private IEnumerable<IASSObject> Generator(SmartGenerator generator, Player p)
         {
-            if (Set is null || targetType is null || parser is null)
+            if (Set is null || type is null || targetType is null || parser is null)
                 yield break;
 
             if (!selections.TryGetValue(p, out (object? Selected, int Index) pair))
@@ -198,7 +202,9 @@ namespace ASS.Collections.Features
                                     return;
 
                                 SetEditorHelper.GetICollectionAdder(targetType).Invoke(Set, [response.Value]);
+
                                 onChanged?.Invoke(Set);
+                                buttonPage.Exit(player);
                             })
                             .WithHoldTime(HoldTime);
                     }
@@ -210,7 +216,9 @@ namespace ASS.Collections.Features
                             .WithHandler((player, button) =>
                             {
                                 SetEditorHelper.GetICollectionRemover(targetType).Invoke(Set, [pair.Selected]);
+
                                 onChanged?.Invoke(Set);
+                                buttonPage.Exit(player);
                             })
                             .WithHoldTime(HoldTime);
                     }
@@ -253,6 +261,7 @@ namespace ASS.Collections.Features
                                 }
 
                                 onChanged?.Invoke(Set);
+                                buttonPage.Exit(player);
                             })
                             .WithHoldTime(HoldTime);
                     }
@@ -277,6 +286,7 @@ namespace ASS.Collections.Features
                                     SetEditorHelper.GetListSetItem(targetType).Invoke(Set, [pair.Index, response.Value]);
 
                                 onChanged?.Invoke(Set);
+                                buttonPage.Exit(player);
                             });
 
                         yield return ButtonTemplate
@@ -303,6 +313,7 @@ namespace ASS.Collections.Features
                                 }
 
                                 onChanged?.Invoke(Set);
+                                buttonPage.Exit(player);
                             })
                             .WithHoldTime(HoldTime);
                     }
