@@ -44,7 +44,7 @@
                 // minimize log spam, but still have it keep warning, Instance can only be null if ASS was referenced and not enabled
                 if ((DateTime.UtcNow - lastDependencyCheckMessage) > TimeSpan.FromSeconds(5))
                 {
-                    Logger.Warn("ASS is being used as a dependency (or is disabled yet still referenced by another plugin), please install it in the Plugins folder!");
+                    Logger.Warn("ASS is being used as a dependency (or is disabled yet still referenced by another plugin), please install it in the Plugins folder, or call EnsureInit from a consumer!");
                     lastDependencyCheckMessage = DateTime.UtcNow;
                 }
 
