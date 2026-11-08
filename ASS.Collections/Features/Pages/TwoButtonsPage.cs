@@ -12,17 +12,15 @@ namespace ASS.Collections.Features.Pages
 
     public class TwoButtonsPage : ASSPage
     {
-        private TwoButtonsPage(string key, IASSObject child)
+        private readonly List<IASSObject> children = [];
+
+        private TwoButtonsPage(string key)
             : base(key)
         {
-            Child = child;
-
             TwoButtons = TwoButtonsTemplate
                 .Create(ControlKey)
                 .WithHandler(Handler);
         }
-
-        public IASSObject Child { get; }
 
         public TwoButtonsTemplate TwoButtons { get; }
 
@@ -30,14 +28,56 @@ namespace ASS.Collections.Features.Pages
 
         public bool RightIsTarget { get; set; }
 
-        public static TwoButtonsPage Create(string key, IASSObject child)
+        public static TwoButtonsPage Create(string key) => new(key);
+
+        public TwoButtonsPage AddChild(IASSObject child)
         {
+            if (children.Contains(child) || !child.TrySetParent(this))
+                return this;
+
             if (child.Key is ControlKey)
                 throw new ArgumentException("You know what you did.");
 
-            TwoButtonsPage page = new(key, child);
+            children.Add(child);
+            return this;
+        }
 
-            return page;
+        public TwoButtonsPage RemoveChild(IASSObject child)
+        {
+            if (children.Remove(child))
+                child.TrySetParent(null);
+
+            return this;
+        }
+
+        public TwoButtonsPage ClearChildren()
+        {
+            foreach (IASSObject child in children)
+                child.TrySetParent(null);
+
+            children.Clear();
+            return this;
+        }
+
+        public TwoButtonsPage WithChildren(params IASSObject[] newChildren) => WithChildren((IEnumerable<IASSObject>)newChildren);
+
+        public TwoButtonsPage WithChildren(IEnumerable<IASSObject> newChildren)
+        {
+            foreach (IASSObject child in newChildren)
+            {
+                if (child.Parent is not null)
+                    throw new InvalidOperationException("An object cannot be the child of two containers!");
+
+                if (!child.TrySetParent(this))
+                    continue;
+
+                if (child.Key is ControlKey)
+                    throw new ArgumentException("You know what you did.");
+
+                children.Add(child);
+            }
+
+            return this;
         }
 
         public TwoButtonsPage WithCondition(Predicate<Player> condition)

@@ -9,6 +9,7 @@
                 <xs:element ref="Group"/>
                 <xs:element ref="Header"/>
                 <xs:element ref="Button"/>
+                <xs:element ref="ButtonPage"/>
             </xs:choice>
         </xs:complexType>
     </xs:element>
@@ -19,6 +20,7 @@
                 <xs:element ref="Group"/>
                 <xs:element ref="Header"/>
                 <xs:element ref="Button"/>
+                <xs:element ref="ButtonPage"/>
             </xs:choice>
             <xs:attribute name="Key" type="xs:string" use="required"/>
         </xs:complexType>
@@ -34,6 +36,21 @@
 
     <xs:element name="Button">
         <xs:complexType>
+            <xs:attribute name="Key"      type="xs:string" use="required"/>
+            <xs:attribute name="Label"    type="xs:string"/>
+            <xs:attribute name="HoldTime" type="xs:float"/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="ButtonPage">
+        <xs:complexType>
+            <xs:choice maxOccurs="unbounded">
+                <xs:element ref="Group"/>
+                <xs:element ref="Header"/>
+                <xs:element ref="Button"/>
+                <xs:element ref="ButtonPage"/>
+            </xs:choice>
+
             <xs:attribute name="Key"      type="xs:string" use="required"/>
             <xs:attribute name="Label"    type="xs:string"/>
             <xs:attribute name="HoldTime" type="xs:float"/>

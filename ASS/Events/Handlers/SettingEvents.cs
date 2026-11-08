@@ -1,6 +1,7 @@
 namespace ASS.Events.Handlers
 {
     using ASS.Events.EventArgs;
+    using ASS.Features.Templates;
 
     public static class SettingEvents
     {
@@ -16,6 +17,10 @@ namespace ASS.Events.Handlers
 
         public static ASSEvent<UpdatingInstanceEventArgs> UpdatingSetting { get; set; } = new();
 
+        /// <summary>
+        /// Gets or sets the standard event for when settings are triggered.
+        /// </summary>
+        /// <remarks>YOU SHOULD NOT USE THIS EVENT. Using <see cref="InstanceHandler{T}"/>'s on templates is a LOT better.</remarks>
         public static ASSEvent<InstanceTriggeredEventArgs> SettingTriggered { get; set; } = new();
 
         public static ASSEvent<ObjectRegisteredEventArgs> ObjectRegistered { get; set; } = new();

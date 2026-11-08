@@ -54,6 +54,8 @@ namespace ASS.Features.Containers
             return this;
         }
 
+        public ASSGroup WithChildren(IASSObject[] newChildren) => WithChildren((IEnumerable<IASSObject>)newChildren);
+
         public ASSGroup WithChildren(IEnumerable<IASSObject> newChildren)
         {
             foreach (IASSObject child in newChildren)

@@ -32,12 +32,7 @@ namespace ASS.Collections.Features.Pages
 
         public ButtonTemplate ExitButton { get; }
 
-        public static ButtonPage Create(string key)
-        {
-            ButtonPage page = new(key);
-
-            return page;
-        }
+        public static ButtonPage Create(string key) => new(key);
 
         public ButtonPage AddChild(IASSObject child)
         {
@@ -67,6 +62,8 @@ namespace ASS.Collections.Features.Pages
             children.Clear();
             return this;
         }
+
+        public ButtonPage WithChildren(params IASSObject[] newChildren) => WithChildren((IEnumerable<IASSObject>)newChildren);
 
         public ButtonPage WithChildren(IEnumerable<IASSObject> newChildren)
         {
