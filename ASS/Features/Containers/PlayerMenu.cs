@@ -52,7 +52,7 @@ namespace ASS.Features.Containers
         }
 
         /// <summary>
-        /// Updates a <see cref="PlayerMenu"/> by using the menus <see cref="ASSGenerator"/> to acquire new values.
+        /// Updates a <see cref="PlayerMenu"/> by using the menus <see cref="ASSGenerator{T}"/> to acquire new values.
         /// </summary>
         /// <param name="viewer">The viewer to update.</param>
         /// <param name="updatePlayer">Whether to send the player the new settings.</param>
