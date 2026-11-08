@@ -1,4 +1,4 @@
-namespace ASS.Pages.Features
+namespace ASS.Collections.Features.Pages
 {
     using System;
     using System.Collections.Generic;
@@ -168,11 +168,11 @@ namespace ASS.Pages.Features
         {
             if (Children.Count is 0)
             {
-                Logger.Debug($"No children found under {Key}", Main.Debug);
+                Logger.Debug($"No children found under {Key}", ASS.Main.Debug);
                 yield break;
             }
 
-            Logger.Debug("Yielding dropdown", Main.Debug);
+            Logger.Debug("Yielding dropdown", ASS.Main.Debug);
             yield return GeneratedDropdowns[viewer] = Generator(viewer);
 
             IASSObject? obj;
@@ -180,7 +180,7 @@ namespace ASS.Pages.Features
             {
                 if (Children.TryGetValue(Default, out DropdownChild defaultChild))
                 {
-                    Logger.Debug("Yielding default child.", Main.Debug);
+                    Logger.Debug("Yielding default child.", ASS.Main.Debug);
                     obj = defaultChild.GetChild(viewer);
 
                     if (obj is null)
@@ -194,11 +194,11 @@ namespace ASS.Pages.Features
                     yield break;
                 }
 
-                Logger.Debug("Breaking, no selection found.", Main.Debug);
+                Logger.Debug("Breaking, no selection found.", ASS.Main.Debug);
                 yield break;
             }
 
-            Logger.Debug("Yielding child", Main.Debug);
+            Logger.Debug("Yielding child", ASS.Main.Debug);
             obj = child.GetChild(viewer);
 
             if (obj is null)
@@ -226,22 +226,22 @@ namespace ASS.Pages.Features
 
         private DropdownTemplate Generator(Player viewer)
         {
-            Logger.Debug($"Building Dropdown for {viewer.Nickname}...", Main.Debug);
+            Logger.Debug($"Building Dropdown for {viewer.Nickname}...", ASS.Main.Debug);
             return DropdownTemplate
                 .Create("Dropdown Page Dropdown")
                 .WithHandler(Handler)
                 .WithOptions(
                     Children.Where(kvp =>
                         {
-                            Logger.Debug($"Can use {kvp.Value}?", Main.Debug);
+                            Logger.Debug($"Can use {kvp.Value}?", ASS.Main.Debug);
                             if (kvp.Value is DropdownChild.ConditionChild conditionChild)
                             {
                                 bool result = conditionChild.Condition(viewer);
-                                Logger.Debug(result, Main.Debug);
+                                Logger.Debug(result, ASS.Main.Debug);
                                 return result;
                             }
 
-                            Logger.Debug(true, Main.Debug);
+                            Logger.Debug(true, ASS.Main.Debug);
                             return true;
                         })
                         .Select(kvp => kvp.Key)
@@ -254,7 +254,7 @@ namespace ASS.Pages.Features
 
         private void Handler(Player player, DropdownInstance dropdown)
         {
-            Logger.Debug($"{player.Nickname} selected page {dropdown.OptionSelected}", Main.Debug);
+            Logger.Debug($"{player.Nickname} selected page {dropdown.OptionSelected}", ASS.Main.Debug);
 
             bool change;
             if (Selected.TryGetValue(player, out string value))

@@ -1,22 +1,24 @@
-namespace ASS.Pages.Features
+namespace ASS.Collections.Features
 {
     using System;
     using System.Collections.Generic;
+
     using ASS.Features;
     using ASS.Features.Interfaces;
     using ASS.Features.Templates;
+
     using LabApi.Features.Wrappers;
 
     public class Confirmation
     {
         private readonly HeaderTemplate header = HeaderTemplate
-            .Create("ASS.Pages Confirmation Header");
+            .Create("ASS.Collections Confirmation Header");
 
         private readonly ButtonTemplate confirmButton = ButtonTemplate
-            .Create("ASS.Pages Confirmation Confirm Button");
+            .Create("ASS.Collections Confirmation Confirm Button");
 
         private readonly ButtonTemplate cancelButton = ButtonTemplate
-            .Create("ASS.Pages Confirmation Cancel Button");
+            .Create("ASS.Collections Confirmation Cancel Button");
 
         private readonly IASSObject[] templates;
 

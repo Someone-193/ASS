@@ -32,15 +32,13 @@ namespace ASS.ASSML
 
         public static Main? Instance { get; private set; }
 
-        public override string Name => "ASS.Pages";
+        public override string Name => "ASS.ASSML";
 
         public override string Author => "@Someone";
 
         public override Version Version { get; } = new(4, 0, 0);
 
-        public override LoadPriority Priority => LoadPriority.High;
-
-        public override string Description => "Adds pages to ASS";
+        public override string Description => "Allows creation and loading of ASS collections via .assml files.";
 
         public override Version RequiredApiVersion { get; } = new(LabApiProperties.CompiledVersion);
 

@@ -4,7 +4,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ASS", "ASS\ASS.csproj", "{5
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ASS.Example", "ASS.Example\ASS.Example.csproj", "{537BC30F-80F8-4A91-9D24-25E23B7BA28B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ASS.Pages", "ASS.Pages\ASS.Pages.csproj", "{2E38C870-CAFF-4B9D-A539-23E87DF283EE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ASS.Collections", "ASS.Collections\ASS.Collections.csproj", "{2E38C870-CAFF-4B9D-A539-23E87DF283EE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ASS.Generators", "ASS.Generators\ASS.Generators.csproj", "{20AB002A-8A0A-4D16-B2CC-E3B67EA5A305}"
 EndProject

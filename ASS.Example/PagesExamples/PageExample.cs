@@ -1,9 +1,10 @@
 namespace ASS.Example.PagesExamples
 {
+    using ASS.Collections.Features.Pages;
     using ASS.Features.Containers;
     using ASS.Features.Instances;
     using ASS.Features.Templates;
-    using ASS.Pages.Features;
+
     using LabApi.Features.Wrappers;
 
     public class PageExample

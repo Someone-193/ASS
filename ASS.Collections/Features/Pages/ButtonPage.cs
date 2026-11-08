@@ -1,11 +1,13 @@
-namespace ASS.Pages.Features
+namespace ASS.Collections.Features.Pages
 {
     using System;
     using System.Collections.Generic;
+
     using ASS.Features;
     using ASS.Features.Instances;
     using ASS.Features.Interfaces;
     using ASS.Features.Templates;
+
     using LabApi.Features.Wrappers;
 
     public class ButtonPage : ASSPage

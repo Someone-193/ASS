@@ -1,6 +1,6 @@
-namespace ASS.Pages.EventHandlers
+namespace ASS.Collections.EventHandlers
 {
-    using ASS.Pages.Features;
+    using ASS.Collections.Features.Pages;
 
     using LabApi.Events.Arguments.PlayerEvents;
 

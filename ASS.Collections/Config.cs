@@ -1,4 +1,4 @@
-namespace ASS.Pages
+namespace ASS.Collections
 {
     public class Config
     {

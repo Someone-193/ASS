@@ -2,12 +2,12 @@
 {
     using System;
 
+    using ASS.Collections.Features.Pages;
     using ASS.Example.DefaultExample;
     using ASS.Example.PagesExamples;
     using ASS.Example.PlayerMenuExamples;
     using ASS.Features.Containers;
     using ASS.Features.Templates;
-    using ASS.Pages.Features;
 
     using LabApi.Events.Handlers;
     using LabApi.Features;

@@ -3,7 +3,7 @@
 
     <PropertyGroup>
         <OutputType>Library</OutputType>
-        <AssemblyName>ASS.Pages</AssemblyName>
+        <AssemblyName>ASS.Collections</AssemblyName>
     </PropertyGroup>
 
     <Import Project="../plugin.props" />

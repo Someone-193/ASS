@@ -24,7 +24,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\ASS.Pages\ASS.Pages.csproj" />
+      <ProjectReference Include="..\ASS.Collections\ASS.Collections.csproj" />
       <ProjectReference Include="..\ASS\ASS.csproj" />
     </ItemGroup>
 

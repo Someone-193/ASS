@@ -62,13 +62,13 @@ namespace ASS.Features
         /// <summary>
         /// Gets or sets the generator used to get the root settings of the hierarchy shown to a player.
         /// </summary>
-        /// <remarks>tldr; for base ASS, just <see cref="Objects"/>, sorted. For ASS.Pages, gets the players selected page.</remarks>
+        /// <remarks>tldr; for base ASS, just <see cref="Objects"/>, sorted. For ASS.Collections, gets the players selected page.</remarks>
         public static Func<Player, IEnumerable<IASSObject>> TemplateRootGenerator { get; set; } = Main.StandardTemplateRootGenerator;
 
         /// <summary>
         /// Gets or sets the default behavior for sending base game settings for a player.
         /// </summary>
-        /// <remarks>tldr; for base ASS, always true. For ASS.Pages, only true when the player isn't in a custom page.</remarks>
+        /// <remarks>tldr; for base ASS, always true. For ASS.Collections, only true when the player isn't in a custom page.</remarks>
         public static Func<Player, bool> SendBaseGameSettingsGenerator { get; set; } = Main.StandardSendBaseGameSettingsGenerator;
 
         public static bool TryGetSetting<T>(Player player, int id, [NotNullWhen(true)] out T? value)
@@ -78,6 +78,15 @@ namespace ASS.Features
         public static bool TryGetSetting<T>(Player player, string[] path, [NotNullWhen(true)] out T? value)
             where T : ASSInstance
             => (value = !SentSettings.TryGetValue(player, out ASSInstance[] settings) ? null : settings.FirstOrDefault(setting => setting.Id == ASSExtensions.GenerateId(path)) as T) is not null;
+
+        // TODO: should send setting with incompatible saved value on client (string / number / array, whatever). Await response, then send normal settings again. After response, call onReset.
+        public static void ResetSetting(Player player, int id, Action? onReset)
+        {
+        }
+
+        public static void ResetSetting(Player player, string[] path, Action? onReset)
+        {
+        }
 
         /// <summary>
         /// A helper method that updates a players settings once they open their SSS tab. This method is the ideal way to send a player new settings. Though if keybinds are involved, the standard <see cref="SendToPlayer"/> should be used.

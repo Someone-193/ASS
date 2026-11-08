@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="urn:assml"
+           elementFormDefault="qualified">
+
+    <xs:element name="assml">
+        <xs:complexType>
+            <xs:choice maxOccurs="unbounded">
+                <xs:element ref="Group"/>
+                <xs:element ref="Header"/>
+                <xs:element ref="Button"/>
+            </xs:choice>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="Group">
+        <xs:complexType>
+            <xs:choice minOccurs="0" maxOccurs="unbounded">
+                <xs:element ref="Group"/>
+                <xs:element ref="Header"/>
+                <xs:element ref="Button"/>
+            </xs:choice>
+            <xs:attribute name="Key" type="xs:string" use="required"/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="Header">
+        <xs:complexType>
+            <xs:attribute name="Key"   type="xs:string" use="required"/>
+            <xs:attribute name="Label" type="xs:string"/>
+            <xs:attribute name="Hint"  type="xs:string"/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="Button">
+        <xs:complexType>
+            <xs:attribute name="Key"      type="xs:string" use="required"/>
+            <xs:attribute name="Label"    type="xs:string"/>
+            <xs:attribute name="HoldTime" type="xs:float"/>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- TODO: add more -->
+
+</xs:schema>

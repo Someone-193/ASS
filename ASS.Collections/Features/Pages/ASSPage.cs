@@ -1,4 +1,4 @@
-namespace ASS.Pages.Features
+namespace ASS.Collections.Features.Pages
 {
     using System.Collections.Generic;
     using System.Linq;
@@ -14,7 +14,7 @@ namespace ASS.Pages.Features
 
     public abstract class ASSPage : IASSContainer
     {
-        protected const string ControlKey = "ASS.Pages Page Controller";
+        protected const string ControlKey = "ASS.Collections Page Controller";
 
         protected ASSPage(string key) => Key = key;
 
@@ -23,7 +23,7 @@ namespace ASS.Pages.Features
             .WithChildren(ASSNetworking.Objects.OrderByDescending(kvp => kvp.Value).Select(kvp => kvp.Key));
 
         public static DropdownPage MainPageController { get; } = DropdownPage
-            .Create("ASS.Pages.MainPage", "Main Page", MainPage)
+            .Create("ASS.Collections.MainPage", "Main Page", MainPage)
             .WithLabel("Pages")
             .WithEntryType(SSDropdownSetting.DropdownEntryType.HybridLoop);
 

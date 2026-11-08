@@ -1,4 +1,4 @@
-namespace ASS.Pages.Features
+namespace ASS.Collections.Features.Pages
 {
     using System;
     using System.Collections.Generic;
