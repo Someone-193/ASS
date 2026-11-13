@@ -1,19 +1,11 @@
 namespace ASS
 {
-    using System.ComponentModel;
+    extern alias oldSystem;
 
-    #if EXILED
-    using Exiled.API.Interfaces;
+    using oldSystem::System.ComponentModel;
 
-    public class Config : IConfig
-    #elif LABAPI
     public class Config
-    #endif
     {
-        #if EXILED
-        public bool IsEnabled { get; set; } = true;
-        #endif
-
         public bool Debug { get; set; }
 
         [Description("With most SSS code, you often run into having multiple plugins try to send a player settings multiplie time" +
@@ -21,5 +13,8 @@ namespace ASS
                      "which can resolve conflicts. If set to False, objects like the PlayerMenu might make a players settings not" +
                      "appear visible when they first join.")]
         public bool ForceJoinSyncPriority { get; set; } = true;
+
+        [Description("If true, when a method calls SendToPlayer in some form very quickly in succession for a long time. ASS will log a stacktrace for you to review.")]
+        public bool LogSuspiciousLoops { get; set; } = true;
     }
 }

@@ -1,14 +1,15 @@
 namespace ASS.Features.MirrorUtils.Messages
 {
     using System;
-    using ASS.Features.Settings;
+    using ASS.Features.Instances;
+    using ASS.Features.Templates;
     using Mirror;
     using UserSettings.ServerSpecific;
 
-    public readonly struct ASSUpdateMessage(ASSBase setting, Action<NetworkWriter> writerFunc) : NetworkMessage
+    public readonly struct ASSUpdateMessage(int id, Type sssType, Action<NetworkWriter> writerFunc) : NetworkMessage
     {
-        public readonly int Id = setting.Id;
-        public readonly byte TypeCode = ServerSpecificSettingsSync.GetCodeFromType(setting.SSSType);
+        public readonly int Id = id;
+        public readonly byte TypeCode = ServerSpecificSettingsSync.GetCodeFromType(sssType);
         public readonly Action<NetworkWriter> ServersidePayloadWriter = writerFunc;
 
         public void Serialize(NetworkWriter writer)

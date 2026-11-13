@@ -1,36 +1,38 @@
 ﻿namespace ASS
 {
     using System;
+    using System.Collections.Generic;
+    using System.Linq;
 
     using ASS.EventHandlers;
     using ASS.Features;
+    using ASS.Features.Helpers;
+    using ASS.Features.Interfaces;
+
+    using HarmonyLib;
 
     using LabApi.Events.Handlers;
     using LabApi.Features;
     using LabApi.Features.Console;
+    using LabApi.Features.Wrappers;
     using LabApi.Loader.Features.Plugins;
     using LabApi.Loader.Features.Plugins.Enums;
 
-    #if EXILED
-    using Exiled.API.Enums;
-    #endif
-
-    using HarmonyLib;
+    using MEC;
 
     using Mirror;
 
     using UserSettings.ServerSpecific;
 
-    #if EXILED
-    public class Main : Exiled.API.Features.Plugin<Config>
-    #elif LABAPI
     public class Main : Plugin<Config>
-    #endif
     {
         private static readonly Action HandlerAction = () => NetworkServer.ReplaceHandler<SSSClientResponse>(ASSNetworking.ProcessResponseMessage);
         private static DateTime lastDependencyCheckMessage = DateTime.MinValue;
+        private static CoroutineHandle responseTrackerPump;
 
         private static Harmony harmony = null!;
+
+        private static bool enabled;
 
         public static bool Debug
         {
@@ -42,7 +44,7 @@
                 // minimize log spam, but still have it keep warning, Instance can only be null if ASS was referenced and not enabled
                 if ((DateTime.UtcNow - lastDependencyCheckMessage) > TimeSpan.FromSeconds(5))
                 {
-                    Logger.Warn("ASS is being used as a dependency (or is disabled yet still referenced by another plugin), please install it in the Plugins folder!");
+                    Logger.Warn("ASS is being used as a dependency (or is disabled yet still referenced by another plugin), please install it in the Plugins folder, or call EnsureInit from a consumer!");
                     lastDependencyCheckMessage = DateTime.UtcNow;
                 }
 
@@ -52,45 +54,38 @@
 
         public static Main? Instance { get; private set; }
 
+        // the default template generator.
+        public static Func<Player, IEnumerable<IASSObject>> StandardTemplateRootGenerator { get; } = _ => ASSNetworking.Objects.OrderByDescending(kvp => kvp.Value).Select(kvp => kvp.Key);
+
+        public static Func<Player, bool> StandardSendBaseGameSettingsGenerator { get; } = _ => true;
+
         public override string Name => "ASS";
 
         public override string Author => "@Someone";
 
-        public override Version Version { get; } = new(2, 0, 0);
+        public override Version Version { get; } = new(4, 0, 0);
 
-        #if EXILED
-        public override string Prefix => "ASS";
-
-        public override PluginPriority Priority => PluginPriority.Higher;
-        #elif LABAPI
-        public override LoadPriority Priority => LoadPriority.High;
+        // Order of assembly loading:
+        // ASS
+        // ASS.ASSML
+        // ASS.Collections
+        // ASS.Example
+        public override LoadPriority Priority => LoadPriority.High - 2;
 
         public override string Description => "Reworks SSS with the goal of improving player specific settings";
 
         public override Version RequiredApiVersion { get; } = new(LabApiProperties.CompiledVersion);
-        #endif
 
-        #if EXILED
-        public override void OnEnabled()
+        public static void EnsureInit()
         {
-            Enabled();
-            base.OnEnabled();
-        }
+            if (enabled)
+                return;
 
-        public override void OnDisabled()
-        {
-            Disabled();
-            base.OnDisabled();
-        }
-        #elif LABAPI
-        public override void Enable() => Enabled();
-
-        public override void Disable() => Disabled();
-        #endif
-
-        private void Enabled()
-        {
-            Instance = this;
+            if (Instance is null)
+            {
+                Instance = new Main();
+                Instance.LoadConfigs();
+            }
 
             ServerSpecificSettingsSync.SendOnJoinFilter = _ => false;
 
@@ -105,10 +100,17 @@
             PlayerEvents.Left += Left.OnLeft;
 
             ServerSpecificSettingsSync.DefinedSettings ??= [];
+
+            responseTrackerPump = Timing.CallPeriodically(float.MaxValue, 0.5F, static () => ResponseTracker.Flush(DateTime.UtcNow));
+
+            enabled = true;
         }
 
-        private void Disabled()
+        public static void DisablePlugin()
         {
+            if (!enabled)
+                return;
+
             harmony.UnpatchAll(harmony.Id);
 
             ServerSpecificSettingsSync.ServerOnStatusReceived -= ASSNetworking.OnStatusReceived;
@@ -117,6 +119,19 @@
 
             PlayerEvents.Joined -= Joined.OnJoined;
             PlayerEvents.Left -= Left.OnLeft;
+
+            Timing.KillCoroutines(responseTrackerPump);
+
+            enabled = false;
         }
+
+        public override void Enable()
+        {
+            Instance = this;
+
+            EnsureInit();
+        }
+
+        public override void Disable() => DisablePlugin();
     }
 }

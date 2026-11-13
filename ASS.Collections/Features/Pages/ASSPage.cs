@@ -1,0 +1,50 @@
+namespace ASS.Collections.Features.Pages
+{
+    using System.Collections.Generic;
+    using System.Linq;
+
+    using ASS.Events.EventArgs;
+    using ASS.Features;
+    using ASS.Features.Containers;
+    using ASS.Features.Interfaces;
+
+    using LabApi.Features.Wrappers;
+
+    using UserSettings.ServerSpecific;
+
+    /// <summary>
+    /// A representation of a page. You can inherit this and use it as you please.
+    /// </summary>
+    /// <remarks>ALWAYS TRACK INSTANCES OF PAGES. DO NOT CREATE PAGES IN SOMETHING LIKE A <see cref="TemplateGenerator"/> (though you can cache and return them)!</remarks>
+    public abstract class ASSPage : IASSContainer
+    {
+        protected const string ControlKey = "ASS.Collections Page Controller";
+
+        protected ASSPage(string key) => Key = key;
+
+        public static ASSGroup MainPage { get; } = ASSGroup
+            .Create("Main Page")
+            .WithChildren(ASSNetworking.Objects.OrderByDescending(kvp => kvp.Value).Select(kvp => kvp.Key));
+
+        public static DropdownPage MainPageController { get; } = DropdownPage
+            .Create("ASS.Collections.MainPage", "Main Page", MainPage)
+            .WithLabel("Pages")
+            .WithEntryType(SSDropdownSetting.DropdownEntryType.HybridLoop);
+
+        public static Dictionary<Player, Stack<ASSPage>> SelectedPage { get; } = new();
+
+        public string Key { get; }
+
+        public IASSContainer? Parent { get; set; }
+
+        public bool DisplayInHierarchy { get; set; } = true;
+
+        protected HashSet<Player> Opened { get; } = [];
+
+        public abstract IEnumerable<IASSObject> GetChildren(Player viewer);
+
+        internal static void OnObjectRegistered(ObjectRegisteredEventArgs ev) => MainPage.ClearChildren().WithChildren(ASSNetworking.Objects.OrderByDescending(kvp => kvp.Value).Select(kvp => kvp.Key));
+
+        internal static void OnObjectUnregistered(ObjectUnregisteredEventArgs ev) => MainPage.ClearChildren().WithChildren(ASSNetworking.Objects.OrderByDescending(kvp => kvp.Value).Select(kvp => kvp.Key));
+    }
+}

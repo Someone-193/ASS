@@ -24,7 +24,7 @@ namespace ASS.Features.Commands
                 return false;
             }
 
-            ASSNetworking.SendToPlayerFull(p, true, false, true);
+            ASSNetworking.SendToPlayerFull(p, null, false, true);
             response = "Did the thing.";
             return true;
         }
