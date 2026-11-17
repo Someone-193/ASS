@@ -4,13 +4,15 @@ namespace ASS.Collections.Features.Pages
     using System.Collections.Generic;
 
     using ASS.Features;
+    using ASS.Features.Attributes;
     using ASS.Features.Instances;
     using ASS.Features.Interfaces;
     using ASS.Features.Templates;
 
     using LabApi.Features.Wrappers;
 
-    public class TwoButtonsPage : ASSPage
+    [Fluent]
+    public partial class TwoButtonsPage : ASSPage
     {
         private readonly List<IASSObject> children = [];
 
@@ -24,6 +26,7 @@ namespace ASS.Collections.Features.Pages
 
         public TwoButtonsTemplate TwoButtons { get; }
 
+        [Fluent]
         public Predicate<Player>? Condition { get; set; }
 
         public bool RightIsTarget { get; set; }
@@ -77,12 +80,6 @@ namespace ASS.Collections.Features.Pages
                 children.Add(child);
             }
 
-            return this;
-        }
-
-        public TwoButtonsPage WithCondition(Predicate<Player> condition)
-        {
-            Condition = condition;
             return this;
         }
 

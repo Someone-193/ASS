@@ -12,6 +12,8 @@ namespace ASS.Features.Instances
             : base(viewer, id, template)
         {
             ReducedPadding = template.ReducedPadding;
+
+            AutoSync = template.AutoSync;
         }
 
         public bool ReducedPadding { get; set; }

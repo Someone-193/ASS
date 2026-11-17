@@ -30,6 +30,8 @@ namespace ASS.Features.Templates
 
         public byte CollectionId { get; set; } = byte.MaxValue;
 
+        public bool AutoSync { get; set; } = true;
+
         public IASSContainer? Parent { get; set; }
 
         public bool DisplayInHierarchy => true;

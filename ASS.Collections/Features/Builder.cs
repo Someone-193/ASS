@@ -2,11 +2,15 @@ namespace ASS.Collections.Features
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Reflection;
 
-    using ASS.Collections.Features.Helpers;
+    using ASS.Features;
+    using ASS.Features.Attributes;
+    using ASS.Features.Helpers;
     using ASS.Features.Instances;
     using ASS.Features.Interfaces;
+    using ASS.Features.Parsers;
     using ASS.Features.Templates;
 
     using LabApi.Features.Console;
@@ -15,17 +19,17 @@ namespace ASS.Collections.Features
     /// <summary>
     /// <see cref="Binding"/>, but for constructors.
     /// </summary>
-    public class Builder : IASSContainer
+    [Fluent]
+    public partial class Builder : IASSContainer
     {
         private readonly List<ParameterInfo> parameters = [];
-        private readonly List<ASSTemplate> templates = [];
+        private readonly List<IASSObject> objects = [];
 
         private Builder(string key) => Key = key;
 
-        public Dictionary<Type, Func<string, BindingHelper.ParserResponse>> Parsers { get; } = new();
-
         public string Key { get; }
 
+        [Fluent]
         public ConstructorInfo? Constructor
         {
             get;
@@ -42,16 +46,17 @@ namespace ASS.Collections.Features
             }
         }
 
+        [Fluent]
         public float HoldTime
         {
             get;
             set
             {
                 field = value;
-                if (templates.Count is 0)
+                if (objects.Count is 0)
                     return;
 
-                if (templates[templates.Count - 1] is not ButtonTemplate button)
+                if (objects[objects.Count - 1] is not ButtonTemplate button)
                     return;
 
                 button.HoldTime = value;
@@ -61,8 +66,10 @@ namespace ASS.Collections.Features
             }
         }
 
+        [Fluent]
         public Action<Player, object>? OnBuilt { get; set; }
 
+        [Fluent(false)]
         public bool SuppressLogs { get; set; } = true;
 
         public IASSContainer? Parent { get; set; }
@@ -71,70 +78,69 @@ namespace ASS.Collections.Features
 
         public static Builder Create(string key) => new(key);
 
-        public Builder WithConstructor(ConstructorInfo? constructor)
-        {
-            Constructor = constructor;
-            return this;
-        }
-
-        public Builder WithOnBuilt(Action<Player, object>? onBuilt)
-        {
-            OnBuilt = onBuilt;
-            return this;
-        }
-
-        public Builder WithHoldTime(float holdTime)
-        {
-            HoldTime = holdTime;
-            return this;
-        }
-
-        public Builder WithoutSuppressLogs(bool suppressLogs = false)
-        {
-            SuppressLogs = suppressLogs;
-            return this;
-        }
-
         public IEnumerable<IASSObject> GetChildren(Player viewer)
         {
             // re-use old templates unless rebuilt in RebuildParameters.
-            if (templates.Count > 0)
-                return templates;
+            if (objects.Count > 0)
+                return objects;
 
             if (Constructor is null)
                 return [];
 
-            templates.Add(HeaderTemplate
+            objects.Add(HeaderTemplate
                 .Create("ASS.Collections Builder Header")
                 .WithLabel($"{Constructor.DeclaringType!.Name} builder"));
 
             foreach (ParameterInfo parameter in parameters)
             {
-                string text = parameter.DefaultValue?.ToString() ?? "null";
+                Type targetType = parameter.ParameterType;
+                if (!Clipboard.TryGetParser(targetType, out ParserTemplate parserTemplate))
+                {
+                    if (!SuppressLogs)
+                        Logger.Warn($"Cannot build type {Constructor.DeclaringType?.FullName ?? "null"} as no parser for {targetType.FullName} was found");
+                    return [];
+                }
 
-                templates.Add(TextInputTemplate
-                    .Create(parameter.Name)
-                    .WithLabel(parameter.Name)
-                    .WithDefaultText(text)
-                    .WithPlaceholder(text));
+                ASSParser parser = parserTemplate.Instantiate(parameter.Name);
+                parser.Transform(parameter.GetCustomAttributes().OfType<IParserTransform>());
+
+                if (parser is IHeaderParser headerParser)
+                {
+                    string label = $"{parameter.Name} ({parameter.ParameterType.ProperTypeName()}):";
+
+                    if (parameter.HasDefaultValue)
+                        label += " [" + (parameter.DefaultValue?.ToString() ?? "null") + ']';
+
+                    headerParser.Header
+                        .WithLabel(label)
+                        .WithReducedPadding();
+                }
+
+                objects.Add(parser);
+
+                // objects.Add(TextInputTemplate
+                //     .Create(parameter.Name)
+                //     .WithLabel(parameter.Name)
+                //     .WithDefaultText(text)
+                //     .WithPlaceholder(text));
             }
 
-            templates.Add(ButtonTemplate
+            objects.Add(ButtonTemplate
                 .Create("ASS.Collections Builder Build Button")
                 .WithLabel("Create")
                 .WithHoldTime(HoldTime)
                 .WithHandler((player, button) =>
                 {
                     // it should be noted here all the index math just needs to ignore the first entry in templates. This includes this entry though as this is the buttons HANDLER.
-                    object?[] args = new object?[templates.Count - 2];
+                    object?[] args = new object?[objects.Count - 2];
 
-                    for (int i = 1; i < templates.Count - 1; i++)
+                    for (int i = 1; i < objects.Count - 1; i++)
                     {
-                        if (templates[i] is not TextInputTemplate textInput)
+                        if (objects[i] is not ASSParser parser)
                         {
-                            Logger.Error("Invalid Builder state, found a non-text input!");
+                            Logger.Error($"Invalid Builder state, expected ASSParser but found {objects[i]}!");
 
-                            foreach (ASSTemplate template in templates)
+                            foreach (IASSObject template in objects)
                             {
                                 Logger.Warn(template);
                             }
@@ -142,22 +148,10 @@ namespace ASS.Collections.Features
                             return;
                         }
 
-                        if (!textInput.Instances.TryGetValue(player, out TextInputInstance? input))
+                        if (!parser.TryParse(player, out object? obj))
                             return;
 
-                        Type targetType = parameters[i - 1].ParameterType;
-                        if (!Parsers.TryGetValue(targetType, out Func<string, BindingHelper.ParserResponse> parser) && !BindingHelper.GlobalParsers.TryGetValue(targetType, out parser))
-                        {
-                            if (!SuppressLogs)
-                                Logger.Warn($"Cannot build type {Constructor.DeclaringType?.FullName ?? "null"} as no parser for {targetType.FullName} was found");
-                            return;
-                        }
-
-                        BindingHelper.ParserResponse response = parser(input.InputtedText);
-                        if (response.IsError)
-                            return;
-
-                        args[i - 1] = response.Value;
+                        args[i - 1] = obj;
                     }
 
                     object instance = Constructor.Invoke(args);
@@ -175,13 +169,13 @@ namespace ASS.Collections.Features
                     }
                 }));
 
-            return templates;
+            return objects;
         }
 
         private void RebuildParameters()
         {
             parameters.Clear();
-            templates.Clear();
+            objects.Clear();
 
             if (Constructor is null)
                 return;

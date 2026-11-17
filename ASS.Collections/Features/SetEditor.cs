@@ -9,8 +9,11 @@ namespace ASS.Collections.Features
     using ASS.Collections.Features.Pages;
 
     using ASS.Features;
+    using ASS.Features.Attributes;
+    using ASS.Features.Helpers;
     using ASS.Features.Instances;
     using ASS.Features.Interfaces;
+    using ASS.Features.Parsers;
     using ASS.Features.Templates;
 
     using LabApi.Features.Wrappers;
@@ -18,10 +21,14 @@ namespace ASS.Collections.Features
     using Logger = LabApi.Features.Console.Logger;
 
     /// <summary>
-    /// A generalized editor for <see cref="HashSet{T}"/>s, <see cref="List{T}"/>s, and <see cref="Array"/>s.
+    /// A generalized editor for <see cref="HashSet{T}"/>s, <see cref="List{T}"/>s, <see cref="Array"/>s, and <see cref="Dictionary{TKey,TValue}"/>s.
     /// </summary>
     /// <remarks>Manual modifications to <see cref="Set"/> should update viewers of this container.</remarks>
-    public class SetEditor : IASSContainer
+    [Fluent]
+
+    // this kids, is why YOU DONT CRAM 1000 LINES OF CODE IN A SINGLE FILE AHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
+    // I'm being fr, if you want to try and fix this somehow, just ping me on discord or something. This thing needs a full rewrite. (But at least it works, and it's pretty cool!)
+    public partial class SetEditor : IASSContainer
     {
         private const string NullKeyword = "<color=#6C95EB>null</color>";
 
@@ -37,7 +44,9 @@ namespace ASS.Collections.Features
         private SetType setType;
         private Type? type;
         private Type? targetType;
-        private Func<string, BindingHelper.ParserResponse>? parser;
+        private Type? dictKey;
+        private ParserTemplate parserTemplate;
+        private ParserTemplate dictKeyTemplate;
         private Action<Array>? onResize;
 
         private SetEditor(string key)
@@ -46,6 +55,7 @@ namespace ASS.Collections.Features
 
             smartGenerator = SmartGenerator.Create("ASS.Collections SetEditor Sub-Menu SmartGenerator", Generator, Validator);
 
+            buttonPage.Parent = this;
             buttonPage.WithChildren(smartGenerator);
         }
 
@@ -54,6 +64,7 @@ namespace ASS.Collections.Features
             HashSet = 0,
             List = 1,
             Array = 2,
+            Dictionary = 3,
         }
 
         public string Key { get; }
@@ -69,7 +80,7 @@ namespace ASS.Collections.Features
                 {
                     type = null;
                     targetType = null;
-                    parser = null;
+                    parserTemplate = default;
                     return;
                 }
 
@@ -82,27 +93,47 @@ namespace ASS.Collections.Features
                 }
 
                 if (!type.IsConstructedGenericType)
-                    throw new InvalidOperationException("SetEditors can only be used on HashSets, Lists, and Arrays!");
+                    throw new InvalidOperationException("SetEditors can only be used on HashSets, Lists, and Arrays, Dictionaries!");
 
                 Type definition = type.GetGenericTypeDefinition();
                 if (definition == typeof(HashSet<>))
-                    setType = SetType.HashSet;
-                else if (definition == typeof(List<>))
-                    setType = SetType.List;
-                else
-                    throw new InvalidOperationException("SetEditors can only be used on HashSets, Lists, and Arrays!");
-
-                targetType = type.GenericTypeArguments[0];
-
-                if (!BindingHelper.GlobalParsers.TryGetValue(targetType, out parser))
                 {
-                    parser = null;
+                    targetType = type.GenericTypeArguments[0];
+                    setType = SetType.HashSet;
+                }
+                else if (definition == typeof(List<>))
+                {
+                    targetType = type.GenericTypeArguments[0];
+                    setType = SetType.List;
+                }
+                else if (definition == typeof(Dictionary<,>))
+                {
+                    targetType = type.GenericTypeArguments[1];
+                    setType = SetType.Dictionary;
+                    dictKey = type.GenericTypeArguments[0];
+
+                    if (!Clipboard.TryGetParser(dictKey, out dictKeyTemplate))
+                    {
+                        dictKeyTemplate = default;
+                        Logger.Warn($"Cannot create SetEditor for type {dictKey.FullName}, there is no parser available!");
+                    }
+                }
+                else
+                    throw new InvalidOperationException("SetEditors can only be used on HashSets, Lists, and Arrays, Dictionaries!");
+
+                if (!Clipboard.TryGetParser(targetType, out parserTemplate))
+                {
+                    parserTemplate = default;
                     Logger.Warn($"Cannot create SetEditor for type {targetType.FullName}, there is no parser available!");
                 }
             }
         }
 
+        [Fluent]
         public float HoldTime { get; set; }
+
+        [Fluent]
+        public bool UseClipboard { get; set; }
 
         public IASSContainer? Parent { get; set; }
 
@@ -114,9 +145,9 @@ namespace ASS.Collections.Features
         /// The standard way to use a <see cref="SetEditor"/>. <see cref="Array"/>'s need special attention.
         /// </summary>
         /// <param name="set">The set to modify.</param>
-        /// <param name="onResize">An action triggered whenever Set is an array, and a resize occurs.</param>
+        /// <param name="onResize">An action triggered whenever Set is an array, and the array is resized.</param>
         /// <returns>The current instance.</returns>
-        /// <remarks>If you are using an Array, set onResize to reset the original set.</remarks>
+        /// <remarks>If you are using an Array, set onResize to reset the source array.</remarks>
         public SetEditor WithSet(IEnumerable? set, Action<Array>? onResize = null)
         {
             Set = set;
@@ -125,15 +156,12 @@ namespace ASS.Collections.Features
             return this;
         }
 
-        public SetEditor WithHoldTime(float holdTime)
-        {
-            HoldTime = holdTime;
-            return this;
-        }
-
         public IEnumerable<IASSObject> GetChildren(Player viewer)
         {
-            if (type is null || targetType is null || Set is null || parser is null)
+            if (type is null || targetType is null || Set is null || parserTemplate == default)
+                yield break;
+
+            if (setType is SetType.Dictionary && dictKey is null)
                 yield break;
 
             list.Clear();
@@ -144,10 +172,10 @@ namespace ASS.Collections.Features
 
             yield return DropdownTemplate
                 .Create("Options Dropdown")
-                .WithLabel($"Current Values ({BindingHelper.ProperTypeName(type)})")
+                .WithLabel($"Current Values ({type.ProperTypeName()})")
                 .WithOptions(list
-                    .Select(obj => obj?.ToString() ?? NullKeyword)
-                    .Append($"Create New {BindingHelper.ProperTypeName(targetType)}")
+                    .Select(obj => parserTemplate.Print(obj))
+                    .Append($"Create New {targetType.ProperTypeName()}")
                     .ToArray())
                 .WithHandler((player, dropdown) =>
                 {
@@ -175,10 +203,16 @@ namespace ASS.Collections.Features
 
                             onResize?.Invoke(array);
                             break;
+                        case SetType.Dictionary:
+                            SetEditorHelper.GetDictionaryClear(dictKey!, targetType).Invoke(Set, null);
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
                     }
 
                     ASSNetworking.SetDirty(player);
-                });
+                })
+                .WithHoldTime(HoldTime);
 
             yield return buttonPage;
         }
@@ -187,7 +221,10 @@ namespace ASS.Collections.Features
 
         private IEnumerable<IASSObject> Generator(SmartGenerator generator, Player p)
         {
-            if (Set is null || type is null || targetType is null || parser is null)
+            if (Set is null || type is null || targetType is null || parserTemplate == default)
+                yield break;
+
+            if (setType is SetType.Dictionary && dictKey is null)
                 yield break;
 
             if (!selections.TryGetValue(p, out (object? Selected, int Index) pair))
@@ -201,40 +238,53 @@ namespace ASS.Collections.Features
             {
                 yield return HeaderTemplate
                     .Create("Header")
-                    .WithLabel($"Create new {BindingHelper.ProperTypeName(targetType)}");
+                    .WithLabel($"Create new {targetType.ProperTypeName()}");
             }
             else
             {
                 yield return HeaderTemplate
                     .Create("Header")
-                    .WithLabel($"Modify {pair.Selected?.ToString() ?? NullKeyword} ({BindingHelper.ProperTypeName(targetType)})");
+                    .WithLabel($"Modify Value: ({parserTemplate.Print(pair.Selected)}) [{targetType.ProperTypeName()}]");
             }
+
+            ASSParser parser = parserTemplate.Instantiate("SetEditor Parser");
 
             switch (setType)
             {
                 case SetType.HashSet:
                     if (isNew)
                     {
-                        TextInputTemplate textInput = TextInputTemplate
-                            .Create("Creator Text Input")
-                            .WithLabel($"Create New {BindingHelper.ProperTypeName(targetType)}");
+                        if (parser is IHeaderParser headerParser)
+                        {
+                            headerParser.Header
+                                .WithLabel($"Create New {targetType.ProperTypeName()}")
+                                .WithReducedPadding();
+                        }
 
-                        yield return textInput;
+                        yield return parser;
+
+                        if (UseClipboard && Clipboard.TryGetValue(p, out object? copied) && copied.GetType() == targetType)
+                        {
+                            yield return ButtonTemplate
+                                .Create($"Create from Clipboard ({parserTemplate.Print(copied)})")
+                                .WithHoldTime(HoldTime)
+                                .WithHandler((player, button) =>
+                                {
+                                    SetEditorHelper.GetICollectionAdder(targetType).Invoke(Set, [copied]);
+
+                                    buttonPage.Exit(player);
+                                });
+                        }
 
                         yield return ButtonTemplate
                             .Create("Creator Button")
                             .WithLabel("Create")
                             .WithHandler((player, button) =>
                             {
-                                if (!textInput.Instances.TryGetValue(player, out TextInputInstance? input))
+                                if (!parser.TryParse(player, out object? obj))
                                     return;
 
-                                BindingHelper.ParserResponse response = parser(input.InputtedText);
-
-                                if (response.IsError)
-                                    return;
-
-                                SetEditorHelper.GetICollectionAdder(targetType).Invoke(Set, [response.Value]);
+                                SetEditorHelper.GetICollectionAdder(targetType).Invoke(Set, [obj]);
 
                                 buttonPage.Exit(player);
                             })
@@ -244,7 +294,7 @@ namespace ASS.Collections.Features
                     {
                         yield return ButtonTemplate
                             .Create("Remover Button")
-                            .WithLabel($"Remove {pair.Selected?.ToString() ?? NullKeyword} ({BindingHelper.ProperTypeName(targetType)})")
+                            .WithLabel($"Remove ({parserTemplate.Print(pair.Selected)}) [{targetType.ProperTypeName()}]")
                             .WithHandler((player, button) =>
                             {
                                 SetEditorHelper.GetICollectionRemover(targetType).Invoke(Set, [pair.Selected]);
@@ -259,23 +309,46 @@ namespace ASS.Collections.Features
                 case SetType.Array:
                     if (isNew)
                     {
-                        TextInputTemplate textInput = TextInputTemplate
-                            .Create("Creator Text Input")
-                            .WithLabel($"Create New {BindingHelper.ProperTypeName(targetType)}");
+                        if (parser is IHeaderParser headerParser)
+                        {
+                            headerParser.Header
+                                .WithLabel($"Create New {targetType.ProperTypeName()}")
+                                .WithReducedPadding();
+                        }
 
-                        yield return textInput;
+                        yield return parser;
+
+                        if (UseClipboard && Clipboard.TryGetValue(p, out object? copied) && copied.GetType() == targetType)
+                        {
+                            yield return ButtonTemplate
+                                .Create($"Create from Clipboard ({parserTemplate.Print(copied)})")
+                                .WithHoldTime(HoldTime)
+                                .WithHandler((player, button) =>
+                                {
+                                    if (Set is Array array)
+                                    {
+                                        object[] args = [Set, array.Length + 1];
+                                        SetEditorHelper.GetResizer(targetType).Invoke(null, args);
+                                        Set = array = (Array)args[0];
+
+                                        array.SetValue(copied, pair.Index);
+                                        onResize?.Invoke(array);
+                                    }
+                                    else
+                                    {
+                                        SetEditorHelper.GetICollectionAdder(targetType).Invoke(Set, [copied]);
+                                    }
+
+                                    buttonPage.Exit(player);
+                                });
+                        }
 
                         yield return ButtonTemplate
                             .Create("Creator Button")
                             .WithLabel("Create")
                             .WithHandler((player, button) =>
                             {
-                                if (!textInput.Instances.TryGetValue(player, out TextInputInstance? input))
-                                    return;
-
-                                BindingHelper.ParserResponse response = parser(input.InputtedText);
-
-                                if (response.IsError)
+                                if (!parser.TryParse(player, out object? obj))
                                     return;
 
                                 if (Set is Array array)
@@ -284,12 +357,12 @@ namespace ASS.Collections.Features
                                     SetEditorHelper.GetResizer(targetType).Invoke(null, args);
                                     Set = array = (Array)args[0];
 
-                                    array.SetValue(response.Value, pair.Index);
+                                    array.SetValue(obj, pair.Index);
                                     onResize?.Invoke(array);
                                 }
                                 else
                                 {
-                                    SetEditorHelper.GetICollectionAdder(targetType).Invoke(Set, [response.Value]);
+                                    SetEditorHelper.GetICollectionAdder(targetType).Invoke(Set, [obj]);
                                 }
 
                                 buttonPage.Exit(player);
@@ -298,30 +371,49 @@ namespace ASS.Collections.Features
                     }
                     else
                     {
-                        yield return TextInputTemplate
-                            .Create("Modifier Text Input")
-                            .WithLabel($"Modify {pair.Selected?.ToString() ?? NullKeyword} ({BindingHelper.ProperTypeName(targetType)})")
-                            .WithHandler((player, input) =>
+                        if (parser is IHeaderParser headerParser)
+                        {
+                            headerParser.Header
+                                .WithLabel($"Modify Value: ({parserTemplate.Print(pair.Selected)}) [{targetType.ProperTypeName()}]")
+                                .WithReducedPadding();
+                        }
+
+                        parser.OnModified = player =>
                             {
-                                if (input.IsInitialResponse)
-                                    return;
-
-                                BindingHelper.ParserResponse response = parser(input.InputtedText);
-
-                                if (response.IsError)
+                                if (!parser.TryParse(player, out object? obj))
                                     return;
 
                                 if (Set is Array array)
-                                    array.SetValue(response.Value, pair.Index);
+                                    array.SetValue(obj, pair.Index);
                                 else
-                                    SetEditorHelper.GetListSetItem(targetType).Invoke(Set, [pair.Index, response.Value]);
+                                    SetEditorHelper.GetListSetItem(targetType).Invoke(Set, [pair.Index, obj]);
 
-                                buttonPage.Exit(player);
-                            });
+                                if (parser is not IHeaderParser header)
+                                    return;
+
+                                if (header.Header.Instances.TryGetValue(player, out HeaderInstance instance))
+                                    instance.Label = $"Modify Value: ({parserTemplate.Print(pair.Selected)}) [{targetType.ProperTypeName()}]";
+                            };
+
+                        if (UseClipboard && Clipboard.TryGetValue(p, out object? copied) && copied.GetType() == targetType)
+                        {
+                            yield return ButtonTemplate
+                                .Create($"Load from Clipboard ({parserTemplate.Print(copied)})")
+                                .WithHoldTime(HoldTime)
+                                .WithHandler((player, button) =>
+                                {
+                                    if (Set is Array array)
+                                        array.SetValue(copied, pair.Index);
+                                    else
+                                        SetEditorHelper.GetListSetItem(targetType).Invoke(Set, [pair.Index, copied]);
+
+                                    buttonPage.Exit(player);
+                                });
+                        }
 
                         yield return ButtonTemplate
                             .Create("Remover Button")
-                            .WithLabel($"Remove {pair.Selected?.ToString() ?? NullKeyword} ({BindingHelper.ProperTypeName(targetType)})")
+                            .WithLabel($"Remove ({parserTemplate.Print(pair.Selected)}) [{targetType.ProperTypeName()}]")
                             .WithHandler((player, button) =>
                             {
                                 if (Set is Array array)
@@ -343,6 +435,103 @@ namespace ASS.Collections.Features
                                 {
                                     SetEditorHelper.GetListRemoveAt(targetType).Invoke(Set, [pair.Index]);
                                 }
+
+                                buttonPage.Exit(player);
+                            })
+                            .WithHoldTime(HoldTime);
+                    }
+
+                    break;
+                case SetType.Dictionary:
+                    if (isNew)
+                    {
+                        ASSParser keyParser = dictKeyTemplate.Instantiate("SetEditor Dictionary Key Parser");
+
+                        if (keyParser is IHeaderParser keyHeader)
+                        {
+                            keyHeader.Header
+                                .WithLabel($"Create Key ({dictKey!.ProperTypeName()})")
+                                .WithReducedPadding();
+                        }
+
+                        yield return keyParser;
+
+                        if (parser is IHeaderParser valueHeader)
+                        {
+                            valueHeader.Header
+                                .WithLabel($"Create Value ({targetType.ProperTypeName()})")
+                                .WithReducedPadding();
+                        }
+
+                        yield return parser;
+
+                        yield return ButtonTemplate
+                            .Create("Creator Button")
+                            .WithLabel("Create")
+                            .WithHandler((player, button) =>
+                            {
+                                if (!keyParser.TryParse(player, out object? key))
+                                    return;
+
+                                if (SetEditorHelper.GetDictionaryContainsKey(dictKey!, targetType).Invoke(Set, [key]) is true)
+                                    return;
+
+                                if (!parser.TryParse(player, out object? value))
+                                    return;
+
+                                SetEditorHelper.GetDictionaryAdd(dictKey!, targetType).Invoke(Set, [key, value]);
+                                buttonPage.Exit(player);
+                            })
+                            .WithHoldTime(HoldTime);
+                    }
+                    else
+                    {
+                        if (parser is IHeaderParser headerParser)
+                        {
+                            headerParser.Header
+                                .WithLabel($"Modify Value: ({parserTemplate.Print(pair.Selected)}) [{targetType.ProperTypeName()}]")
+                                .WithReducedPadding();
+                        }
+
+                        parser.OnModified = player =>
+                            {
+                                if (!parser.TryParse(player, out object? value))
+                                    return;
+
+                                object key = SetEditorHelper.GetKeyFromKvp(dictKey!, targetType).Invoke(pair.Selected, null);
+
+                                SetEditorHelper.GetDictionarySetItem(dictKey!, targetType).Invoke(Set, [key, value]);
+
+                                if (parser is not IHeaderParser header)
+                                    return;
+
+                                if (header.Header.Instances.TryGetValue(player, out HeaderInstance instance))
+                                    instance.Label = $"Modify Value: ({parserTemplate.Print(pair.Selected)}) [{targetType.ProperTypeName()}]";
+                            };
+
+                        if (UseClipboard && Clipboard.TryGetValue(p, out object? copied) && copied.GetType() == targetType)
+                        {
+                            yield return ButtonTemplate
+                                .Create($"Load from Clipboard ({parserTemplate.Print(copied)})")
+                                .WithHoldTime(HoldTime)
+                                .WithHandler((player, button) =>
+                                {
+                                    object key = SetEditorHelper.GetKeyFromKvp(dictKey!, targetType).Invoke(pair.Selected, null);
+
+                                    SetEditorHelper.GetDictionarySetItem(dictKey!, targetType).Invoke(Set, [key, copied]);
+
+                                    buttonPage.Exit(player);
+                                });
+                        }
+
+                        yield return ButtonTemplate
+                            .Create("Remover Button")
+                            .WithLabel($"Remove ({parserTemplate.Print(pair.Selected)}) [{targetType.ProperTypeName()}]")
+                            .WithHandler((player, button) =>
+                            {
+                                object key = SetEditorHelper.GetKeyFromKvp(dictKey!, targetType).Invoke(pair.Selected, null);
+
+                                SetEditorHelper.GetDictionaryRemove(dictKey!, targetType).Invoke(Set, [key]);
 
                                 buttonPage.Exit(player);
                             })

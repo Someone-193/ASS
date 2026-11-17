@@ -2,12 +2,10 @@ namespace ASS.Features.Templates
 {
     using System;
 
-    using ASS.Features.Attributes;
     using ASS.Features.Instances;
 
     using UserSettings.ServerSpecific;
 
-    [CanSync]
     public partial class DropdownTemplate : ASSTemplate
     {
         public InstanceHandler<DropdownInstance>? OnDropdownChanged { get; set; }

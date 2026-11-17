@@ -4,13 +4,15 @@ namespace ASS.Collections.Features.Pages
     using System.Collections.Generic;
 
     using ASS.Features;
+    using ASS.Features.Attributes;
     using ASS.Features.Instances;
     using ASS.Features.Interfaces;
     using ASS.Features.Templates;
 
     using LabApi.Features.Wrappers;
 
-    public class ButtonPage : ASSPage
+    [Fluent]
+    public partial class ButtonPage : ASSPage
     {
         private readonly List<IASSObject> children = [];
 
@@ -26,6 +28,7 @@ namespace ASS.Collections.Features.Pages
                 .WithHandler(Exit);
         }
 
+        [Fluent]
         public Predicate<Player>? Condition { get; set; }
 
         public ButtonTemplate OpenButton { get; }
@@ -81,12 +84,6 @@ namespace ASS.Collections.Features.Pages
                 children.Add(child);
             }
 
-            return this;
-        }
-
-        public ButtonPage WithCondition(Predicate<Player> condition)
-        {
-            Condition = condition;
             return this;
         }
 

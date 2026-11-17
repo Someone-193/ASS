@@ -5,20 +5,30 @@ namespace ASS.Collections.Features
     using System;
     using System.Collections;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Reflection;
 
     using ASS.Collections.Features.Helpers;
+
+    using ASS.Features;
+    using ASS.Features.Attributes;
+    using ASS.Features.Helpers;
+    using ASS.Features.Instances;
     using ASS.Features.Interfaces;
+    using ASS.Features.Parsers;
     using ASS.Features.Templates;
 
     using LabApi.Features.Console;
     using LabApi.Features.Wrappers;
 
+    using oldSystem::System.Collections.ObjectModel;
+    using oldSystem::System.ComponentModel;
+
     /// <summary>
     /// A complex class that essentially converts every property, field, or method of a target object into a TextInput or Button.
     /// </summary>
-    /// <remarks>For custom parsers, see <see cref="BindingHelper.GlobalParsers"/> or <see cref="Parsers"/>.</remarks>
-    public class Binding : IASSContainer
+    [Fluent]
+    public partial class Binding : IASSContainer
     {
         private readonly Dictionary<string, MemberInfo> members = new();
         private readonly List<IASSObject> children = [];
@@ -36,10 +46,9 @@ namespace ASS.Collections.Features
             };
         }
 
-        public Dictionary<Type, Func<string, BindingHelper.ParserResponse>> Parsers { get; } = new();
-
         public string Key { get; }
 
+        [Fluent]
         public object? Target
         {
             get;
@@ -54,6 +63,7 @@ namespace ASS.Collections.Features
             }
         }
 
+        [Fluent]
         public bool Properties
         {
             get;
@@ -68,6 +78,7 @@ namespace ASS.Collections.Features
             }
         }
 
+        [Fluent]
         public bool Fields
         {
             get;
@@ -82,6 +93,7 @@ namespace ASS.Collections.Features
             }
         }
 
+        [Fluent]
         public bool Methods
         {
             get;
@@ -96,6 +108,7 @@ namespace ASS.Collections.Features
             }
         }
 
+        [Fluent]
         public bool NonPublic
         {
             get;
@@ -110,55 +123,27 @@ namespace ASS.Collections.Features
             }
         }
 
+        [Fluent]
         public bool HandleSets { get; set; }
 
+        [Fluent]
+        public bool UseClipboard { get; set; }
+
+        [Fluent(false)]
         public bool IgnoreDefaultResponses { get; set; } = true;
 
+        [Fluent(false)]
         public bool SuppressLogs { get; set; } = true;
 
-        public oldSystem::System.Collections.ObjectModel.ObservableCollection<string> Blacklist { get; } = [];
+        public ObservableCollection<string> Blacklist { get; } = [];
+
+        public ObservableCollection<string> Whitelist { get; } = [];
 
         public IASSContainer? Parent { get; set; }
 
         public bool DisplayInHierarchy { get; set; } = true;
 
         public static Binding Create(string key) => new(key);
-
-        public Binding WithTarget(object? target)
-        {
-            Target = target;
-            return this;
-        }
-
-        public Binding WithProperties(bool properties = true)
-        {
-            Properties = properties;
-            return this;
-        }
-
-        public Binding WithFields(bool fields = true)
-        {
-            Fields = fields;
-            return this;
-        }
-
-        public Binding WithMethods(bool methods = true)
-        {
-            Methods = methods;
-            return this;
-        }
-
-        public Binding WithNonPublic(bool nonPublic = true)
-        {
-            NonPublic = nonPublic;
-            return this;
-        }
-
-        public Binding WithHandleSets(bool handleSets = true)
-        {
-            HandleSets = handleSets;
-            return this;
-        }
 
         public Binding WithBlacklist(params string[] blacklist)
         {
@@ -170,15 +155,13 @@ namespace ASS.Collections.Features
             return this;
         }
 
-        public Binding WithoutIgnoreDefaultResponses(bool ignoreDefaultResponses = false)
+        public Binding WithWhitelist(params string[] whitelist)
         {
-            IgnoreDefaultResponses = ignoreDefaultResponses;
-            return this;
-        }
+            for (int i = 0; i < whitelist.Length; i++)
+            {
+                Whitelist.Add(whitelist[i]);
+            }
 
-        public Binding WithoutSuppressLogs(bool suppressLogs = false)
-        {
-            SuppressLogs = suppressLogs;
             return this;
         }
 
@@ -242,51 +225,68 @@ namespace ASS.Collections.Features
                 if (Target is null)
                     return;
 
-                if (type.IsSet())
+                DescriptionAttribute? attr = member.GetCustomAttribute<DescriptionAttribute>();
+
+                if (HandleSets && type.IsSet())
                 {
+                    children.Add(HeaderTemplate
+                        .Create($"{member.Name} SetEditor Header")
+                        .WithLabel($"{member.Name} Editor: [{type.ProperTypeName()}]")
+                        .WithReducedPadding());
+
                     children.Add(SetEditor
-                        .Create(type.Name)
+                        .Create(member.Name)
                         .WithSet(currentValue as IEnumerable, array => setValue.Invoke(Target, array)));
 
                     return;
                 }
 
-                if (!Parsers.TryGetValue(type, out Func<string, BindingHelper.ParserResponse> parser) && !BindingHelper.GlobalParsers.TryGetValue(type, out parser))
+                if (!Clipboard.TryGetParser(type, out ParserTemplate parserTemplate))
                 {
-                    if (type.IsEnum)
-                    {
-                        BindingHelper.GlobalParsers[type] = parser = BindingHelper.CreateParserForEnum(type);
-                    }
-                    else
-                    {
-                        if (!SuppressLogs)
-                            Logger.Warn($"Cannot bind type {Target.GetType().FullName} as no parser for {type.FullName} was found");
+                    if (!SuppressLogs)
+                        Logger.Warn($"Cannot bind type {Target.GetType().FullName} as no parser for {type.FullName} was found");
 
-                        return;
-                    }
+                    return;
                 }
 
-                string text = currentValue?.ToString() ?? "null";
-                children.Add(TextInputTemplate
-                    .Create(member.Name)
-                    .WithDefaultText(text)
-                    .WithPlaceholder(text)
-                    .WithHandler((player, input) =>
+                ASSParser parser = parserTemplate.Instantiate(member.Name);
+                parser.Transform(member.GetCustomAttributes().OfType<IParserTransform>());
+
+                if (parser is IHeaderParser header)
+                {
+                    header.Header
+                        .WithLabel($"{member.Name}: ({parserTemplate.Print(currentValue)}) [{type.ProperTypeName()}]")
+                        .WithReducedPadding();
+
+                    if (attr is not null)
+                        header.Header.WithHint(attr.Description);
+                }
+
+                children.Add(parser);
+
+                parser.OnModified = player =>
+                {
+                    if (!parser.TryParse(player, out object? value))
+                        return;
+
+                    setValue.Invoke(Target, value);
+
+                    if (parser is IHeaderParser header2)
                     {
-                        if (IgnoreDefaultResponses && input.IsInitialResponse)
-                            return;
+                        string text = $"{member.Name}: ({parserTemplate.Print(value)}) [{type.ProperTypeName()}]";
+                        header2.Header.Label = text;
+                        if (header2.Header.Instances.TryGetValue(player, out HeaderInstance instance))
+                            instance.Label = text;
+                    }
+                };
 
-                        BindingHelper.ParserResponse response = parser(input.InputtedText);
-                        if (response.IsError)
-                            return;
-
-                        string text = response.Value?.ToString() ?? "null";
-                        input.DefaultText = text;
-                        input.Placeholder = text;
-
-                        setValue.Invoke(Target, response.Value);
-                    })
-                    .WithLabel($"{member.Name}: ({BindingHelper.ProperTypeName(type)})"));
+                if (UseClipboard && Clipboard.TryGetValue(viewer, out object? obj) && obj.GetType() == type)
+                {
+                    children.Add(ButtonTemplate
+                        .Create(member.Name + "Clipboard Button")
+                        .WithHandler((player, button) => setValue.Invoke(Target, obj))
+                        .WithLabel($"Load from Clipboard {obj} to {member.Name}"));
+                }
             }
         }
 
@@ -305,8 +305,11 @@ namespace ASS.Collections.Features
             if (NonPublic)
                 flags |= BindingFlags.NonPublic;
 
-            foreach (MemberInfo member in type.GetMembers(flags))
+            foreach (MemberInfo member in type.GetMembers(flags).OrderBy(m => type == m.DeclaringType ? 1 : -1))
             {
+                if (Whitelist.Count > 0 && !Whitelist.Contains(member.Name))
+                    continue;
+
                 if (Blacklist.Contains(member.Name))
                     continue;
                 switch (member)

@@ -2,14 +2,12 @@ namespace ASS.Features.Templates
 {
     using System;
 
-    using ASS.Features.Attributes;
     using ASS.Features.Instances;
 
     using TMPro;
 
     using UserSettings.ServerSpecific;
 
-    [CanSync]
     public partial class TextInputTemplate : ASSTemplate
     {
         public InstanceHandler<TextInputInstance>? OnTextInputted { get; set; }

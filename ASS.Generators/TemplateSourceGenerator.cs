@@ -14,10 +14,6 @@ public class TemplateSourceGenerator : IIncrementalGenerator
     private const string TemplateTypeName = "ASSTemplate";
     private const string FullyQualifiedBaseType = TemplateNamespace + "." + TemplateTypeName;
 
-    private const string AttributeNamespace = "ASS.Features.Attributes";
-    private const string AttributeName = "CanSyncAttribute";
-    private const string FullyQualifiedAttributeNamespace = AttributeNamespace + "." + AttributeName;
-
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         IncrementalValuesProvider<TemplateModel> models = context.SyntaxProvider
@@ -30,7 +26,7 @@ public class TemplateSourceGenerator : IIncrementalGenerator
         context.RegisterSourceOutput(models, static (ctx, model) => Emit(ctx, model));
     }
 
-    private record struct TemplateModel(string Namespace, string ClassName, string InstanceName, bool CanSync, ImmutableArray<PropertyModel> FluentProperties);
+    private record struct TemplateModel(string Namespace, string ClassName, string InstanceName, ImmutableArray<PropertyModel> FluentProperties);
 
     private record struct PropertyModel(string MethodName, string PropertyName, string TypeFqn, string ParamName);
 
@@ -56,8 +52,6 @@ public class TemplateSourceGenerator : IIncrementalGenerator
         if (!derivesFromBase)
             return null;
 
-        bool canSync = HasAttributeInHierarchy(symbol, AttributeNamespace, AttributeName);
-
         ImmutableArray<PropertyModel>.Builder props = ImmutableArray.CreateBuilder<PropertyModel>();
         foreach (ISymbol member in symbol.GetMembers())
         {
@@ -66,11 +60,9 @@ public class TemplateSourceGenerator : IIncrementalGenerator
             if (prop.GetMethod is null || prop.SetMethod is null)
                 continue;
 
-            props.Add(new PropertyModel(
-                IsInstanceHandler(prop) ? "Handler" : prop.Name,
+            props.Add(new PropertyModel(Helpers.IsInstanceHandler(prop) ? "Handler" : prop.Name,
                 prop.Name,
-                prop.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
-                Camel(prop.Name) + (IsBool(prop) ? " = true" : string.Empty)));
+                prop.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat), Helpers.Camel(prop.Name) + (Helpers.IsBool(prop) ? " = true" : string.Empty)));
         }
 
         int len = symbol.Name.IndexOf("Template", StringComparison.Ordinal);
@@ -84,7 +76,6 @@ public class TemplateSourceGenerator : IIncrementalGenerator
             symbol.ContainingNamespace.ToDisplayString(),
             symbol.Name,
             instanceName,
-            canSync,
             props.ToImmutable());
     }
 
@@ -117,17 +108,7 @@ public class TemplateSourceGenerator : IIncrementalGenerator
                             }
 
                             public Dictionary<Player, {{model.InstanceName}}> Instances { get; } = new();
-                        """);
 
-        sb.AppendLine();
-
-        if (model.CanSync)
-        {
-            sb.AppendLine("    public bool AutoSync { get; set; } = true;");
-            sb.AppendLine();
-        }
-
-        sb.AppendLine($$"""
                             public static {{model.ClassName}} Create(string key) => new(key, null);
 
                             public static {{model.ClassName}} Create(int id) => new(null, id);
@@ -163,16 +144,13 @@ public class TemplateSourceGenerator : IIncrementalGenerator
                                 CollectionId = collectionId;
                                 return this;
                             }
-                        """);
 
-        if (model.CanSync)
-            sb.AppendLine($$"""
-                                public {{model.ClassName}} WithoutAutoSync(bool autoSync = false)
-                                    {
-                                        AutoSync = autoSync;
-                                        return this;
-                                    }
-                            """);
+                            public {{model.ClassName}} WithoutAutoSync(bool autoSync = false)
+                            {
+                                AutoSync = autoSync;
+                                return this;
+                            }
+                        """);
 
         foreach (PropertyModel p in model.FluentProperties)
         {
@@ -200,27 +178,5 @@ public class TemplateSourceGenerator : IIncrementalGenerator
         sb.AppendLine("}");
 
         ctx.AddSource($"{model.ClassName}.g.cs", SourceText.From(sb.ToString(), Encoding.UTF8));
-    }
-
-    private static string Camel(string s) => s.Length == 0 ? s : char.ToLowerInvariant(s[0]) + s.Substring(1);
-
-    private static bool IsInstanceHandler(IPropertySymbol prop) => prop.Type is INamedTypeSymbol { IsGenericType: true } named && named.OriginalDefinition.ToDisplayString() == "ASS.Features.Templates.InstanceHandler<T>";
-
-    private static bool IsBool(IPropertySymbol prop) => prop.Type is INamedTypeSymbol named && named.OriginalDefinition.ToDisplayString() == "bool";
-
-    private static bool HasAttributeInHierarchy(INamedTypeSymbol symbol, string ns, string name)
-    {
-        for (INamedTypeSymbol? namedType = symbol; namedType is not null; namedType = namedType.BaseType)
-        {
-            foreach (AttributeData attr in namedType.GetAttributes())
-            {
-                INamedTypeSymbol? attributeClass = attr.AttributeClass;
-                if (attributeClass != null
-                    && attributeClass.MetadataName == name
-                    && attributeClass.ContainingNamespace.ToDisplayString() == ns)
-                    return true;
-            }
-        }
-        return false;
     }
 }

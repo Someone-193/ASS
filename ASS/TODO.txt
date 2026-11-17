@@ -23,3 +23,16 @@ More examples
 YT video?
 
 Setting definitions in properties like the LabAPI SSS implementation that never released publicly?
+
+.assml files
+
+More fancy collections.
+
+Enhance Clipboard (integrate it with BindingHelper.Parsers, etc...) [Done]
+
+Rewrite some collections to be simpler.
+
+Attributes for custom parser transforms seems bad. Need to improve somehow.
+
+So. If I track when ALL settings are received. I can make a HashSet<int> of IDs to reset. Then. I look in that hashset, compare with sent settings.
+Build a custom pack to RESET the settings. Then I can send the actual settings once I get all the responses back from that.

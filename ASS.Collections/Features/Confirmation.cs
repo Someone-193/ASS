@@ -4,12 +4,14 @@ namespace ASS.Collections.Features
     using System.Collections.Generic;
 
     using ASS.Features;
+    using ASS.Features.Attributes;
     using ASS.Features.Interfaces;
     using ASS.Features.Templates;
 
     using LabApi.Features.Wrappers;
 
-    public class Confirmation
+    [Fluent]
+    public partial class Confirmation
     {
         private readonly HeaderTemplate header = HeaderTemplate
             .Create("ASS.Collections Confirmation Header");
@@ -40,6 +42,7 @@ namespace ASS.Collections.Features
             templates = [header, confirmButton, cancelButton];
         }
 
+        [Fluent]
         public string Message
         {
             get;
@@ -50,31 +53,15 @@ namespace ASS.Collections.Features
             }
         }
 
+        [Fluent]
         public Action<Player>? Confirm { get; set; }
 
+        [Fluent]
         public Action<Player>? Cancel { get; set; }
 
         internal static Dictionary<Player, Confirmation> Confirmations { get; } = new();
 
         public static Confirmation Create() => new();
-
-        public Confirmation WithMessage(string message)
-        {
-            Message = message;
-            return this;
-        }
-
-        public Confirmation OnConfirm(Action<Player> confirm)
-        {
-            Confirm = confirm;
-            return this;
-        }
-
-        public Confirmation OnCancel(Action<Player> cancel)
-        {
-            Cancel = cancel;
-            return this;
-        }
 
         public Confirmation Show(Player viewer, bool force = false)
         {

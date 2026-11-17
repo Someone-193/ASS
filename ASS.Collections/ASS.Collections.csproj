@@ -4,9 +4,18 @@
     <PropertyGroup>
         <OutputType>Library</OutputType>
         <AssemblyName>ASS.Collections</AssemblyName>
+
+        <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+        <CompilerGeneratedFilesOutputPath>$(BaseIntermediateOutputPath)Generated</CompilerGeneratedFilesOutputPath>
     </PropertyGroup>
 
     <Import Project="../plugin.props" />
+
+    <ItemGroup>
+        <ProjectReference Include="..\ASS.Generators\ASS.Generators.csproj"
+                          OutputItemType="Analyzer"
+                          ReferenceOutputAssembly="false" />
+    </ItemGroup>
 
     <ItemGroup>
         <PackageReference Include="Northwood.LabAPI" Version="1.1.7" />
@@ -29,6 +38,10 @@
 
     <ItemGroup>
         <ProjectReference Include="..\ASS\ASS.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Features\Attributes\" />
     </ItemGroup>
 
 </Project>

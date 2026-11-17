@@ -20,6 +20,8 @@ namespace ASS.Features.Instances
             SuggestedKeyCode = template.SuggestedKeyCode;
             TriggerInGUI = template.TriggerInGUI;
             TriggerInSpectator = template.TriggerInSpectator;
+
+            AutoSync = template.AutoSync;
         }
 
         public bool IsPressed => isPressed;
