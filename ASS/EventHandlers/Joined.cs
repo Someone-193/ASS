@@ -9,7 +9,7 @@ namespace ASS.EventHandlers
 
     using MEC;
 
-    public class Joined
+    internal class Joined
     {
         public static HashSet<Player> InitializedPlayers { get; } = [];
 
@@ -26,7 +26,7 @@ namespace ASS.EventHandlers
                 // send all settings that need to be read from client, but might not be typically visible.
                 if (ASSNetworking.InitializingSettings.Count != 0)
                 {
-                    ASSNetworking.SendCustomToPlayer(ev.Player, ASSNetworking.InitializingSettings.ToArray(), false, false, true);
+                    ASSNetworking.SendCustomToPlayer(ev.Player, ASSNetworking.InitializingSettings, false, false, true);
 
                     // lock all setting sending until they send back settings from InitializingSettings
                     Locked.Add(ev.Player);
@@ -37,7 +37,7 @@ namespace ASS.EventHandlers
                 else
                 {
                     // if none exist, just send settings
-                    ASSNetworking.SendToPlayerFull(ev.Player, true, false, true);
+                    ASSNetworking.SendToPlayerFull(ev.Player, null, false, true);
                 }
             });
         }
@@ -56,7 +56,7 @@ namespace ASS.EventHandlers
                 if (Locked.Contains(player) && ticks <= 60 * 8)
                     continue;
 
-                ASSNetworking.SendToPlayerFull(player, true, false, true);
+                ASSNetworking.SendToPlayerFull(player, null, false, true);
                 break;
             }
         }

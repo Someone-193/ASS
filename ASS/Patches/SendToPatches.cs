@@ -18,15 +18,17 @@ namespace ASS.Patches
     {
         [HarmonyPatch(nameof(ServerSpecificSettingsSync.SendToPlayer), typeof(ReferenceHub))]
         [HarmonyTranspiler]
-        public static IEnumerable<CodeInstruction> Transpiler1(IEnumerable<CodeInstruction> instructions)
+        public static IEnumerable<CodeInstruction> Transpiler1(IEnumerable<CodeInstruction> instructions, ILGenerator generator)
         {
+            LocalBuilder sendBaseGame = generator.DeclareLocal(typeof(bool?));
+
             yield return new CodeInstruction(OpCodes.Ldarg_0);
             yield return new CodeInstruction(OpCodes.Call, Method(typeof(Player), nameof(Player.Get), [typeof(ReferenceHub)]));
-            yield return new CodeInstruction(OpCodes.Ldc_I4_1);
+            yield return new CodeInstruction(OpCodes.Ldloca_S, sendBaseGame);
+            yield return new CodeInstruction(OpCodes.Initobj, typeof(bool?));
+            yield return new CodeInstruction(OpCodes.Ldloc_S, sendBaseGame);
             yield return new CodeInstruction(OpCodes.Ldc_I4_1);
             yield return new CodeInstruction(OpCodes.Ldc_I4_0);
-            yield return new CodeInstruction(OpCodes.Ldc_I4_1);
-            yield return new CodeInstruction(OpCodes.Ldnull);
             yield return new CodeInstruction(OpCodes.Call, Method(typeof(ASSNetworking), nameof(ASSNetworking.SendToPlayerFull)));
             yield return new CodeInstruction(OpCodes.Ret);
         }

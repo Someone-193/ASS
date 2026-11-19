@@ -35,3 +35,8 @@ If you want to add your own features, feel free to fork this repo and edit it fr
 # Please ping me on discord if you find any issues!
 (that is unintneded behavior)
 My discord is atsomeone btw
+
+<br>
+<br>
+
+### Credit to Exiled for their Event and Event{T} types which ASS's events are based off of.
