@@ -1,0 +1,143 @@
+namespace ASS.Features.Parsers
+{
+    using System.Collections.Generic;
+    using ASS.Features.Attributes;
+    using ASS.Features.Instances;
+    using ASS.Features.Interfaces;
+    using ASS.Features.Templates;
+    using LabApi.Features.Wrappers;
+    using UnityEngine;
+
+    public class ColorParser : ASSParser, IHeaderParser
+    {
+        private readonly TwoButtonsTemplate twoButtons = TwoButtonsTemplate
+            .Create("ASS Color Parser TwoButtons")
+            .WithLeftOption("Text Inputs")
+            .WithRightOption("Sliders");
+
+        private readonly TextInputTemplate ir = TextInputTemplate.Create("ASS Color Parser IR");
+
+        private readonly TextInputTemplate ig = TextInputTemplate.Create("ASS Color Parser IG");
+
+        private readonly TextInputTemplate ib = TextInputTemplate.Create("ASS Color Parser IB");
+
+        private readonly SliderTemplate sr = SliderTemplate
+            .Create("ASS Color Parser SR")
+            .WithMinValue(0)
+            .WithMaxValue(1);
+
+        private readonly SliderTemplate sg = SliderTemplate
+            .Create("ASS Color Parser SG")
+            .WithMinValue(0)
+            .WithMaxValue(1);
+
+        private readonly SliderTemplate sb = SliderTemplate
+            .Create("ASS Color Parser SB")
+            .WithMinValue(0)
+            .WithMaxValue(1);
+
+        private bool useSliders;
+
+        public ColorParser(string key)
+            : base(key)
+        {
+            twoButtons.WithHandler((player, setting) =>
+            {
+                if (IgnoreInitialResponses && setting.IsInitialResponse)
+                    return;
+
+                if (!(setting.RightSelected ^ useSliders))
+                    return;
+
+                useSliders = setting.RightSelected;
+                ASSNetworking.SetDirty(player);
+            });
+
+            InstanceHandler<SliderInstance> sliderHandler = (player, slider) =>
+            {
+                if (IgnoreInitialResponses && slider.IsInitialResponse)
+                    return;
+
+                OnModified?.Invoke(player);
+            };
+
+            sr.WithHandler(sliderHandler);
+            sg.WithHandler(sliderHandler);
+            sb.WithHandler(sliderHandler);
+
+            InstanceHandler<TextInputInstance> textInputHandler =
+                (player, input) =>
+                {
+                    if (IgnoreInitialResponses && input.IsInitialResponse)
+                        return;
+
+                    OnModified?.Invoke(player);
+                };
+
+            ir.WithHandler(textInputHandler);
+            ig.WithHandler(textInputHandler);
+            ib.WithHandler(textInputHandler);
+        }
+
+        public HeaderTemplate Header { get; } = HeaderTemplate.Create("ASS Color Parser Header");
+
+        public override IEnumerable<IASSObject> GetChildren(Player viewer)
+        {
+            yield return Header;
+            yield return twoButtons;
+
+            if (useSliders)
+            {
+                yield return sr;
+                yield return sg;
+                yield return sb;
+            }
+            else
+            {
+                yield return ir;
+                yield return ig;
+                yield return ib;
+            }
+        }
+
+        public override void Transform(IEnumerable<IParserTransform> transforms)
+        {
+            foreach (IParserTransform transform in transforms)
+            {
+                if (transform is HeaderTransformAttribute header)
+                    header.Apply(Header);
+            }
+        }
+
+        public override bool TryParse(Player viewer, out object? value)
+        {
+            value = null;
+
+            if (useSliders)
+            {
+                if (!sr.Instances.TryGetValue(viewer, out SliderInstance r) ||
+                    !sg.Instances.TryGetValue(viewer, out SliderInstance g) ||
+                    !sb.Instances.TryGetValue(viewer, out SliderInstance b))
+                    return false;
+
+                value = new Color(r.Value, g.Value, b.Value);
+            }
+            else
+            {
+                if (!ir.Instances.TryGetValue(viewer, out TextInputInstance i1) ||
+                    !ig.Instances.TryGetValue(viewer, out TextInputInstance i2) ||
+                    !ib.Instances.TryGetValue(viewer, out TextInputInstance i3))
+                    return false;
+
+                if (!float.TryParse(i1.InputtedText, out float r) ||
+                    !float.TryParse(i2.InputtedText, out float g) ||
+                    !float.TryParse(i3.InputtedText, out float b))
+                    return false;
+
+                value = new Color(r, g, b);
+            }
+
+            return true;
+        }
+    }
+}

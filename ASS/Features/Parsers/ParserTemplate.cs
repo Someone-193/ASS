@@ -94,6 +94,8 @@ namespace ASS.Features.Parsers
 
                     return obj?.ToString() ?? NullKeyword;
                 }),
+
+                [new Clipboard.Key(typeof(UnityEngine.Color))] = new ParserTemplate(str => new ColorParser(str)),
             };
 
             return value;
