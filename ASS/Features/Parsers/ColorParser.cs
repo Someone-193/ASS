@@ -21,6 +21,8 @@ namespace ASS.Features.Parsers
 
         private readonly TextInputTemplate ib = TextInputTemplate.Create("ASS Color Parser IB");
 
+        private readonly TextInputTemplate ia = TextInputTemplate.Create("ASS Color Parser IA");
+
         private readonly SliderTemplate sr = SliderTemplate
             .Create("ASS Color Parser SR")
             .WithMinValue(0)
@@ -33,6 +35,11 @@ namespace ASS.Features.Parsers
 
         private readonly SliderTemplate sb = SliderTemplate
             .Create("ASS Color Parser SB")
+            .WithMinValue(0)
+            .WithMaxValue(1);
+
+        private readonly SliderTemplate sa = SliderTemplate
+            .Create("ASS Color Parser SA")
             .WithMinValue(0)
             .WithMaxValue(1);
 
@@ -64,6 +71,7 @@ namespace ASS.Features.Parsers
             sr.WithHandler(sliderHandler);
             sg.WithHandler(sliderHandler);
             sb.WithHandler(sliderHandler);
+            sa.WithHandler(sliderHandler);
 
             InstanceHandler<TextInputInstance> textInputHandler =
                 (player, input) =>
@@ -77,6 +85,7 @@ namespace ASS.Features.Parsers
             ir.WithHandler(textInputHandler);
             ig.WithHandler(textInputHandler);
             ib.WithHandler(textInputHandler);
+            ia.WithHandler(textInputHandler);
         }
 
         public HeaderTemplate Header { get; } = HeaderTemplate.Create("ASS Color Parser Header");
@@ -91,12 +100,14 @@ namespace ASS.Features.Parsers
                 yield return sr;
                 yield return sg;
                 yield return sb;
+                yield return sa;
             }
             else
             {
                 yield return ir;
                 yield return ig;
                 yield return ib;
+                yield return ia;
             }
         }
 
@@ -117,24 +128,27 @@ namespace ASS.Features.Parsers
             {
                 if (!sr.Instances.TryGetValue(viewer, out SliderInstance r) ||
                     !sg.Instances.TryGetValue(viewer, out SliderInstance g) ||
-                    !sb.Instances.TryGetValue(viewer, out SliderInstance b))
+                    !sb.Instances.TryGetValue(viewer, out SliderInstance b) ||
+                    !sa.Instances.TryGetValue(viewer, out SliderInstance a))
                     return false;
 
-                value = new Color(r.Value, g.Value, b.Value);
+                value = new Color(r.Value, g.Value, b.Value, a.Value);
             }
             else
             {
                 if (!ir.Instances.TryGetValue(viewer, out TextInputInstance i1) ||
                     !ig.Instances.TryGetValue(viewer, out TextInputInstance i2) ||
-                    !ib.Instances.TryGetValue(viewer, out TextInputInstance i3))
+                    !ib.Instances.TryGetValue(viewer, out TextInputInstance i3) ||
+                    !ia.Instances.TryGetValue(viewer, out TextInputInstance i4))
                     return false;
 
                 if (!float.TryParse(i1.InputtedText, out float r) ||
                     !float.TryParse(i2.InputtedText, out float g) ||
-                    !float.TryParse(i3.InputtedText, out float b))
+                    !float.TryParse(i3.InputtedText, out float b) ||
+                    !float.TryParse(i4.InputtedText, out float a))
                     return false;
 
-                value = new Color(r, g, b);
+                value = new Color(r, g, b, a);
             }
 
             return true;
