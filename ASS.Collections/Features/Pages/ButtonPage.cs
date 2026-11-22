@@ -31,6 +31,12 @@ namespace ASS.Collections.Features.Pages
         [Fluent]
         public Predicate<Player>? Condition { get; set; }
 
+        [Fluent]
+        public Predicate<Player>? CanEnter { get; set; }
+
+        [Fluent]
+        public Predicate<Player>? CanExit { get; set; }
+
         public ButtonTemplate OpenButton { get; }
 
         public ButtonTemplate ExitButton { get; }
@@ -143,6 +149,8 @@ namespace ASS.Collections.Features.Pages
         // these are public because the Button does not carry a state.
         public void Open(Player player)
         {
+            if (CanEnter is not null && !CanEnter(player))
+                return;
             if (!Opened.Add(player))
                 return;
             if (!SelectedPage.TryGetValue(player, out Stack<ASSPage> stack))
@@ -155,6 +163,8 @@ namespace ASS.Collections.Features.Pages
 
         public void Exit(Player player)
         {
+            if (CanExit is not null && !CanExit(player))
+                return;
             if (!Opened.Remove(player))
                 return;
             if (!SelectedPage.TryGetValue(player, out Stack<ASSPage> stack))

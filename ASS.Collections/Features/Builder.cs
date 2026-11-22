@@ -149,7 +149,11 @@ namespace ASS.Collections.Features
                         }
 
                         if (!parser.TryParse(player, out object? obj))
+                        {
+                            if (!SuppressLogs)
+                                Logger.Warn($"Failed to parse '{parser.Key}'!");
                             return;
+                        }
 
                         args[i - 1] = obj;
                     }

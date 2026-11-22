@@ -15,33 +15,45 @@ namespace ASS.Features.Parsers
             .WithLeftOption("Text Inputs")
             .WithRightOption("Sliders");
 
-        private readonly TextInputTemplate ir = TextInputTemplate.Create("ASS Color Parser IR");
+        private readonly TextInputTemplate ir = TextInputTemplate
+            .Create("ASS Color Parser IR")
+            .WithLabel("Red");
 
-        private readonly TextInputTemplate ig = TextInputTemplate.Create("ASS Color Parser IG");
+        private readonly TextInputTemplate ig = TextInputTemplate
+            .Create("ASS Color Parser IG")
+            .WithLabel("Green");
 
-        private readonly TextInputTemplate ib = TextInputTemplate.Create("ASS Color Parser IB");
+        private readonly TextInputTemplate ib = TextInputTemplate
+            .Create("ASS Color Parser IB")
+            .WithLabel("Blue");
 
-        private readonly TextInputTemplate ia = TextInputTemplate.Create("ASS Color Parser IA");
+        private readonly TextInputTemplate ia = TextInputTemplate
+            .Create("ASS Color Parser IA")
+            .WithLabel("Alpha");
 
         private readonly SliderTemplate sr = SliderTemplate
             .Create("ASS Color Parser SR")
             .WithMinValue(0)
-            .WithMaxValue(1);
+            .WithMaxValue(1)
+            .WithLabel("Red");
 
         private readonly SliderTemplate sg = SliderTemplate
             .Create("ASS Color Parser SG")
             .WithMinValue(0)
-            .WithMaxValue(1);
+            .WithMaxValue(1)
+            .WithLabel("Green");
 
         private readonly SliderTemplate sb = SliderTemplate
             .Create("ASS Color Parser SB")
             .WithMinValue(0)
-            .WithMaxValue(1);
+            .WithMaxValue(1)
+            .WithLabel("Blue");
 
         private readonly SliderTemplate sa = SliderTemplate
             .Create("ASS Color Parser SA")
             .WithMinValue(0)
-            .WithMaxValue(1);
+            .WithMaxValue(1)
+            .WithLabel("Alpha");
 
         private bool useSliders;
 
